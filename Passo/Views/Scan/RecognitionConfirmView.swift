@@ -136,7 +136,7 @@ struct RecognitionConfirmView: View {
                 Divider().padding(.horizontal, AppSpacing.md)
                 fieldRow(icon: "📍", label: "场馆",      value: $ticket.venue)
                 Divider().padding(.horizontal, AppSpacing.md)
-                fieldRow(icon: "📅", label: "日期",      value: .constant(ticket.eventDate?.formatted(date: .abbreviated, time: .omitted) ?? ""))
+                dateRow
                 Divider().padding(.horizontal, AppSpacing.md)
                 fieldRow(icon: "🕐", label: "时间",      value: $ticket.eventTime)
                 Divider().padding(.horizontal, AppSpacing.md)
@@ -199,6 +199,36 @@ struct RecognitionConfirmView: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
         }
         .buttonStyle(.plain)
+    }
+
+    private var dateRow: some View {
+        HStack(spacing: 12) {
+            Text("📅")
+                .font(.system(size: 18))
+                .frame(width: 28, alignment: .center)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("日期")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                DatePicker(
+                    "",
+                    selection: Binding(
+                        get: { ticket.eventDate ?? Date() },
+                        set: { ticket.eventDate = $0 }
+                    ),
+                    displayedComponents: .date
+                )
+                .labelsHidden()
+                .datePickerStyle(.compact)
+                .font(.system(size: 16, weight: .medium))
+                .environment(\.locale, Locale(identifier: "zh_CN"))
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.vertical, 10)
     }
 
     private func fieldRow(icon: String, label: String, value: Binding<String>) -> some View {

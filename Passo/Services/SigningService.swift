@@ -95,9 +95,21 @@ actor SigningService {
     static let domesticEndpoint  = "https://sign.passo.cn/api/sign"
     static let overseasEndpoint  = "https://passo-sign.workers.dev/api/sign"
 
-    // These should be filled via App provisioning / remote config in production.
-    // For the MVP they can be left empty; the signing node uses its own certificate.
-    static let teamIdentifier     = ""
+    // teamIdentifier is read from the app's signing entitlements at runtime.
+    // Falls back to empty string in Simulator builds where entitlements aren't embedded.
+    static var teamIdentifier: String {
+        guard
+            let entitlements = Bundle.main.object(forInfoDictionaryKey: "com.apple.developer.team-identifier") as? String,
+            !entitlements.isEmpty
+        else {
+            // Try AppIdentifierPrefix (DeveloperIDApplication-style prefix)
+            if let prefix = Bundle.main.object(forInfoDictionaryKey: "AppIdentifierPrefix") as? String {
+                return String(prefix.dropLast()) // strip trailing "."
+            }
+            return ""
+        }
+        return entitlements
+    }
     static let passTypeIdentifier = "pass.com.passo.ticket"
 
     // MARK: - Public API

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import PassKit
 import MapKit
 
@@ -15,12 +16,14 @@ struct PassDetailView: View {
     let ticket: Ticket
 
     @State private var isFlipped = false
-    // M5: map snapshot
     @State private var mapSnapshot: UIImage?
     @State private var mapCoordinate: CLLocationCoordinate2D?
-    // M4: reminder toggle
     @State private var reminderEnabled: Bool = false
     @State private var scheduledReminderDate: Date?
+    @State private var showMenu = false
+    @State private var showEditNotes = false
+    @State private var showDeleteConfirm = false
+    @State private var editingNotes = ""
 
     private var isDark: Bool { colorScheme == .dark }
     private var theme: TicketTheme { ticket.ticketType.theme }
@@ -44,9 +47,53 @@ struct PassDetailView: View {
         .statusBarHidden(false)
         .task {
             reminderEnabled = ticket.reminderEnabled
+            editingNotes = ticket.notes
             scheduledReminderDate = ReminderService.reminderDate(for: TicketSnapshot(ticket: ticket))
             await loadMapSnapshot()
         }
+        .confirmationDialog("操作", isPresented: $showMenu, titleVisibility: .hidden) {
+            Button("分享票据") { shareTicket() }
+            Button("编辑备注") { editingNotes = ticket.notes; showEditNotes = true }
+            Button("删除票据", role: .destructive) { showDeleteConfirm = true }
+            Button("取消", role: .cancel) {}
+        }
+        .alert("编辑备注", isPresented: $showEditNotes) {
+            TextField("备注内容", text: $editingNotes, axis: .vertical)
+                .lineLimit(3...6)
+            Button("保存") {
+                ticket.notes = editingNotes
+                try? modelContext.save()
+            }
+            Button("取消", role: .cancel) {}
+        }
+        .confirmationDialog("确认删除", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+            Button("删除票据", role: .destructive) {
+                ReminderService.cancelReminder(ticketID: ticket.id)
+                modelContext.delete(ticket)
+                try? modelContext.save()
+                dismiss()
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("此操作不可撤销，票据将从 Passo 中永久删除")
+        }
+    }
+
+    private func shareTicket() {
+        let lines: [String] = [
+            ticket.title,
+            ticket.venue.isEmpty ? nil : "📍 \(ticket.venue)",
+            ticket.eventDate.map { "📅 \($0.formatted(date: .abbreviated, time: .omitted))" },
+            ticket.eventTime.isEmpty ? nil : "🕐 \(ticket.eventTime)",
+            ticket.seatInfo.isEmpty ? nil : "💺 \(ticket.seatInfo)",
+            ticket.barcodeValue.isEmpty ? nil : ticket.barcodeValue,
+        ].compactMap { $0 }
+        let text = lines.joined(separator: "\n")
+        let av = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.windows.first?
+            .rootViewController?.present(av, animated: true)
     }
 
     // MARK: Background
@@ -93,7 +140,7 @@ struct PassDetailView: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.white)
             Spacer()
-            GlassPillButton(isDark: true, action: { }) {
+            GlassPillButton(isDark: true, action: { showMenu = true }) {
                 AnyView(
                     Image(systemName: "ellipsis")
                         .font(.system(size: 14, weight: .semibold))

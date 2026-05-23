@@ -11,11 +11,12 @@ struct SettingsView: View {
     @AppStorage("isPro")              private var isPro = false
     @AppStorage("iCloudSyncEnabled")  private var iCloudSyncEnabled = true
 
-    @State private var showProSheet      = false
-    @State private var showAboutSheet    = false
-    @State private var showPhotoImport   = false
-    @State private var showScan          = false
-    @State private var showClearConfirm  = false
+    @State private var showProSheet           = false
+    @State private var showAboutSheet         = false
+    @State private var showPhotoImport        = false
+    @State private var showScan               = false
+    @State private var showClearConfirm       = false
+    @State private var showShareExtensionTip  = false
 
     var body: some View {
         NavigationStack {
@@ -75,8 +76,25 @@ struct SettingsView: View {
                     .foregroundStyle(.primary)
             }
 
-            Label("共享扩展", systemImage: "square.and.arrow.up")
-                .foregroundStyle(.secondary)
+            HStack {
+                Label("共享扩展", systemImage: "square.and.arrow.up")
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text("系统级")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color(uiColor: .tertiarySystemBackground))
+                    .clipShape(Capsule())
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { showShareExtensionTip = true }
+            .alert("如何使用共享扩展", isPresented: $showShareExtensionTip) {
+                Button("好的") {}
+            } message: {
+                Text("在任意 App 中找到要导入的票据截图，点击「分享」，然后选择「Passo」即可自动识别。首次使用前需在分享菜单中点「更多」启用 Passo。")
+            }
 
             NavigationLink {
                 ScreenshotImportView()

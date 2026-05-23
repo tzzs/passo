@@ -174,24 +174,33 @@ struct WalletView: View {
     }
 
     private var cardStack: some View {
-        ZStack(alignment: .top) {
+        Group {
             if filteredTickets.isEmpty {
                 emptyState
+                    .padding(.horizontal, AppSpacing.md)
             } else {
-                // Back ghost cards (depth effect)
-                if filteredTickets.count > 2 {
-                    ghostCard(inset: 26, topOffset: 30, opacity: 0.04, bgOpacity: 0.04)
-                }
-                if filteredTickets.count > 1 {
-                    ghostCard(inset: 22, topOffset: 18, opacity: 0.06, bgOpacity: 0.06)
-                }
+                cardPile
+                    .padding(.horizontal, AppSpacing.md)
+            }
+        }
+        .padding(.top, 10)
+    }
 
-                // Top card
+    private var cardPile: some View {
+        VStack(spacing: 0) {
+            // Top card with swipe gesture
+            ZStack {
                 if let top = filteredTickets.first {
+                    // Ghost depth layers behind the top card
+                    if filteredTickets.count > 2 {
+                        ghostCard(inset: 26, topOffset: -8, opacity: 0.04, bgOpacity: 0.04)
+                    }
+                    if filteredTickets.count > 1 {
+                        ghostCard(inset: 22, topOffset: -4, opacity: 0.06, bgOpacity: 0.06)
+                    }
+
                     ZStack {
                         TicketCardView(ticket: top, size: .full, isDark: isDark)
-
-                        // Swipe action labels — fade in as card moves
                         swipeLabels(for: top)
                     }
                     .offset(topCardOffset)
@@ -200,18 +209,15 @@ struct WalletView: View {
                     .onTapGesture { selectedTicket = top }
                     .zIndex(10)
                 }
+            }
 
-                // Peek of second card
-                if filteredTickets.count > 1 {
-                    TicketCardView(ticket: filteredTickets[1], size: .compact, isDark: isDark)
-                        .padding(.top, 16)
-                        .zIndex(5)
-                        .offset(y: 340) // Below the top card
-                }
+            // Peek of second card — naturally below via VStack, no hardcoded offset
+            if filteredTickets.count > 1 {
+                TicketCardView(ticket: filteredTickets[1], size: .compact, isDark: isDark)
+                    .padding(.top, 12)
+                    .zIndex(5)
             }
         }
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.top, 10)
     }
 
     private func ghostCard(inset: CGFloat, topOffset: CGFloat, opacity: Double, bgOpacity: Double) -> some View {
