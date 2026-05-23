@@ -43,6 +43,10 @@ targets:
         NSCameraUsageDescription: "扫描票据条码和二维码"
         NSPhotoLibraryUsageDescription: "从相册导入票据截图"
         NSLocationWhenInUseUsageDescription: "在你到达场馆时发送票据提醒"
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - passo
+            CFBundleURLName: com.passo.app
         NSUbiquitousContainers:
           iCloud.com.passo.app:
             NSUbiquitousContainerIsDocumentScopePublic: false
@@ -51,6 +55,8 @@ targets:
     entitlements:
       path: Passo/Passo.entitlements
       properties:
+        com.apple.security.application-groups:
+          - group.com.passo.app
         com.apple.developer.icloud-container-identifiers:
           - iCloud.com.passo.app
         com.apple.developer.icloud-services:
@@ -60,3 +66,37 @@ targets:
     settings:
       base:
         INFOPLIST_FILE: Passo/Info.plist
+
+  PassoShareExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: PassoShareExtension
+    info:
+      path: PassoShareExtension/Info.plist
+      properties:
+        CFBundleName: PassoShareExtension
+        CFBundleDisplayName: Passo
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsImageWithMaxCount: 1
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+    entitlements:
+      path: PassoShareExtension/PassoShareExtension.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.passo.app
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        PRODUCT_BUNDLE_IDENTIFIER: com.passo.app.share
+        INFOPLIST_FILE: PassoShareExtension/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""

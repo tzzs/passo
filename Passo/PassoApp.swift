@@ -13,6 +13,11 @@ struct PassoApp: App {
             ContentView()
                 .environmentObject(store)
                 .task { await store.refreshEntitlements() }
+                .onOpenURL { url in
+                    // passo://import — triggered by Share Extension hand-off
+                    guard url.scheme == "passo", url.host == "import" else { return }
+                    NotificationCenter.default.post(name: .passoShareImport, object: nil)
+                }
         }
         .modelContainer(appContainer)
     }

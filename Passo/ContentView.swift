@@ -29,6 +29,7 @@ enum AppTab: Int, CaseIterable {
 struct ContentView: View {
     @State private var selectedTab: AppTab = .wallet
     @State private var showScanSheet = false
+    @State private var shareImportTicket: Ticket?
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -55,13 +56,29 @@ struct ContentView: View {
         .onChange(of: selectedTab) { _, newTab in
             if newTab == .scan {
                 showScanSheet = true
-                // Return focus to wallet so scan tab doesn't stay "selected"
                 selectedTab = .wallet
             }
         }
         .fullScreenCover(isPresented: $showScanSheet) {
             ScanView()
         }
+        .sheet(item: $shareImportTicket) { ticket in
+            RecognitionConfirmView(ticket: ticket)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .passoShareImport)) { _ in
+            handleShareImport()
+        }
+        .onAppear {
+            // Handle import if app was cold-launched via passo:// URL scheme
+            handleShareImport()
+        }
+    }
+
+    private func handleShareImport() {
+        guard let payload = ShareImportService.consumePendingPayload() else { return }
+        let ticket = TicketParser.parse(barcodeValue: payload.barcodeValue, ocrText: payload.ocrText)
+        ticket.thumbnailData = payload.thumbnailData
+        shareImportTicket = ticket
     }
 }
 

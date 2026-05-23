@@ -17,6 +17,30 @@ enum ReminderService {
         return (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
     }
 
+    // MARK: - Location Authorization
+
+    private static func requestLocationAuthorization() async -> Bool {
+        await withCheckedContinuation { continuation in
+            let delegate = LocationAuthDelegate(continuation: continuation)
+            // Store delegate so it isn't deallocated before callback fires
+            LocationAuthDelegate.activeDelegate = delegate
+            let manager = CLLocationManager()
+            manager.delegate = delegate
+            let status = manager.authorizationStatus
+            switch status {
+            case .authorizedWhenInUse, .authorizedAlways:
+                LocationAuthDelegate.activeDelegate = nil
+                continuation.resume(returning: true)
+            case .notDetermined:
+                manager.requestWhenInUseAuthorization()
+                // delegate fires didChangeAuthorization
+            default:
+                LocationAuthDelegate.activeDelegate = nil
+                continuation.resume(returning: false)
+            }
+        }
+    }
+
     @discardableResult
     static func scheduleReminder(snapshot: TicketSnapshot, ticketID: UUID) async -> Date? {
         guard !snapshot.isUsed else { return nil }
@@ -51,6 +75,7 @@ enum ReminderService {
     static func scheduleLocationReminder(snapshot: TicketSnapshot, ticketID: UUID) async {
         guard let lat = snapshot.latitude, let lon = snapshot.longitude else { return }
         guard await requestAuthorization() else { return }
+        guard await requestLocationAuthorization() else { return }
 
         let content = UNMutableNotificationContent()
         content.title = snapshot.title.isEmpty ? "附近有你的票据" : snapshot.title
@@ -139,4 +164,29 @@ enum ReminderService {
 
 extension TicketSnapshot {
     var isUsed: Bool { false }  // ReminderService only sees un-used tickets at call site
+}
+
+// MARK: - Location Auth Delegate
+
+// Helper that bridges CLLocationManagerDelegate callback into async/await.
+// Retained via a static slot so it isn't deallocated before the delegate fires.
+private final class LocationAuthDelegate: NSObject, CLLocationManagerDelegate {
+
+    nonisolated(unsafe) static var activeDelegate: LocationAuthDelegate?
+
+    private let continuation: CheckedContinuation<Bool, Never>
+    private var resumed = false
+
+    init(continuation: CheckedContinuation<Bool, Never>) {
+        self.continuation = continuation
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        guard !resumed else { return }
+        resumed = true
+        Self.activeDelegate = nil
+        let granted = manager.authorizationStatus == .authorizedWhenInUse
+                   || manager.authorizationStatus == .authorizedAlways
+        continuation.resume(returning: granted)
+    }
 }

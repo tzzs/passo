@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 import Vision
+import SwiftData
 
 // MARK: - Photo Import View
 
@@ -9,9 +10,13 @@ struct PhotoImportView: View {
     @Environment(\.dismiss)      private var dismiss
     @Environment(\.modelContext) private var modelContext
 
+    @AppStorage("isPro") private var isPro = false
+    @Query private var allTickets: [Ticket]
+
     @State private var selectedItem: PhotosPickerItem?
     @State private var phase: Phase = .picking
     @State private var detectedTicket: Ticket?
+    @State private var showProGate = false
 
     private enum Phase {
         case picking
@@ -47,6 +52,10 @@ struct PhotoImportView: View {
             .sheet(item: $detectedTicket) { ticket in
                 RecognitionConfirmView(ticket: ticket)
                     .onDisappear { dismiss() }
+            }
+            .sheet(isPresented: $showProGate) {
+                ProUpgradeSheet()
+                    .environmentObject(StoreService.shared)
             }
         }
     }
@@ -182,6 +191,13 @@ struct PhotoImportView: View {
 
         if barcodeValue.isEmpty && ocrText.isEmpty {
             phase = .failed("未在图片中检测到票据信息，请确认图片包含条码或二维码")
+            return
+        }
+
+        // Free tier gate: max 5 tickets
+        if !isPro && allTickets.count >= 5 {
+            phase = .picking
+            showProGate = true
             return
         }
 

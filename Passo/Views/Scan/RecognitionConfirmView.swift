@@ -14,6 +14,9 @@ struct RecognitionConfirmView: View {
     @Bindable var ticket: Ticket
 
     @AppStorage("signingNodePreference") private var nodeRaw = NodePreference.auto.rawValue
+    @AppStorage("isPro") private var isPro = false
+
+    @Query private var allTickets: [Ticket]
 
     @State private var showAddedToast = false
     @State private var isSigning = false
@@ -23,6 +26,7 @@ struct RecognitionConfirmView: View {
     @State private var showAddFieldSheet = false
     @State private var newFieldLabel = ""
     @State private var newFieldValue = ""
+    @State private var showProGate = false
 
     private var nodePreference: NodePreference { NodePreference(rawValue: nodeRaw) ?? .auto }
 
@@ -58,6 +62,10 @@ struct RecognitionConfirmView: View {
         }, message: {
             Text(signingError ?? "")
         })
+        .sheet(isPresented: $showProGate) {
+            ProUpgradeSheet()
+                .environmentObject(StoreService.shared)
+        }
     }
 
     // MARK: Background
@@ -343,7 +351,16 @@ struct RecognitionConfirmView: View {
 
     // MARK: Actions
 
+    private var isAtFreeLimit: Bool {
+        !isPro && allTickets.count >= 5
+    }
+
     private func addToWallet() async {
+        guard !isAtFreeLimit else {
+            showProGate = true
+            return
+        }
+
         isSigning = true
         defer { isSigning = false }
 
