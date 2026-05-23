@@ -156,7 +156,7 @@ struct SettingsView: View {
                 HStack {
                     Label("关于 Passo", systemImage: "info.circle")
                     Spacer()
-                    Text("v1.0.0")
+                    Text("v\(appVersionString)")
                         .foregroundStyle(.secondary)
                 }
             }
@@ -170,6 +170,14 @@ struct SettingsView: View {
                 Label("用户协议", systemImage: "doc.text")
             }
         }
+    }
+
+    // MARK: - Helpers
+
+    private var appVersionString: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build   = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "\(version) (\(build))"
     }
 
     // MARK: - Actions
@@ -243,6 +251,12 @@ private struct ProStatusCard: View {
 private struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
 
+    private var appVersionString: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build   = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "\(version) (\(build))"
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -269,7 +283,7 @@ private struct AboutView: View {
                     HStack {
                         Text("版本")
                         Spacer()
-                        Text("1.0.0 (1)").foregroundStyle(.secondary)
+                        Text(appVersionString).foregroundStyle(.secondary)
                     }
                     HStack {
                         Text("开发者")

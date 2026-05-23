@@ -50,6 +50,8 @@ struct PassDetailView: View {
             editingNotes = ticket.notes
             scheduledReminderDate = ReminderService.reminderDate(for: TicketSnapshot(ticket: ticket))
             await loadMapSnapshot()
+            // F2: sync isAddedToWallet with actual PKPassLibrary state
+            syncWalletStatus()
         }
         .confirmationDialog("操作", isPresented: $showMenu, titleVisibility: .hidden) {
             Button("分享票据") { shareTicket() }
@@ -94,6 +96,20 @@ struct PassDetailView: View {
             .compactMap { $0 as? UIWindowScene }
             .first?.windows.first?
             .rootViewController?.present(av, animated: true)
+    }
+
+    private func syncWalletStatus() {
+        guard let serial = ticket.passSerialNumber else { return }
+        let typeID = "pass.com.passo.ticket"
+        let library = PKPassLibrary()
+        guard let pass = library.passes(ofType: .generic).first(where: {
+            $0.serialNumber == serial && $0.passTypeIdentifier == typeID
+        }) else { return }
+        let inLibrary = library.containsPass(pass)
+        if ticket.isAddedToWallet != inLibrary {
+            ticket.isAddedToWallet = inLibrary
+            try? modelContext.save()
+        }
     }
 
     // MARK: Background

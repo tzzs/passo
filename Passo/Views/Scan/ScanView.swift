@@ -12,9 +12,14 @@ struct ScanView: View {
     @StateObject private var camera = CameraService()
 
     @State private var isFlashOn = false
-    @State private var showConfirmSheet = false
     @State private var scanLineOffset: CGFloat = -60
     @State private var detectedTicket: Ticket?
+    @State private var showConfirmSheet = false
+
+    // The theme used for scan-frame accent color — updates when a ticket is detected
+    private var scanAccent: Color {
+        detectedTicket?.ticketType.theme.accent ?? TicketType.movie.theme.accent
+    }
 
     var body: some View {
         ZStack {
@@ -29,8 +34,11 @@ struct ScanView: View {
             }
         }
         .statusBarHidden()
-        .sheet(item: $detectedTicket) { ticket in
-            RecognitionConfirmView(ticket: ticket)
+        // B1: sheet bound to showConfirmSheet, not detectedTicket, so dismiss works independently
+        .sheet(isPresented: $showConfirmSheet) {
+            if let ticket = detectedTicket {
+                RecognitionConfirmView(ticket: ticket)
+            }
         }
         .onAppear {
             camera.requestPermissionAndStart()
@@ -121,18 +129,19 @@ struct ScanView: View {
     private var detectedBadge: some View {
         HStack(spacing: 6) {
             Circle()
-                .fill(TicketType.movie.theme.accent)
+                .fill(scanAccent)
                 .frame(width: 7, height: 7)
-                .shadow(color: TicketType.movie.theme.accent, radius: 4)
+                .shadow(color: scanAccent, radius: 4)
             Text("已检测到票据")
                 .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(TicketType.movie.theme.accent)
+                .foregroundStyle(scanAccent)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 5)
-        .background(TicketType.movie.theme.accent.opacity(0.13))
-        .overlay(Capsule().strokeBorder(TicketType.movie.theme.accent.opacity(0.27), lineWidth: 1))
+        .background(scanAccent.opacity(0.13))
+        .overlay(Capsule().strokeBorder(scanAccent.opacity(0.27), lineWidth: 1))
         .clipShape(Capsule())
+        .animation(AppAnimation.themeChange, value: detectedTicket?.ticketType.rawValue)
     }
 
     private var scanFrame: some View {
@@ -147,18 +156,18 @@ struct ScanView: View {
             ZStack {
                 ScanCornerBrackets(
                     rect: CGRect(x: frameLeft, y: frameTop, width: frameWidth, height: frameHeight),
-                    color: TicketType.movie.theme.accent
+                    color: scanAccent
                 )
 
                 Rectangle()
                     .fill(
                         LinearGradient(
-                            colors: [.clear, TicketType.movie.theme.accent, .clear],
+                            colors: [.clear, scanAccent, .clear],
                             startPoint: .leading, endPoint: .trailing
                         )
                     )
                     .frame(width: frameWidth - 24, height: 2)
-                    .shadow(color: TicketType.movie.theme.accent.opacity(0.6), radius: 6)
+                    .shadow(color: scanAccent.opacity(0.6), radius: 6)
                     .position(x: geo.size.width / 2, y: frameTop + frameHeight / 2 + scanLineOffset)
                     .clipped()
 
@@ -167,6 +176,7 @@ struct ScanView: View {
                     .foregroundStyle(.white.opacity(0.5))
                     .position(x: geo.size.width / 2, y: frameTop + frameHeight + 30)
             }
+            .animation(AppAnimation.themeChange, value: detectedTicket?.ticketType.rawValue)
         }
     }
 
@@ -220,7 +230,8 @@ struct ScanView: View {
                 Button {
                     withAnimation {
                         detectedTicket = nil
-                        camera.detectedBarcode = nil
+                        camera.resetDetection()   // B2: clear lastDetectedValue so same barcode re-triggers
+                        startScanAnimation()      // B3: restart scan line
                     }
                 } label: {
                     Text("重新扫描")
@@ -237,6 +248,7 @@ struct ScanView: View {
             }
 
             HStack(spacing: 10) {
+                // B1: both buttons now open showConfirmSheet which is correctly sheet-bound
                 Button {
                     showConfirmSheet = true
                 } label: {
@@ -256,7 +268,7 @@ struct ScanView: View {
                 Button {
                     showConfirmSheet = true
                 } label: {
-                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    Image(systemName: "square.and.pencil")
                         .font(.system(size: 18, weight: .medium))
                         .frame(width: 50, height: 50)
                         .background(Color(uiColor: .secondarySystemBackground))

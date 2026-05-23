@@ -21,6 +21,10 @@ enum TicketParser {
         )
 
         extractFields(from: ocrText, into: &ticket, type: type)
+        // F5: fill expiresAt using default rules so views display it correctly from the start
+        if ticket.expiresAt == nil {
+            ticket.expiresAt = Ticket.defaultExpiry(for: type, eventDate: ticket.eventDate)
+        }
         return ticket
     }
 
@@ -130,11 +134,19 @@ enum TicketParser {
     // MARK: - Field Helpers
 
     private static func extractTitle(from text: String, type: TicketType) -> String {
-        // First line of OCR text is usually the title
-        let firstLine = text.components(separatedBy: CharacterSet.newlines)
+        let lines = text.components(separatedBy: CharacterSet.newlines)
             .map { $0.trimmingCharacters(in: .whitespaces) }
-            .first { $0.count > 1 } ?? ""
-        return firstLine.isEmpty ? type.displayName : firstLine
+            .filter { $0.count > 1 }
+
+        // Skip lines that look like order numbers, dates, or purely numeric/short strings
+        let orderPattern = try? NSRegularExpression(pattern: #"^[\d\s\-/.:TZ]{4,}$|^[A-Z]{0,3}\d{8,}$|订单号|Order"#)
+        for line in lines {
+            let range = NSRange(line.startIndex..., in: line)
+            if orderPattern?.firstMatch(in: line, range: range) != nil { continue }
+            if line.count < 2 { continue }
+            return line
+        }
+        return type.displayName
     }
 
     private static func extractVenue(from text: String, type: TicketType) -> String {

@@ -63,6 +63,12 @@ final class CameraService: NSObject, ObservableObject {
         }
     }
 
+    /// Clears the dedup guard so the same barcode value triggers detection again.
+    func resetDetection() {
+        lastDetectedValue = nil
+        detectedBarcode   = nil
+    }
+
     // MARK: Torch
 
     func setTorch(_ on: Bool) {

@@ -176,7 +176,7 @@ struct WalletView: View {
     private var cardStack: some View {
         Group {
             if filteredTickets.isEmpty {
-                emptyState
+                currentEmptyState
                     .padding(.horizontal, AppSpacing.md)
             } else {
                 cardPile
@@ -201,7 +201,13 @@ struct WalletView: View {
 
                     ZStack {
                         TicketCardView(ticket: top, size: .full, isDark: isDark)
+                            .saturation(top.isUsed ? 0.25 : 1)
+                            .opacity(top.isUsed ? 0.7 : 1)
                         swipeLabels(for: top)
+                        // "已使用" stamp overlay
+                        if top.isUsed {
+                            usedStamp
+                        }
                     }
                     .offset(topCardOffset)
                     .rotationEffect(.degrees(Double(topCardOffset.width) / 22))
@@ -232,33 +238,78 @@ struct WalletView: View {
             .offset(y: topOffset)
     }
 
-    private var emptyState: some View {
+    private var usedStamp: some View {
+        Text("已使用")
+            .font(.system(size: 18, weight: .black, design: .rounded))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
+            .background(Color.black.opacity(0.55))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .rotationEffect(.degrees(-22))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(.white.opacity(0.6), lineWidth: 2)
+                    .rotationEffect(.degrees(-22))
+            )
+    }
+
+    @ViewBuilder
+    private var currentEmptyState: some View {
+        switch WalletFilter(rawValue: filterIndex) ?? .all {
+        case .today:
+            emptyState(
+                icon: "sun.max",
+                title: "今天没有票据",
+                subtitle: "今日无演出、放映或出行计划",
+                showScanButton: false
+            )
+        case .upcoming:
+            emptyState(
+                icon: "calendar.badge.clock",
+                title: "暂无即将到来的票据",
+                subtitle: "添加票据后，未来的行程会显示在这里",
+                showScanButton: true
+            )
+        case .all:
+            emptyState(
+                icon: "wallet.pass",
+                title: "票夹空空如也",
+                subtitle: "拍一张票据，即刻存入 Wallet",
+                showScanButton: true
+            )
+        }
+    }
+
+    private func emptyState(icon: String, title: String, subtitle: String, showScanButton: Bool) -> some View {
         VStack(spacing: 20) {
-            Image(systemName: "wallet.pass")
+            Image(systemName: icon)
                 .font(.system(size: 56, weight: .light))
                 .foregroundStyle(isDark ? .white.opacity(0.3) : .black.opacity(0.2))
                 .padding(.top, 60)
 
             VStack(spacing: 8) {
-                Text("票夹空空如也")
+                Text(title)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(isDark ? .white.opacity(0.8) : .black.opacity(0.7))
-                Text("拍一张票据，即刻存入 Wallet")
+                Text(subtitle)
                     .font(.system(size: 15))
                     .foregroundStyle(isDark ? .white.opacity(0.45) : .black.opacity(0.4))
                     .multilineTextAlignment(.center)
             }
 
-            Button(action: onScanTapped) {
-                Label("扫描导入", systemImage: "qrcode.viewfinder")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(isDark ? .black : .white)
-                    .frame(height: 50)
-                    .frame(maxWidth: 200)
-                    .background(isDark ? Color.white : Color.black)
-                    .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton))
+            if showScanButton {
+                Button(action: onScanTapped) {
+                    Label("扫描导入", systemImage: "qrcode.viewfinder")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(isDark ? .black : .white)
+                        .frame(height: 50)
+                        .frame(maxWidth: 200)
+                        .background(isDark ? Color.white : Color.black)
+                        .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton))
+                }
+                .padding(.top, 8)
             }
-            .padding(.top, 8)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 40)

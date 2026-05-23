@@ -143,6 +143,8 @@ struct RecognitionConfirmView: View {
                 fieldRow(icon: "💺", label: "座位",      value: $ticket.seatInfo)
 
                 Divider().padding(.horizontal, AppSpacing.md)
+                tagsRow
+                Divider().padding(.horizontal, AppSpacing.md)
 
                 // Add custom field
                 addFieldRow
@@ -314,6 +316,95 @@ struct RecognitionConfirmView: View {
             }
         }
         .presentationDetents([.medium])
+    }
+
+    // MARK: Tags Row
+
+    private var tagsRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("🏷️")
+                    .font(.system(size: 18))
+                    .frame(width: 28, alignment: .center)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("标签")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                    if ticket.tags.isEmpty {
+                        Text("点击添加标签")
+                            .font(.system(size: 15))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                Spacer()
+            }
+
+            if !ticket.tags.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(ticket.tags, id: \.self) { tag in
+                            HStack(spacing: 4) {
+                                Text(tag)
+                                    .font(.system(size: 13))
+                                Button {
+                                    ticket.tags = ticket.tags.filter { $0 != tag }
+                                } label: {
+                                    Image(systemName: "xmark")
+                                        .font(.system(size: 10, weight: .semibold))
+                                }
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(theme.accent.opacity(0.1))
+                            .foregroundStyle(theme.accent)
+                            .clipShape(Capsule())
+                            .overlay(Capsule().strokeBorder(theme.accent.opacity(0.3), lineWidth: 1))
+                        }
+
+                        if ticket.tags.count < 5 {
+                            quickTagPicker
+                        }
+                    }
+                    .padding(.horizontal, 2)
+                }
+                .padding(.leading, 40)
+            } else {
+                quickTagPicker
+                    .padding(.leading, 40)
+            }
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.vertical, 10)
+    }
+
+    private var quickTagPicker: some View {
+        let suggestions: [String] = {
+            switch ticket.ticketType {
+            case .movie:   return ["IMAX", "4DX", "情侣座", "VIP"]
+            case .concert: return ["内场", "VIP", "看台", "摇滚区"]
+            case .train:   return ["商务座", "一等座", "二等座", "卧铺"]
+            case .scenic:  return ["成人票", "学生票", "亲子票", "年卡"]
+            case .member:  return ["金卡", "银卡", "钻石卡", "年费"]
+            case .generic: return ["VIP", "赠票", "电子票", "纸质票"]
+            }
+        }()
+
+        return Menu {
+            ForEach(suggestions.filter { !ticket.tags.contains($0) }, id: \.self) { tag in
+                Button(tag) {
+                    if !ticket.tags.contains(tag) { ticket.tags.append(tag) }
+                }
+            }
+        } label: {
+            Label("添加标签", systemImage: "plus")
+                .font(.system(size: 13))
+                .foregroundStyle(theme.accent)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(theme.accent.opacity(0.08))
+                .clipShape(Capsule())
+                .overlay(Capsule().strokeBorder(theme.accent.opacity(0.2), lineWidth: 1))
+        }
     }
 
     private func commitCustomField() {
