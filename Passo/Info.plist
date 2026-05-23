@@ -22,8 +22,22 @@
 	<string>1</string>
 	<key>NSCameraUsageDescription</key>
 	<string>扫描票据条码和二维码</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>在你到达场馆时发送票据提醒</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>从相册导入票据截图</string>
+	<key>NSUbiquitousContainers</key>
+	<dict>
+		<key>iCloud.com.passo.app</key>
+		<dict>
+			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
+			<false/>
+			<key>NSUbiquitousContainerName</key>
+			<string>Passo</string>
+			<key>NSUbiquitousContainerSupportedFolderLevels</key>
+			<string>None</string>
+		</dict>
+	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

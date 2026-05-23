@@ -41,9 +41,7 @@ struct ScanView: View {
         }
         .onChange(of: camera.detectedBarcode) { _, result in
             guard let result, detectedTicket == nil else { return }
-            // Parse with empty OCR text; in a future enhancement, a concurrent OCR
-            // pass on the frame could enrich the ticket with field values.
-            let ticket = TicketParser.parse(barcodeValue: result.value, ocrText: "")
+            let ticket = TicketParser.parse(barcodeValue: result.value, ocrText: camera.latestOCRText)
             ticket.barcodeFormat = result.format
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 detectedTicket = ticket

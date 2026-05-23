@@ -2,6 +2,7 @@ import AVFoundation
 import CoreImage
 import SwiftUI
 import UIKit
+import Vision
 
 // MARK: - Barcode Result
 
@@ -13,21 +14,28 @@ struct BarcodeResult: Equatable {
 // MARK: - Camera Service
 
 /// Manages AVCaptureSession for live camera preview + real-time barcode detection.
-/// Runs the capture session on a background serial queue to keep the main thread free.
+/// Also runs throttled frame OCR (1 fps) so TicketParser gets enriched text context.
 @MainActor
 final class CameraService: NSObject, ObservableObject {
 
     @Published var detectedBarcode: BarcodeResult?
     @Published var authorizationStatus: AVAuthorizationStatus = .notDetermined
+    /// Accumulated OCR text from the most recent camera frame — fed into TicketParser
+    /// alongside the barcode value for richer field extraction.
+    @Published private(set) var latestOCRText: String = ""
 
     let previewLayer = AVCaptureVideoPreviewLayer()
 
-    private let session = AVCaptureSession()
+    private let session      = AVCaptureSession()
     private let sessionQueue = DispatchQueue(label: "passo.camera.session", qos: .userInitiated)
-    private let metadataOutput = AVCaptureMetadataOutput()
+    private let ocrQueue     = DispatchQueue(label: "passo.camera.ocr",     qos: .utility)
+    private let metadataOutput   = AVCaptureMetadataOutput()
+    private let videoDataOutput  = AVCaptureVideoDataOutput()
 
-    // Debounce: only fire once per unique barcode value
     private var lastDetectedValue: String?
+    // Accessed only from ocrQueue — nonisolated(unsafe) avoids actor-isolation error
+    nonisolated(unsafe) private var lastOCRFrameTime: CFTimeInterval = 0
+    private let ocrInterval: CFTimeInterval = 1.5
 
     // MARK: Lifecycle
 
@@ -74,10 +82,9 @@ final class CameraService: NSObject, ObservableObject {
         session.beginConfiguration()
         session.sessionPreset = .hd1280x720
 
-        // Input
         guard
             let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-            let input = try? AVCaptureDeviceInput(device: device),
+            let input  = try? AVCaptureDeviceInput(device: device),
             session.canAddInput(input)
         else {
             session.commitConfiguration()
@@ -85,16 +92,25 @@ final class CameraService: NSObject, ObservableObject {
         }
         session.addInput(input)
 
-        // Metadata output for barcode detection
+        // Barcode metadata output
         if session.canAddOutput(metadataOutput) {
             session.addOutput(metadataOutput)
             metadataOutput.setMetadataObjectsDelegate(self, queue: .main)
             metadataOutput.metadataObjectTypes = supportedBarcodeTypes
         }
 
+        // Video data output for parallel OCR
+        videoDataOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+        ]
+        videoDataOutput.alwaysDiscardsLateVideoFrames = true
+        if session.canAddOutput(videoDataOutput) {
+            session.addOutput(videoDataOutput)
+            videoDataOutput.setSampleBufferDelegate(self, queue: ocrQueue)
+        }
+
         session.commitConfiguration()
 
-        // Wire preview layer on main thread before starting
         Task { @MainActor in
             self.previewLayer.session = self.session
             self.previewLayer.videoGravity = .resizeAspectFill
@@ -117,12 +133,11 @@ extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
         from connection: AVCaptureConnection
     ) {
         guard
-            let obj = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
+            let obj   = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
             let value = obj.stringValue
         else { return }
 
         let format = barcodeFormatString(from: obj.type)
-
         Task { @MainActor in
             guard value != self.lastDetectedValue else { return }
             self.lastDetectedValue = value
@@ -146,9 +161,46 @@ extension CameraService: AVCaptureMetadataOutputObjectsDelegate {
     }
 }
 
+// MARK: - AVCaptureVideoDataOutputSampleBufferDelegate (OCR)
+
+extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
+    nonisolated func captureOutput(
+        _ output: AVCaptureOutput,
+        didOutput sampleBuffer: CMSampleBuffer,
+        from connection: AVCaptureConnection
+    ) {
+        let now = CACurrentMediaTime()
+        guard now - lastOCRFrameTime >= ocrInterval else { return }
+        // Note: lastOCRFrameTime is accessed on ocrQueue — no actor isolation needed
+        // since this property is only written here and read here (single queue).
+        // We use a local nonisolated approach; the published result goes back to MainActor.
+
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+
+        // Commit throttle timestamp before async work so subsequent frames are dropped
+        lastOCRFrameTime = now
+
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel     = .fast  // ~200 ms vs ~800 ms for accurate
+        request.recognitionLanguages = ["zh-Hans", "en-US"]
+        request.usesLanguageCorrection = false
+
+        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
+        guard (try? handler.perform([request])) != nil else { return }
+
+        let lines = (request.results ?? [])
+            .compactMap { $0.topCandidates(1).first?.string }
+        let text = lines.joined(separator: " ")
+
+        guard !text.isEmpty else { return }
+        Task { @MainActor in
+            self.latestOCRText = text
+        }
+    }
+}
+
 // MARK: - Camera Preview UIViewRepresentable
 
-/// Wraps AVCaptureVideoPreviewLayer in a SwiftUI-compatible view.
 struct CameraPreviewView: UIViewRepresentable {
     let previewLayer: AVCaptureVideoPreviewLayer
 
@@ -164,7 +216,6 @@ struct CameraPreviewView: UIViewRepresentable {
         previewLayer.frame = uiView.bounds
     }
 
-    // Custom UIView that keeps the previewLayer in sync with its bounds
     final class PreviewUIView: UIView {
         override func layoutSubviews() {
             super.layoutSubviews()

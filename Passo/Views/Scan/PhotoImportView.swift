@@ -212,12 +212,14 @@ struct PhotoImportView: View {
 
     private func thumbnailData(from image: UIImage) async -> Data? {
         await Task.detached(priority: .utility) {
-            let size = CGSize(width: 300, height: 300)
-            let renderer = UIGraphicsImageRenderer(size: size)
-            let thumb = renderer.image { _ in
-                image.draw(in: CGRect(origin: .zero, size: size))
-            }
-            return thumb.jpegData(compressionQuality: 0.7)
+            // Preserve aspect ratio — max 400pt on the longer edge
+            let maxSide: CGFloat = 400
+            let scale = min(maxSide / image.size.width, maxSide / image.size.height)
+            let targetSize = CGSize(
+                width:  image.size.width  * scale,
+                height: image.size.height * scale
+            )
+            return image.preparingThumbnail(of: targetSize)?.jpegData(compressionQuality: 0.75)
         }.value
     }
 }

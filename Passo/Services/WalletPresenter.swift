@@ -10,7 +10,10 @@ struct WalletPresenter: UIViewControllerRepresentable {
     let onAdded: () -> Void
     let onCancelled: () -> Void
 
-    func makeCoordinator() -> Coordinator { Coordinator(onAdded: onAdded, onCancelled: onCancelled) }
+    func makeCoordinator() -> Coordinator {
+        let pass = try? PKPass(data: passData)
+        return Coordinator(pass: pass, onAdded: onAdded, onCancelled: onCancelled)
+    }
 
     func makeUIViewController(context: Context) -> UIViewController {
         guard PKPassLibrary.isPassLibraryAvailable() else {
@@ -33,18 +36,18 @@ struct WalletPresenter: UIViewControllerRepresentable {
     final class Coordinator: NSObject, PKAddPassesViewControllerDelegate {
         private let onAdded: () -> Void
         private let onCancelled: () -> Void
+        private var pass: PKPass?
 
-        init(onAdded: @escaping () -> Void, onCancelled: @escaping () -> Void) {
+        init(pass: PKPass?, onAdded: @escaping () -> Void, onCancelled: @escaping () -> Void) {
+            self.pass        = pass
             self.onAdded     = onAdded
             self.onCancelled = onCancelled
         }
 
         func addPassesViewControllerDidFinish(_ controller: PKAddPassesViewController) {
             controller.dismiss(animated: true)
-            let library = PKPassLibrary()
-            // PKPassLibrary doesn't directly tell us if the pass was added;
-            // treat dismiss as success since user saw the sheet.
-            if library.passes().isEmpty == false {
+            // Use containsPass for precise membership check rather than passes().isEmpty
+            if let pass, PKPassLibrary().containsPass(pass) {
                 onAdded()
             } else {
                 onCancelled()

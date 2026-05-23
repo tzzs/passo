@@ -20,6 +20,9 @@ struct RecognitionConfirmView: View {
     @State private var signingError: String?
     @State private var pkpassData: Data?
     @State private var showWalletSheet = false
+    @State private var showAddFieldSheet = false
+    @State private var newFieldLabel = ""
+    @State private var newFieldValue = ""
 
     private var nodePreference: NodePreference { NodePreference(rawValue: nodeRaw) ?? .auto }
 
@@ -213,7 +216,11 @@ struct RecognitionConfirmView: View {
     }
 
     private var addFieldRow: some View {
-        Button { /* TODO: Add custom field */ } label: {
+        Button {
+            newFieldLabel = ""
+            newFieldValue = ""
+            showAddFieldSheet = true
+        } label: {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
@@ -226,11 +233,61 @@ struct RecognitionConfirmView: View {
                 Text("添加自定义字段")
                     .font(.system(size: 15))
                     .foregroundStyle(theme.accent)
+                Spacer()
+                // Show slot availability
+                let usedSlots = (ticket.extraField1Label.isEmpty ? 0 : 1) +
+                                (ticket.extraField2Label.isEmpty ? 0 : 1)
+                Text("\(usedSlots)/2")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.tertiary)
             }
         }
         .buttonStyle(.plain)
         .padding(.horizontal, AppSpacing.md)
         .padding(.vertical, 12)
+        .sheet(isPresented: $showAddFieldSheet) {
+            addFieldSheet
+        }
+    }
+
+    private var addFieldSheet: some View {
+        NavigationStack {
+            Form {
+                Section("字段标签") {
+                    TextField("例：取票码、座位区域", text: $newFieldLabel)
+                }
+                Section("字段内容") {
+                    TextField("填写内容", text: $newFieldValue)
+                }
+            }
+            .navigationTitle("添加字段")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") { showAddFieldSheet = false }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("添加") {
+                        commitCustomField()
+                        showAddFieldSheet = false
+                    }
+                    .disabled(newFieldLabel.isEmpty || newFieldValue.isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private func commitCustomField() {
+        // Fill the first empty extra-field slot; show no-op if both occupied
+        if ticket.extraField1Label.isEmpty {
+            ticket.extraField1Label = newFieldLabel
+            ticket.extraField1Value = newFieldValue
+        } else if ticket.extraField2Label.isEmpty {
+            ticket.extraField2Label = newFieldLabel
+            ticket.extraField2Value = newFieldValue
+        }
+        // If both slots full, silently ignore — UI shows "2/2" hint
     }
 
     // MARK: Add to Wallet Button

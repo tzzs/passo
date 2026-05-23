@@ -24,6 +24,7 @@
 		A844A58E48C32F0373EEDDB2 /* SigningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7414454046D0D20E7B0A3BC0 /* SigningService.swift */; };
 		B8437754757FD9CFA80BB72C /* Ticket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EB4FFFB3E5323A44702A848 /* Ticket.swift */; };
 		BB8E8003CD161D5635D2FCC3 /* GlassCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56B3637ABE30F5345353721C /* GlassCardView.swift */; };
+		BCAB63311E2C8AF9756404BF /* StoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCE1EC0A750A2164DE38A167 /* StoreService.swift */; };
 		E0E127DEAED7F0F6ED9C98F4 /* PassBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21CCD280CACB4267082FB60B /* PassBuilder.swift */; };
 /* End PBXBuildFile section */
 
@@ -49,6 +50,7 @@
 		E0A65A73C8BED644269BF1DA /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		EAC63ABB292ACF839C7C55C1 /* TicketParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketParser.swift; sourceTree = "<group>"; };
 		F056606A6ADCE2DECE67CFD1 /* TicketCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketCardView.swift; sourceTree = "<group>"; };
+		FCE1EC0A750A2164DE38A167 /* StoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -142,6 +144,7 @@
 				21CCD280CACB4267082FB60B /* PassBuilder.swift */,
 				34380143A1056CF5DF006171 /* ReminderService.swift */,
 				7414454046D0D20E7B0A3BC0 /* SigningService.swift */,
+				FCE1EC0A750A2164DE38A167 /* StoreService.swift */,
 				EAC63ABB292ACF839C7C55C1 /* TicketParser.swift */,
 				1D0D485E8E2B4B02FC945F9C /* WalletPresenter.swift */,
 			);
@@ -239,6 +242,7 @@
 				698DB139BFF2BBFDBE4DCA51 /* ScanView.swift in Sources */,
 				347F9E1028F31F2A08F5052C /* SettingsView.swift in Sources */,
 				A844A58E48C32F0373EEDDB2 /* SigningService.swift in Sources */,
+				BCAB63311E2C8AF9756404BF /* StoreService.swift in Sources */,
 				B8437754757FD9CFA80BB72C /* Ticket.swift in Sources */,
 				2E39365D20EBD50AB9BF8BFD /* TicketCardView.swift in Sources */,
 				700999EB5649B621B1161297 /* TicketParser.swift in Sources */,
