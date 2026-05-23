@@ -47,7 +47,14 @@ struct WalletView: View {
         switch WalletFilter(rawValue: filterIndex) ?? .all {
         case .today:    return tickets.filter { $0.isToday && !$0.isUsed }
         case .upcoming: return tickets.filter { $0.isUpcoming }
-        case .all:      return tickets
+        case .all:
+            // Unused tickets first (sorted by date), used tickets sink to bottom
+            return tickets.sorted {
+                if $0.isUsed != $1.isUsed { return !$0.isUsed }
+                let d0 = $0.eventDate ?? .distantFuture
+                let d1 = $1.eventDate ?? .distantFuture
+                return d0 < d1
+            }
         }
     }
 

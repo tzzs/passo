@@ -203,6 +203,7 @@ struct PhotoImportView: View {
 
         let ticket = TicketParser.parse(barcodeValue: barcodeValue, ocrText: ocrText)
         ticket.barcodeFormat = barcodeFormat
+        ticket.sourceApp = "相册导入"
 
         // Capture thumbnail from selected image
         ticket.thumbnailData = await thumbnailData(from: uiImage)

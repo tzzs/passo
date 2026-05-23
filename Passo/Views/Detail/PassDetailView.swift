@@ -56,6 +56,12 @@ struct PassDetailView: View {
         .confirmationDialog("操作", isPresented: $showMenu, titleVisibility: .hidden) {
             Button("分享票据") { shareTicket() }
             Button("编辑备注") { editingNotes = ticket.notes; showEditNotes = true }
+            if ticket.isUsed {
+                Button("恢复使用") {
+                    ticket.isUsed = false
+                    try? modelContext.save()
+                }
+            }
             Button("删除票据", role: .destructive) { showDeleteConfirm = true }
             Button("取消", role: .cancel) {}
         }

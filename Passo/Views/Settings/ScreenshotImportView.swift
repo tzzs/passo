@@ -235,6 +235,7 @@ struct ScreenshotImportView: View {
                 }
 
                 let ticket = TicketParser.parse(barcodeValue: barcodeValue, ocrText: ocrText)
+                ticket.sourceApp = "截图导入"
                 let thumbData = image.preparingThumbnail(
                     of: CGSize(width: 104, height: 104)
                 )?.jpegData(compressionQuality: 0.7)

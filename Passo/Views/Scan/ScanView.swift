@@ -51,6 +51,7 @@ struct ScanView: View {
             guard let result, detectedTicket == nil else { return }
             let ticket = TicketParser.parse(barcodeValue: result.value, ocrText: camera.latestOCRText)
             ticket.barcodeFormat = result.format
+            ticket.sourceApp = "相机扫描"
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 detectedTicket = ticket
             }

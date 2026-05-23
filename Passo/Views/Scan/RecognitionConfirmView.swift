@@ -422,28 +422,40 @@ struct RecognitionConfirmView: View {
     // MARK: Add to Wallet Button
 
     private var addToWalletButton: some View {
-        Button {
-            Task { await addToWallet() }
-        } label: {
-            HStack(spacing: 8) {
-                if isSigning {
-                    ProgressView()
-                        .tint(isDark ? Color.black : Color.white)
-                } else {
-                    Image(systemName: "wallet.pass.fill")
-                        .font(.system(size: 18, weight: .semibold))
-                    Text("添加到 Wallet")
-                        .font(.system(size: 17, weight: .semibold))
+        VStack(spacing: 10) {
+            Button {
+                Task { await addToWallet() }
+            } label: {
+                HStack(spacing: 8) {
+                    if isSigning {
+                        ProgressView()
+                            .tint(isDark ? Color.black : Color.white)
+                    } else {
+                        Image(systemName: "wallet.pass.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                        Text("添加到 Wallet")
+                            .font(.system(size: 17, weight: .semibold))
+                    }
                 }
+                .foregroundStyle(isDark ? Color.black : Color.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+                .background(isDark ? Color.white : Color.black)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
             }
-            .foregroundStyle(isDark ? Color.black : Color.white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 54)
-            .background(isDark ? Color.white : Color.black)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
+            .disabled(isSigning)
+
+            // Save-only path — useful when signing server is unavailable
+            Button {
+                saveTicketOnly()
+            } label: {
+                Text("仅保存到票夹")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+            }
+            .disabled(isSigning)
         }
-        .disabled(isSigning)
         .padding(.horizontal, AppSpacing.md)
         .padding(.vertical, 12)
         .padding(.bottom, 40)
@@ -502,17 +514,35 @@ struct RecognitionConfirmView: View {
         }
     }
 
-    private func onPassAdded() {
-        ticket.isAddedToWallet = true
-        try? modelContext.save()
+    private func saveTicketOnly() {
+        guard !isAtFreeLimit else { showProGate = true; return }
+        persistTicket(addedToWallet: false)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        withAnimation { showAddedToast = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            withAnimation { showAddedToast = false }
+            dismiss()
+        }
+    }
 
+    private func onPassAdded() {
+        persistTicket(addedToWallet: true)
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         showWalletSheet = false
-
         withAnimation { showAddedToast = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             withAnimation { showAddedToast = false }
             dismiss()
         }
+    }
+
+    /// Insert ticket into SwiftData context (if not already inserted) and save.
+    private func persistTicket(addedToWallet: Bool) {
+        ticket.isAddedToWallet = addedToWallet
+        // Insert only if the ticket has no persistent model ID yet
+        if ticket.persistentModelID.storeIdentifier == nil {
+            modelContext.insert(ticket)
+        }
+        try? modelContext.save()
     }
 }
