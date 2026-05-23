@@ -1,4 +1,6 @@
 import SwiftUI
+import CoreImage
+import CoreImage.CIFilterBuiltins
 
 // MARK: - Card Size
 
@@ -378,8 +380,9 @@ struct TicketCardView: View {
 
     private var barcodeSection: some View {
         VStack(spacing: 6) {
-            QRCodePlaceholderView(
+            BarcodeImageView(
                 value: ticket.barcodeValue,
+                format: ticket.barcodeFormat,
                 size: ticket.isUsed ? 72 : 90,
                 color: ticket.isUsed ? Color.gray.opacity(0.5) : .black
             )
@@ -474,58 +477,73 @@ struct FlowLayout: Layout {
     }
 }
 
-// MARK: - QR Code Placeholder
+// MARK: - Barcode Image View
 
-/// Deterministic QR-code-like grid placeholder.
-/// Production implementation will use Vision framework output.
-struct QRCodePlaceholderView: View {
+/// Renders a real, scannable barcode using Core Image filters.
+/// Supports QR codes and Code128 linear barcodes.
+struct BarcodeImageView: View {
     let value: String
+    let format: String
     let size: CGFloat
     let color: Color
 
-    private let gridSize = 21
+    @State private var barcodeImage: UIImage?
 
     var body: some View {
-        Canvas { context, canvasSize in
-            let cell = canvasSize.width / CGFloat(gridSize)
-            for row in 0..<gridSize {
-                for col in 0..<gridSize {
-                    if shouldFill(row: row, col: col) {
-                        let rect = CGRect(
-                            x: CGFloat(col) * cell,
-                            y: CGFloat(row) * cell,
-                            width: cell + 0.5,
-                            height: cell + 0.5
-                        )
-                        context.fill(Path(rect), with: .color(color))
-                    }
-                }
+        Group {
+            if let img = barcodeImage {
+                Image(uiImage: img)
+                    .interpolation(.none)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: isLinear ? size * 2.2 : size, height: size)
+                    .colorMultiply(color)
+            } else {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.15))
+                    .frame(width: isLinear ? size * 2.2 : size, height: size)
             }
         }
-        .frame(width: size, height: size)
-    }
-
-    private func shouldFill(row: Int, col: Int) -> Bool {
-        // Finder patterns (top-left, top-right, bottom-left)
-        if isFinderPattern(row: row, col: col) { return true }
-        // Timing pattern
-        if row == 6 && col >= 8 && col <= gridSize - 9 { return col % 2 == 0 }
-        if col == 6 && row >= 8 && row <= gridSize - 9 { return row % 2 == 0 }
-        // Data modules: deterministic hash of value + position
-        let seed = value.unicodeScalars.reduce(42) { $0 &+ Int($1.value) }
-        return ((row &* gridSize &+ col &* 1103515245 &+ seed) >> 16) & 1 == 1
-    }
-
-    private func isFinderPattern(row: Int, col: Int) -> Bool {
-        let corners = [(0, 0), (0, gridSize - 7), (gridSize - 7, 0)]
-        for (tr, tc) in corners {
-            let lr = row - tr, lc = col - tc
-            guard lr >= 0 && lr < 7 && lc >= 0 && lc < 7 else { continue }
-            if lr == 0 || lr == 6 || lc == 0 || lc == 6 { return true }
-            if lr >= 2 && lr <= 4 && lc >= 2 && lc <= 4 { return true }
-            return false
+        .task(id: value) {
+            barcodeImage = await generateBarcode()
         }
-        return false
+    }
+
+    private var isLinear: Bool { format != "QR" && format != "DataMatrix" && format != "Aztec" }
+
+    private func generateBarcode() async -> UIImage? {
+        guard !value.isEmpty else { return nil }
+        return await Task.detached(priority: .userInitiated) {
+            let data = value.data(using: .utf8) ?? Data()
+            let ciContext = CIContext()
+
+            if self.format == "QR" || self.format == "DataMatrix" || self.format == "Aztec" {
+                return self.generateQR(data: data, context: ciContext)
+            } else {
+                return self.generateCode128(data: data, context: ciContext)
+            }
+        }.value
+    }
+
+    private nonisolated func generateQR(data: Data, context: CIContext) -> UIImage? {
+        let filter = CIFilter.qrCodeGenerator()
+        filter.message = data
+        filter.correctionLevel = "M"
+        return renderCIImage(filter.outputImage, scale: 10, context: context)
+    }
+
+    private nonisolated func generateCode128(data: Data, context: CIContext) -> UIImage? {
+        let filter = CIFilter.code128BarcodeGenerator()
+        filter.message = data
+        filter.quietSpace = 4
+        return renderCIImage(filter.outputImage, scale: 3, context: context)
+    }
+
+    private nonisolated func renderCIImage(_ ciImage: CIImage?, scale: CGFloat, context: CIContext) -> UIImage? {
+        guard let ciImage else { return nil }
+        let scaled = ciImage.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        guard let cgImage = context.createCGImage(scaled, from: scaled.extent) else { return nil }
+        return UIImage(cgImage: cgImage)
     }
 }
 

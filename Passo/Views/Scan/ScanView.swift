@@ -9,7 +9,8 @@ struct ScanView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
-    @State private var detectedBarcode: String?
+    @StateObject private var camera = CameraService()
+
     @State private var isFlashOn = false
     @State private var showConfirmSheet = false
     @State private var scanLineOffset: CGFloat = -60
@@ -20,11 +21,8 @@ struct ScanView: View {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Camera region (top ~52%)
                 cameraRegion
-
-                // Bottom result sheet
-                if detectedBarcode != nil {
+                if detectedTicket != nil {
                     resultSheet
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
@@ -34,34 +32,37 @@ struct ScanView: View {
         .sheet(item: $detectedTicket) { ticket in
             RecognitionConfirmView(ticket: ticket)
         }
-        .onAppear { startScanAnimation() }
+        .onAppear {
+            camera.requestPermissionAndStart()
+            startScanAnimation()
+        }
+        .onDisappear {
+            camera.stop()
+        }
+        .onChange(of: camera.detectedBarcode) { _, result in
+            guard let result, detectedTicket == nil else { return }
+            // Parse with empty OCR text; in a future enhancement, a concurrent OCR
+            // pass on the frame could enrich the ticket with field values.
+            let ticket = TicketParser.parse(barcodeValue: result.value, ocrText: "")
+            ticket.barcodeFormat = result.format
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                detectedTicket = ticket
+            }
+        }
     }
 
     // MARK: Camera Region
 
     private var cameraRegion: some View {
         ZStack {
-            // Camera preview placeholder
-            // Production: replace with UIViewRepresentable wrapping AVCaptureVideoPreviewLayer
-            Rectangle()
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: "#0a0a0e"), Color(hex: "#111118")],
-                        startPoint: .top, endPoint: .bottom
-                    )
-                )
-
-            // Noise texture overlay
-            Rectangle()
-                .fill(
-                    LinearGradient(
-                        colors: stride(from: 0, to: 20, by: 1).flatMap { _ in
-                            [Color.white.opacity(0.03), Color.clear]
-                        },
-                        startPoint: .top, endPoint: .bottom
-                    )
-                )
-                .opacity(0.06)
+            switch camera.authorizationStatus {
+            case .authorized, .notDetermined:
+                CameraPreviewView(previewLayer: camera.previewLayer)
+            case .denied, .restricted:
+                permissionDeniedOverlay
+            @unknown default:
+                Color.black
+            }
 
             // Top controls
             VStack {
@@ -75,8 +76,8 @@ struct ScanView: View {
                 Spacer()
             }
 
-            // Detection indicator
-            if detectedBarcode != nil {
+            // Detection badge
+            if detectedTicket != nil {
                 VStack {
                     detectedBadge
                         .padding(.top, 102)
@@ -84,17 +85,16 @@ struct ScanView: View {
                 }
             }
 
-            // Scan frame
             scanFrame
         }
         .frame(maxWidth: .infinity)
         .frame(height: UIScreen.main.bounds.height * 0.52)
     }
 
+    // MARK: Controls
+
     private var closeButton: some View {
-        Button {
-            dismiss()
-        } label: {
+        Button { dismiss() } label: {
             Image(systemName: "xmark")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(.white)
@@ -108,7 +108,7 @@ struct ScanView: View {
     private var flashButton: some View {
         Button {
             isFlashOn.toggle()
-            // TODO: toggle AVCaptureDevice torch
+            camera.setTorch(isFlashOn)
         } label: {
             Image(systemName: isFlashOn ? "bolt.fill" : "bolt")
                 .font(.system(size: 16, weight: .medium))
@@ -133,29 +133,25 @@ struct ScanView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 5)
         .background(TicketType.movie.theme.accent.opacity(0.13))
-        .overlay(
-            Capsule().strokeBorder(TicketType.movie.theme.accent.opacity(0.27), lineWidth: 1)
-        )
+        .overlay(Capsule().strokeBorder(TicketType.movie.theme.accent.opacity(0.27), lineWidth: 1))
         .clipShape(Capsule())
     }
 
     private var scanFrame: some View {
         GeometryReader { geo in
-            let frameLeft   = geo.size.width * 0.14
+            let frameLeft   = geo.size.width  * 0.14
             let frameTop    = geo.size.height * 0.22
-            let frameRight  = geo.size.width * 0.14
+            let frameRight  = geo.size.width  * 0.14
             let frameBottom = geo.size.height * 0.14
             let frameWidth  = geo.size.width  - frameLeft - frameRight
             let frameHeight = geo.size.height - frameTop  - frameBottom
 
             ZStack {
-                // Corner brackets
                 ScanCornerBrackets(
                     rect: CGRect(x: frameLeft, y: frameTop, width: frameWidth, height: frameHeight),
                     color: TicketType.movie.theme.accent
                 )
 
-                // Animated scan line
                 Rectangle()
                     .fill(
                         LinearGradient(
@@ -168,7 +164,6 @@ struct ScanView: View {
                     .position(x: geo.size.width / 2, y: frameTop + frameHeight / 2 + scanLineOffset)
                     .clipped()
 
-                // Hint label
                 Text("对准条码或二维码")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.white.opacity(0.5))
@@ -177,18 +172,46 @@ struct ScanView: View {
         }
     }
 
+    // MARK: Permission Denied
+
+    private var permissionDeniedOverlay: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "camera.slash")
+                .font(.system(size: 48, weight: .light))
+                .foregroundStyle(.white.opacity(0.5))
+            Text("需要相机权限")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.white)
+            Text("前往「设置 → Passo → 相机」开启")
+                .font(.system(size: 14))
+                .foregroundStyle(.white.opacity(0.6))
+                .multilineTextAlignment(.center)
+            Button("打开设置") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            .font(.system(size: 15, weight: .medium))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 10)
+            .background(Color.white.opacity(0.15))
+            .clipShape(Capsule())
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black)
+    }
+
     // MARK: Result Sheet
 
     private var resultSheet: some View {
         VStack(spacing: 0) {
-            // Grabber
             Capsule()
                 .fill(Color(uiColor: .systemGray4))
                 .frame(width: 36, height: 5)
                 .padding(.top, 8)
                 .padding(.bottom, 10)
 
-            // Status
             HStack {
                 HStack(spacing: 6) {
                     Circle().fill(Color.green).frame(width: 8, height: 8)
@@ -196,22 +219,26 @@ struct ScanView: View {
                         .font(.system(size: 14, weight: .medium))
                 }
                 Spacer()
-                Text("轻触编辑")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
+                Button {
+                    withAnimation {
+                        detectedTicket = nil
+                        camera.detectedBarcode = nil
+                    }
+                } label: {
+                    Text("重新扫描")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                }
             }
             .padding(.horizontal, AppSpacing.md)
             .padding(.bottom, 10)
 
-            // Ticket preview
             if let ticket = detectedTicket {
                 TicketCardView(ticket: ticket, size: .full, isDark: false)
                     .padding(.horizontal, AppSpacing.md)
             }
 
-            // Action buttons
             HStack(spacing: 10) {
-                // Primary: Add to Wallet
                 Button {
                     showConfirmSheet = true
                 } label: {
@@ -228,7 +255,6 @@ struct ScanView: View {
                     .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
                 }
 
-                // Secondary: Expand
                 Button {
                     showConfirmSheet = true
                 } label: {
@@ -269,7 +295,6 @@ private struct ScanCornerBrackets: View {
         let strokeWidth: CGFloat = 3
 
         ZStack {
-            // Top-left
             Path { p in
                 p.move(to: CGPoint(x: rect.minX, y: rect.minY + bracketSize))
                 p.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
@@ -278,7 +303,6 @@ private struct ScanCornerBrackets: View {
             .stroke(color, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
             .shadow(color: color.opacity(0.4), radius: 6)
 
-            // Top-right
             Path { p in
                 p.move(to: CGPoint(x: rect.maxX - bracketSize, y: rect.minY))
                 p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
@@ -287,7 +311,6 @@ private struct ScanCornerBrackets: View {
             .stroke(color, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
             .shadow(color: color.opacity(0.4), radius: 6)
 
-            // Bottom-left
             Path { p in
                 p.move(to: CGPoint(x: rect.minX, y: rect.maxY - bracketSize))
                 p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
@@ -296,7 +319,6 @@ private struct ScanCornerBrackets: View {
             .stroke(color, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
             .shadow(color: color.opacity(0.4), radius: 6)
 
-            // Bottom-right
             Path { p in
                 p.move(to: CGPoint(x: rect.maxX - bracketSize, y: rect.maxY))
                 p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
