@@ -282,6 +282,12 @@ struct WalletView: View {
 }
 
 #Preview {
-    WalletView(onScanTapped: {})
-        .modelContainer(for: Ticket.self, inMemory: true)
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Ticket.self, configurations: config)
+    // Seed preview data — one ticket per type
+    for type in TicketType.allCases {
+        container.mainContext.insert(Ticket.preview(type))
+    }
+    return WalletView(onScanTapped: {})
+        .modelContainer(container)
 }
