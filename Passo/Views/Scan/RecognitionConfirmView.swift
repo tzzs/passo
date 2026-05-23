@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import PassKit
 
 // MARK: - Recognition Confirm View
 
@@ -12,7 +13,15 @@ struct RecognitionConfirmView: View {
 
     @Bindable var ticket: Ticket
 
+    @AppStorage("signingNodePreference") private var nodeRaw = NodePreference.auto.rawValue
+
     @State private var showAddedToast = false
+    @State private var isSigning = false
+    @State private var signingError: String?
+    @State private var pkpassData: Data?
+    @State private var showWalletSheet = false
+
+    private var nodePreference: NodePreference { NodePreference(rawValue: nodeRaw) ?? .auto }
 
     private var isDark: Bool { colorScheme == .dark }
     private var theme: TicketTheme { ticket.ticketType.theme }
@@ -31,6 +40,21 @@ struct RecognitionConfirmView: View {
             if showAddedToast { successToast }
         }
         .navigationBarHidden(true)
+        .sheet(isPresented: $showWalletSheet) {
+            if let data = pkpassData {
+                WalletPresenter(passData: data) {
+                    onPassAdded()
+                } onCancelled: {
+                    showWalletSheet = false
+                }
+                .ignoresSafeArea()
+            }
+        }
+        .alert("签名失败", isPresented: .constant(signingError != nil), actions: {
+            Button("确定") { signingError = nil }
+        }, message: {
+            Text(signingError ?? "")
+        })
     }
 
     // MARK: Background
@@ -213,13 +237,18 @@ struct RecognitionConfirmView: View {
 
     private var addToWalletButton: some View {
         Button {
-            addToWallet()
+            Task { await addToWallet() }
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: "wallet.pass.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                Text("添加到 Wallet")
-                    .font(.system(size: 17, weight: .semibold))
+                if isSigning {
+                    ProgressView()
+                        .tint(isDark ? Color.black : Color.white)
+                } else {
+                    Image(systemName: "wallet.pass.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                    Text("添加到 Wallet")
+                        .font(.system(size: 17, weight: .semibold))
+                }
             }
             .foregroundStyle(isDark ? Color.black : Color.white)
             .frame(maxWidth: .infinity)
@@ -228,6 +257,7 @@ struct RecognitionConfirmView: View {
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
         }
+        .disabled(isSigning)
         .padding(.horizontal, AppSpacing.md)
         .padding(.vertical, 12)
         .padding(.bottom, 40)
@@ -256,13 +286,33 @@ struct RecognitionConfirmView: View {
 
     // MARK: Actions
 
-    private func addToWallet() {
-        // TODO: call PassKit signing service
-        ticket.passSerialNumber = UUID().uuidString
+    private func addToWallet() async {
+        isSigning = true
+        defer { isSigning = false }
+
+        if ticket.passSerialNumber == nil {
+            ticket.passSerialNumber = UUID().uuidString
+        }
+
+        // Capture a value snapshot to cross the actor boundary safely
+        let snapshot = TicketSnapshot(ticket: ticket)
+        let pref = nodePreference
+
+        do {
+            let data = try await SigningService.sign(snapshot: snapshot, nodePreference: pref)
+            pkpassData = data
+            showWalletSheet = true
+        } catch {
+            signingError = (error as? SigningError)?.errorDescription ?? error.localizedDescription
+        }
+    }
+
+    private func onPassAdded() {
         ticket.isAddedToWallet = true
         try? modelContext.save()
 
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        showWalletSheet = false
 
         withAnimation { showAddedToast = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {

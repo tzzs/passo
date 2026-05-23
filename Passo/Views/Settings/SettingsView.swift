@@ -170,22 +170,6 @@ private struct ProStatusCard: View {
     }
 }
 
-// MARK: - Node Preference
-
-enum NodePreference: String, CaseIterable {
-    case auto     = "auto"
-    case domestic = "domestic"
-    case overseas = "overseas"
-
-    var displayName: String {
-        switch self {
-        case .auto:     return "自动"
-        case .domestic: return "国内节点"
-        case .overseas: return "海外节点 (Cloudflare)"
-        }
-    }
-}
-
 // MARK: - Placeholder Sheets
 
 private struct ProUpgradeView: View {

@@ -261,7 +261,7 @@ struct PassDetailView: View {
 
     private var openWalletButton: some View {
         Button {
-            // TODO: open system Wallet app via pass URL scheme
+            UIApplication.shared.openWallet()
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "wallet.pass")
