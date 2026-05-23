@@ -12,6 +12,7 @@
 		1ABD982041FF0E0D14B84B3F /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC67683C5D8ACEE177AA30B /* WalletView.swift */; };
 		2E39365D20EBD50AB9BF8BFD /* TicketCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F056606A6ADCE2DECE67CFD1 /* TicketCardView.swift */; };
 		347F9E1028F31F2A08F5052C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EEDC446E43178C3565AFF53 /* SettingsView.swift */; };
+		3AB947B2F7597ADB274B85C9 /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34380143A1056CF5DF006171 /* ReminderService.swift */; };
 		57424267B76A02553DCA4D5D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A65A73C8BED644269BF1DA /* AppTheme.swift */; };
 		698DB139BFF2BBFDBE4DCA51 /* ScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA0887C01B87EB0EF76CA62 /* ScanView.swift */; };
 		6ED0D67F72EEFDFAADCE4B9B /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C0EEE25F45C15570C3516D9 /* CameraService.swift */; };
@@ -32,6 +33,7 @@
 		1A04F3BB9D8DF2E510103862 /* PassDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassDetailView.swift; sourceTree = "<group>"; };
 		1D0D485E8E2B4B02FC945F9C /* WalletPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletPresenter.swift; sourceTree = "<group>"; };
 		21CCD280CACB4267082FB60B /* PassBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassBuilder.swift; sourceTree = "<group>"; };
+		34380143A1056CF5DF006171 /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
 		3AC67683C5D8ACEE177AA30B /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		52B6103FEDB9C1AB75B55EB1 /* RecognitionConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognitionConfirmView.swift; sourceTree = "<group>"; };
 		56B3637ABE30F5345353721C /* GlassCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCardView.swift; sourceTree = "<group>"; };
@@ -39,6 +41,7 @@
 		7414454046D0D20E7B0A3BC0 /* SigningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SigningService.swift; sourceTree = "<group>"; };
 		779091FEBA240173A77EE3AC /* PassoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassoApp.swift; sourceTree = "<group>"; };
 		8785A1542D28E66674E87567 /* PhotoImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoImportView.swift; sourceTree = "<group>"; };
+		97C9F3780B86FBC897F44E9A /* Passo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Passo.entitlements; sourceTree = "<group>"; };
 		9EEDC446E43178C3565AFF53 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A5828C11113B0230DCC90670 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A7372016D63A2348DAD153AE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -63,6 +66,7 @@
 			children = (
 				A7372016D63A2348DAD153AE /* ContentView.swift */,
 				A5828C11113B0230DCC90670 /* Info.plist */,
+				97C9F3780B86FBC897F44E9A /* Passo.entitlements */,
 				779091FEBA240173A77EE3AC /* PassoApp.swift */,
 				01A1081E4EC431692BC4F3A3 /* Components */,
 				4948FFFE7C6B79219A911331 /* Models */,
@@ -136,6 +140,7 @@
 			children = (
 				0C0EEE25F45C15570C3516D9 /* CameraService.swift */,
 				21CCD280CACB4267082FB60B /* PassBuilder.swift */,
+				34380143A1056CF5DF006171 /* ReminderService.swift */,
 				7414454046D0D20E7B0A3BC0 /* SigningService.swift */,
 				EAC63ABB292ACF839C7C55C1 /* TicketParser.swift */,
 				1D0D485E8E2B4B02FC945F9C /* WalletPresenter.swift */,
@@ -230,6 +235,7 @@
 				99B2A05CF21020DCCA6CE3DE /* PassoApp.swift in Sources */,
 				031731B8F7CB0DB60E36965E /* PhotoImportView.swift in Sources */,
 				A10C0CBCED3D61588DE5F225 /* RecognitionConfirmView.swift in Sources */,
+				3AB947B2F7597ADB274B85C9 /* ReminderService.swift in Sources */,
 				698DB139BFF2BBFDBE4DCA51 /* ScanView.swift in Sources */,
 				347F9E1028F31F2A08F5052C /* SettingsView.swift in Sources */,
 				A844A58E48C32F0373EEDDB2 /* SigningService.swift in Sources */,
@@ -248,6 +254,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Passo/Passo.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Passo/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -334,6 +341,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Passo/Passo.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Passo/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;

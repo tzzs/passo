@@ -42,6 +42,21 @@ targets:
           - UIInterfaceOrientationPortrait
         NSCameraUsageDescription: "扫描票据条码和二维码"
         NSPhotoLibraryUsageDescription: "从相册导入票据截图"
+        NSLocationWhenInUseUsageDescription: "在你到达场馆时发送票据提醒"
+        NSUbiquitousContainers:
+          iCloud.com.passo.app:
+            NSUbiquitousContainerIsDocumentScopePublic: false
+            NSUbiquitousContainerName: Passo
+            NSUbiquitousContainerSupportedFolderLevels: None
+    entitlements:
+      path: Passo/Passo.entitlements
+      properties:
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.com.passo.app
+        com.apple.developer.icloud-services:
+          - CloudKit
+        com.apple.developer.ubiquity-kvstore-identifier: $(TeamIdentifierPrefix)com.passo.app
+
     settings:
       base:
         INFOPLIST_FILE: Passo/Info.plist

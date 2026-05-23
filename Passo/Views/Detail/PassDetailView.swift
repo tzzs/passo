@@ -1,5 +1,6 @@
 import SwiftUI
 import PassKit
+import MapKit
 
 // MARK: - Pass Detail View
 
@@ -9,9 +10,17 @@ struct PassDetailView: View {
     @Environment(\.dismiss)     private var dismiss
     @Environment(\.colorScheme) private var colorScheme
 
+    @Environment(\.modelContext) private var modelContext
+
     let ticket: Ticket
 
     @State private var isFlipped = false
+    // M5: map snapshot
+    @State private var mapSnapshot: UIImage?
+    @State private var mapCoordinate: CLLocationCoordinate2D?
+    // M4: reminder toggle
+    @State private var reminderEnabled: Bool = false
+    @State private var scheduledReminderDate: Date?
 
     private var isDark: Bool { colorScheme == .dark }
     private var theme: TicketTheme { ticket.ticketType.theme }
@@ -33,6 +42,11 @@ struct PassDetailView: View {
         }
         .navigationBarHidden(true)
         .statusBarHidden(false)
+        .task {
+            reminderEnabled = ticket.reminderEnabled
+            scheduledReminderDate = ReminderService.reminderDate(for: TicketSnapshot(ticket: ticket))
+            await loadMapSnapshot()
+        }
     }
 
     // MARK: Background
@@ -183,7 +197,7 @@ struct PassDetailView: View {
             mapPreview
             infoRow(icon: "🕐", label: "过期时间", value: expiryText)
             Divider().padding(.horizontal, AppSpacing.md)
-            infoRow(icon: "🔔", label: "提醒",     value: reminderText)
+            reminderRow
             Divider().padding(.horizontal, AppSpacing.md)
             infoRow(icon: "📱", label: "来源",     value: ticket.sourceApp.isEmpty ? "手动录入" : ticket.sourceApp)
         }
@@ -193,50 +207,178 @@ struct PassDetailView: View {
         .padding(.horizontal, AppSpacing.md)
     }
 
+    // MARK: M5 — Map Preview
+
     private var mapPreview: some View {
-        ZStack {
-            // Placeholder map gradient
-            LinearGradient(
-                colors: isDark
-                    ? [theme.backgroundStart.opacity(0.27), theme.backgroundEnd.opacity(0.27)]
-                    : [Color(hex: "#e8e6e0"), Color(hex: "#d4d1c9")],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            )
-
-            // Sketchy road lines
-            Canvas { context, size in
-                let path = Path { p in
-                    p.move(to: CGPoint(x: 0, y: size.height * 0.5))
-                    p.addCurve(
-                        to: CGPoint(x: size.width, y: size.height * 0.4),
-                        control1: CGPoint(x: size.width * 0.3, y: size.height * 0.3),
-                        control2: CGPoint(x: size.width * 0.7, y: size.height * 0.5)
+        Button {
+            openInMaps()
+        } label: {
+            ZStack {
+                if let img = mapSnapshot {
+                    Image(uiImage: img)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    // Loading / no-location placeholder
+                    LinearGradient(
+                        colors: isDark
+                            ? [theme.backgroundStart.opacity(0.27), theme.backgroundEnd.opacity(0.27)]
+                            : [Color(hex: "#e8e6e0"), Color(hex: "#d4d1c9")],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
                     )
+                    if ticket.venueAddress.isEmpty && ticket.latitude == nil {
+                        Label("暂无位置信息", systemImage: "map")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ProgressView()
+                    }
                 }
-                context.stroke(path, with: .color(isDark ? Color.white.opacity(0.2) : Color.black.opacity(0.15)), lineWidth: 1)
-            }
 
-            // Location pin
-            Image(systemName: "mappin.circle.fill")
-                .font(.system(size: 28))
-                .foregroundStyle(theme.accent)
-                .shadow(color: theme.accent.opacity(0.4), radius: 8)
+                // Pin overlay
+                Image(systemName: "mappin.circle.fill")
+                    .font(.system(size: 28))
+                    .foregroundStyle(theme.accent)
+                    .shadow(color: theme.accent.opacity(0.5), radius: 6)
+                    .opacity(mapSnapshot != nil ? 1 : 0)
 
-            // Walking distance badge
-            if !ticket.venueAddress.isEmpty {
-                Text("步行 ~8 分钟")
-                    .font(.system(size: 11, weight: .medium))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                    .padding(8)
+                // "在地图中打开" hint
+                if mapSnapshot != nil {
+                    Text("点击在地图中打开")
+                        .font(.system(size: 11, weight: .medium))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                        .padding(8)
+                }
             }
         }
-        .frame(height: 100)
+        .buttonStyle(.plain)
+        .frame(height: 110)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(AppSpacing.md)
+        .disabled(mapCoordinate == nil && ticket.venueAddress.isEmpty)
+    }
+
+    private func loadMapSnapshot() async {
+        // Resolve coordinate: use stored lat/lon, or geocode the address
+        let coordinate: CLLocationCoordinate2D
+        if let lat = ticket.latitude, let lon = ticket.longitude {
+            coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+        } else if !ticket.venueAddress.isEmpty {
+            guard let geocoded = await geocodeAddress(ticket.venueAddress) else { return }
+            coordinate = geocoded
+        } else if !ticket.venue.isEmpty {
+            guard let geocoded = await geocodeAddress(ticket.venue) else { return }
+            coordinate = geocoded
+        } else {
+            return
+        }
+
+        mapCoordinate = coordinate
+
+        let options = MKMapSnapshotter.Options()
+        options.region = MKCoordinateRegion(
+            center: coordinate,
+            latitudinalMeters: 600,
+            longitudinalMeters: 600
+        )
+        options.size = CGSize(width: UIScreen.main.bounds.width - 32, height: 110)
+        options.scale = UIScreen.main.scale
+        options.mapType = .standard
+        options.showsBuildings = true
+
+        let snapshotter = MKMapSnapshotter(options: options)
+        guard let snapshot = try? await snapshotter.start() else { return }
+
+        // Draw pin on snapshot
+        let image = UIGraphicsImageRenderer(size: options.size).image { _ in
+            snapshot.image.draw(at: .zero)
+            let point = snapshot.point(for: coordinate)
+            let pin = UIImage(systemName: "mappin.circle.fill",
+                              withConfiguration: UIImage.SymbolConfiguration(pointSize: 28, weight: .regular))!
+                .withTintColor(UIColor(theme.accent), renderingMode: .alwaysOriginal)
+            pin.draw(at: CGPoint(x: point.x - pin.size.width / 2,
+                                 y: point.y - pin.size.height))
+        }
+
+        mapSnapshot = image
+    }
+
+    private func geocodeAddress(_ address: String) async -> CLLocationCoordinate2D? {
+        try? await withCheckedThrowingContinuation { continuation in
+            CLGeocoder().geocodeAddressString(address) { placemarks, error in
+                if let coord = placemarks?.first?.location?.coordinate {
+                    continuation.resume(returning: coord)
+                } else {
+                    continuation.resume(throwing: error ?? URLError(.unknown))
+                }
+            }
+        }
+    }
+
+    private func openInMaps() {
+        guard let coord = mapCoordinate else { return }
+        let item = MKMapItem(placemark: MKPlacemark(coordinate: coord))
+        item.name = ticket.venue.isEmpty ? ticket.title : ticket.venue
+        item.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
+    }
+
+    // MARK: M4 — Reminder Row
+
+    private var reminderRow: some View {
+        HStack(spacing: 12) {
+            Text("🔔")
+                .font(.system(size: 18))
+                .frame(width: 28, alignment: .center)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("提醒")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                if reminderEnabled, let date = scheduledReminderDate {
+                    Text(date.formatted(date: .abbreviated, time: .shortened))
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(isDark ? .white : .black)
+                } else {
+                    Text("未设置")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer()
+
+            Toggle("", isOn: $reminderEnabled)
+                .labelsHidden()
+                .tint(theme.accent)
+                .onChange(of: reminderEnabled) { _, enabled in
+                    Task { await toggleReminder(enabled) }
+                }
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.vertical, 12)
+    }
+
+    private func toggleReminder(_ enable: Bool) async {
+        let snapshot = TicketSnapshot(ticket: ticket)
+        if enable {
+            let date = await ReminderService.scheduleReminder(snapshot: snapshot, ticketID: ticket.id)
+            scheduledReminderDate = date
+            ticket.reminderEnabled = date != nil
+            ticket.reminderDate    = date
+            if date == nil { reminderEnabled = false }
+            if snapshot.latitude != nil || !snapshot.venueAddress.isEmpty {
+                await ReminderService.scheduleLocationReminder(snapshot: snapshot, ticketID: ticket.id)
+            }
+        } else {
+            ReminderService.cancelReminder(ticketID: ticket.id)
+            ticket.reminderEnabled = false
+            ticket.reminderDate    = nil
+        }
+        try? modelContext.save()
     }
 
     private func infoRow(icon: String, label: String, value: String) -> some View {
@@ -288,8 +430,4 @@ struct PassDetailView: View {
         return exp.formatted(date: .abbreviated, time: .shortened)
     }
 
-    private var reminderText: String {
-        guard ticket.reminderEnabled, let date = ticket.reminderDate else { return "未设置" }
-        return date.formatted(date: .omitted, time: .shortened) + " 前提醒"
-    }
 }
