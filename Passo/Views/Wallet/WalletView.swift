@@ -32,6 +32,10 @@ struct WalletView: View {
     @State private var filterIndex = 0
     @State private var selectedTicket: Ticket?
     @State private var topCardOffset: CGSize = .zero
+    @State private var swipeAction: SwipeAction?
+    @State private var showPhotoImport = false
+
+    private enum SwipeAction { case delete, markUsed }
 
     private var isDark: Bool { colorScheme == .dark }
 
@@ -73,6 +77,9 @@ struct WalletView: View {
         .navigationDestination(item: $selectedTicket) { ticket in
             PassDetailView(ticket: ticket)
         }
+        .sheet(isPresented: $showPhotoImport) {
+            PhotoImportView()
+        }
     }
 
     // MARK: Sub-views
@@ -112,12 +119,22 @@ struct WalletView: View {
 
             Spacer()
 
-            GlassPillButton(isDark: isDark, action: onScanTapped) {
-                AnyView(
-                    Image(systemName: "qrcode.viewfinder")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(isDark ? .white : .black)
-                )
+            HStack(spacing: 10) {
+                GlassPillButton(isDark: isDark, action: { showPhotoImport = true }) {
+                    AnyView(
+                        Image(systemName: "photo.badge.plus")
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(isDark ? .white : .black)
+                    )
+                }
+
+                GlassPillButton(isDark: isDark, action: onScanTapped) {
+                    AnyView(
+                        Image(systemName: "qrcode.viewfinder")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundStyle(isDark ? .white : .black)
+                    )
+                }
             }
         }
         .padding(.horizontal, AppSpacing.md)
@@ -171,11 +188,17 @@ struct WalletView: View {
 
                 // Top card
                 if let top = filteredTickets.first {
-                    TicketCardView(ticket: top, size: .full, isDark: isDark)
-                        .offset(topCardOffset)
-                        .gesture(swipeGesture)
-                        .onTapGesture { selectedTicket = top }
-                        .zIndex(10)
+                    ZStack {
+                        TicketCardView(ticket: top, size: .full, isDark: isDark)
+
+                        // Swipe action labels — fade in as card moves
+                        swipeLabels(for: top)
+                    }
+                    .offset(topCardOffset)
+                    .rotationEffect(.degrees(Double(topCardOffset.width) / 22))
+                    .gesture(swipeGesture(for: top))
+                    .onTapGesture { selectedTicket = top }
+                    .zIndex(10)
                 }
 
                 // Peek of second card
@@ -266,18 +289,103 @@ struct WalletView: View {
         .padding(.bottom, 24)
     }
 
-    // MARK: Swipe Gesture (dismiss top card)
+    // MARK: Swipe Labels
 
-    private var swipeGesture: some Gesture {
+    @ViewBuilder
+    private func swipeLabels(for ticket: Ticket) -> some View {
+        let dragX = topCardOffset.width
+        let progress = min(abs(dragX) / swipeThreshold, 1.0)
+
+        HStack {
+            // Right swipe → mark used
+            if dragX > 20 {
+                Label(ticket.isUsed ? "已归档" : "标记使用", systemImage: ticket.isUsed ? "archivebox" : "checkmark.circle.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Color.green.opacity(0.85))
+                    .clipShape(Capsule())
+                    .opacity(progress)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 20)
+            }
+
+            // Left swipe → delete
+            if dragX < -20 {
+                Label("删除", systemImage: "trash.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Color.red.opacity(0.85))
+                    .clipShape(Capsule())
+                    .opacity(progress)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.trailing, 20)
+            }
+        }
+    }
+
+    // MARK: Swipe Gesture
+
+    private let swipeThreshold: CGFloat = 120
+
+    private func swipeGesture(for ticket: Ticket) -> some Gesture {
         DragGesture()
             .onChanged { value in
-                topCardOffset = value.translation
+                // Only allow horizontal swipe; dampen vertical drift
+                topCardOffset = CGSize(
+                    width: value.translation.width,
+                    height: value.translation.height * 0.15
+                )
             }
             .onEnded { value in
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                    topCardOffset = .zero
+                let dx = value.translation.width
+
+                if dx > swipeThreshold {
+                    commitSwipe(direction: .right, ticket: ticket)
+                } else if dx < -swipeThreshold {
+                    commitSwipe(direction: .left, ticket: ticket)
+                } else {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                        topCardOffset = .zero
+                    }
                 }
             }
+    }
+
+    private func commitSwipe(direction: HorizontalDirection, ticket: Ticket) {
+        let screenWidth = UIScreen.main.bounds.width
+        let flyX: CGFloat = direction == .right ? screenWidth + 100 : -(screenWidth + 100)
+
+        withAnimation(.spring(response: 0.38, dampingFraction: 0.8), completionCriteria: .removed) {
+            topCardOffset = CGSize(width: flyX, height: topCardOffset.height)
+        } completion: {
+            topCardOffset = .zero
+            if direction == .right {
+                ticket.isUsed = true
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } else {
+                modelContext.delete(ticket)
+                UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            }
+            try? modelContext.save()
+        }
+    }
+
+    private enum HorizontalDirection { case left, right }
+}
+
+// MARK: - Photo Import Entry (WalletView header button)
+
+extension WalletView {
+    var photoImportButton: some View {
+        Button { showPhotoImport = true } label: {
+            Image(systemName: "photo.badge.plus")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(isDark ? .white : .black)
+        }
     }
 }
 

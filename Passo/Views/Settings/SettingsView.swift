@@ -11,8 +11,9 @@ struct SettingsView: View {
 
     @AppStorage("signingNodePreference") private var nodePreference = NodePreference.auto
     @AppStorage("isPro") private var isPro = false
-    @State private var showProSheet   = false
-    @State private var showAboutSheet = false
+    @State private var showProSheet    = false
+    @State private var showAboutSheet  = false
+    @State private var showPhotoImport = false
 
     var body: some View {
         NavigationStack {
@@ -25,8 +26,9 @@ struct SettingsView: View {
             }
             .navigationTitle("设置")
             .navigationBarTitleDisplayMode(.large)
-            .sheet(isPresented: $showProSheet)   { ProUpgradeView() }
-            .sheet(isPresented: $showAboutSheet) { AboutView() }
+            .sheet(isPresented: $showProSheet)    { ProUpgradeView() }
+            .sheet(isPresented: $showAboutSheet)  { AboutView() }
+            .sheet(isPresented: $showPhotoImport) { PhotoImportView() }
         }
     }
 
@@ -45,7 +47,12 @@ struct SettingsView: View {
     private var importSection: some View {
         Section("导入") {
             Label("相机扫描", systemImage: "camera")
-            Label("相册选取", systemImage: "photo.on.rectangle")
+            Button {
+                showPhotoImport = true
+            } label: {
+                Label("相册选取", systemImage: "photo.on.rectangle")
+                    .foregroundStyle(.primary)
+            }
             Label("共享扩展", systemImage: "square.and.arrow.up")
 
             NavigationLink {
