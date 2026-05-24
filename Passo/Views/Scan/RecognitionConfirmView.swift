@@ -485,7 +485,11 @@ struct RecognitionConfirmView: View {
     // MARK: Actions
 
     private var isAtFreeLimit: Bool {
-        !isPro && allTickets.count >= 5
+        guard !isPro else { return false }
+        let startOfMonth = Calendar.current.date(
+            from: Calendar.current.dateComponents([.year, .month], from: Date())
+        ) ?? Date()
+        return allTickets.filter { $0.importedAt >= startOfMonth }.count >= 5
     }
 
     private func addToWallet() async {

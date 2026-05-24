@@ -194,11 +194,16 @@ struct PhotoImportView: View {
             return
         }
 
-        // Free tier gate: max 5 tickets
-        if !isPro && allTickets.count >= 5 {
-            phase = .picking
-            showProGate = true
-            return
+        // Free tier gate: max 5 imports per calendar month
+        if !isPro {
+            let startOfMonth = Calendar.current.date(
+                from: Calendar.current.dateComponents([.year, .month], from: Date())
+            ) ?? Date()
+            if allTickets.filter({ $0.importedAt >= startOfMonth }).count >= 5 {
+                phase = .picking
+                showProGate = true
+                return
+            }
         }
 
         let ticket = TicketParser.parse(barcodeValue: barcodeValue, ocrText: ocrText)

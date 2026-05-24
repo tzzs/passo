@@ -23,9 +23,9 @@
 
 | # | 位置 | 描述 | 影响 |
 |---|---|---|---|
-| B1 | `TicketParser.swift:188-191` | `MM-dd` 格式日期始终使用当年年份。12 月购买明年 1 月的票，解析出的 eventDate 会是当年 1 月（已过期）。修复：若解析日期 < 今天 - 30 天，则年份加 1。 | 中 |
-| ~~B2~~ | ~~`WalletView.swift:230`~~ | ~~第二张卡片没有 `onTapGesture`~~ | ✅ 已修复 |
-| B3 | `RecognitionConfirmView.swift:488` / `PhotoImportView.swift:198` | 免费限额用 `allTickets.count >= 5`（历史总量），但 UI 文案说"每月 5 张"。需统一（改为月度计数，或改文案为"最多 5 张"）。 | 低 |
+| ~~B1~~ | ~~`TicketParser.swift`~~ | ~~`MM-dd` 跨年解析错误~~ | ✅ 已修复（> 30 天前则年份 +1） |
+| ~~B2~~ | ~~`WalletView.swift`~~ | ~~第二张卡片无 `onTapGesture`~~ | ✅ 已修复 |
+| ~~B3~~ | ~~`RecognitionConfirmView` / `PhotoImportView`~~ | ~~限额用历史总量，文案说"每月"~~ | ✅ 已修复（改为当月 `importedAt` 计数） |
 
 ---
 

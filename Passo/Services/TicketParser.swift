@@ -188,7 +188,15 @@ enum TicketParser {
                       let month = Int(m), let day = Int(d) {
                 var comps = cal.dateComponents([.year], from: Date())
                 comps.month = month; comps.day = day
-                return cal.date(from: comps)
+                guard let candidate = cal.date(from: comps) else { continue }
+                // If the date is more than 30 days in the past, assume the event is next year
+                // (handles Dec purchase of Jan tickets, etc.)
+                let thirtyDaysAgo = cal.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+                if candidate < thirtyDaysAgo {
+                    comps.year = (comps.year ?? cal.component(.year, from: Date())) + 1
+                    return cal.date(from: comps)
+                }
+                return candidate
             }
         }
         return nil
