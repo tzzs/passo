@@ -43,6 +43,7 @@ targets:
         NSCameraUsageDescription: "扫描票据条码和二维码"
         NSPhotoLibraryUsageDescription: "从相册导入票据截图"
         NSLocationWhenInUseUsageDescription: "在你到达场馆时发送票据提醒"
+        NSLocationAlwaysAndWhenInUseUsageDescription: "在后台检测你是否到达场馆，并在适当时间发送票据提醒"
         CFBundleURLTypes:
           - CFBundleURLSchemes:
               - passo

@@ -112,9 +112,19 @@ struct ProUpgradeSheet: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
         } else {
+            let monthly = store.products.first { $0.id.contains("monthly") }
+            let yearly  = store.products.first { $0.id.contains("yearly") }
+            // Compute savings % dynamically so it stays accurate if prices change
+            let yearlySavingsLabel: String? = {
+                guard let m = monthly, let y = yearly, m.price > 0 else { return nil }
+                let pct = Int((1 - y.price / (m.price * 12)) * 100)
+                return pct > 0 ? "省 \(pct)%" : nil
+            }()
+
             VStack(spacing: 12) {
                 ForEach(store.products, id: \.id) { product in
-                    UpgradeProductCard(product: product) {
+                    let savings = product.id.contains("yearly") ? yearlySavingsLabel : nil
+                    UpgradeProductCard(product: product, savingsLabel: savings) {
                         Task { await store.purchase(product) }
                     }
                 }
@@ -156,6 +166,7 @@ struct ProUpgradeSheet: View {
 
 struct UpgradeProductCard: View {
     let product: Product
+    let savingsLabel: String?
     let onPurchase: () -> Void
 
     var isYearly: Bool { product.id.contains("yearly") }
@@ -166,8 +177,8 @@ struct UpgradeProductCard: View {
                 HStack(spacing: 6) {
                     Text(isYearly ? "年度订阅" : "月度订阅")
                         .font(.system(size: 16, weight: .semibold))
-                    if isYearly {
-                        Text("省 53%")
+                    if let label = savingsLabel {
+                        Text(label)
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 7)

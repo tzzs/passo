@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 // MARK: - Tab Definition
 
@@ -31,12 +32,19 @@ struct ContentView: View {
     @State private var showScanSheet = false
     @State private var shareImportTicket: Ticket?
 
+    // U1: today's active ticket count for tab badge
+    @Query private var allTickets: [Ticket]
+    private var todayBadgeCount: Int {
+        allTickets.filter { $0.isToday && !$0.isUsed }.count
+    }
+
     var body: some View {
         TabView(selection: $selectedTab) {
             WalletView(onScanTapped: { showScanSheet = true })
                 .tabItem {
                     Label(AppTab.wallet.title, systemImage: AppTab.wallet.icon)
                 }
+                .badge(todayBadgeCount > 0 ? todayBadgeCount : 0)
                 .tag(AppTab.wallet)
 
             // Scan tab acts as a trigger, not a destination view.

@@ -34,8 +34,13 @@ struct ScanView: View {
             }
         }
         .statusBarHidden()
-        // B1: sheet bound to showConfirmSheet, not detectedTicket, so dismiss works independently
-        .sheet(isPresented: $showConfirmSheet) {
+        // Sheet bound to showConfirmSheet so dismiss works independently from detectedTicket.
+        // onDismiss: if the ticket was persisted (storeIdentifier non-nil), auto-dismiss ScanView.
+        .sheet(isPresented: $showConfirmSheet, onDismiss: {
+            if detectedTicket?.persistentModelID.storeIdentifier != nil {
+                dismiss()
+            }
+        }) {
             if let ticket = detectedTicket {
                 RecognitionConfirmView(ticket: ticket)
             }

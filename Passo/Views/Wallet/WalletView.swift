@@ -225,11 +225,12 @@ struct WalletView: View {
                 }
             }
 
-            // Peek of second card — naturally below via VStack, no hardcoded offset
+            // Peek of second card — tappable to navigate to its detail
             if filteredTickets.count > 1 {
                 TicketCardView(ticket: filteredTickets[1], size: .compact, isDark: isDark)
                     .padding(.top, 12)
                     .zIndex(5)
+                    .onTapGesture { selectedTicket = filteredTickets[1] }
             }
         }
     }

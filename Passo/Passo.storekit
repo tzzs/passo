@@ -1,0 +1,85 @@
+{
+  "identifier" : "Passo",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_interruptedPurchasesEnabled" : false,
+    "_locale" : "zh_CN",
+    "_storefront" : "CHN",
+    "_timeRate" : "MONTHLY_RENEWAL_EVERY_30_MINUTES"
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "pro-subscription",
+      "localizations" : [
+        {
+          "description" : "解锁无限导入与 iCloud 跨设备同步",
+          "displayName" : "Passo Pro",
+          "locale" : "zh_CN"
+        }
+      ],
+      "name" : "Passo Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "12.00",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "com.passo.pro.monthly",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "每月解锁无限导入与 iCloud 同步",
+              "displayName" : "月度订阅",
+              "locale" : "zh_CN"
+            }
+          ],
+          "productID" : "com.passo.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Passo Pro 月度",
+          "subscriptionGroupID" : "pro-subscription",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "68.00",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "com.passo.pro.yearly",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "每年解锁无限导入与 iCloud 同步，相比月订更划算",
+              "displayName" : "年度订阅",
+              "locale" : "zh_CN"
+            }
+          ],
+          "productID" : "com.passo.pro.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Passo Pro 年度",
+          "subscriptionGroupID" : "pro-subscription",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

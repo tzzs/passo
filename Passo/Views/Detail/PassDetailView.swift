@@ -13,7 +13,7 @@ struct PassDetailView: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    let ticket: Ticket
+    @Bindable var ticket: Ticket
 
     @State private var isFlipped = false
     @State private var mapSnapshot: UIImage?

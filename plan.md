@@ -24,8 +24,8 @@
 | # | 位置 | 描述 | 影响 |
 |---|---|---|---|
 | B1 | `TicketParser.swift:188-191` | `MM-dd` 格式日期始终使用当年年份。12 月购买明年 1 月的票，解析出的 eventDate 会是当年 1 月（已过期）。修复：若解析日期 < 今天 - 30 天，则年份加 1。 | 中 |
-| B2 | `WalletView.swift:230` | 第二张卡片（compact 预览）没有 `onTapGesture`，点击无法进入详情。 | 低 |
-| B3 | `RecognitionConfirmView.swift:488` / `PhotoImportView.swift:198` | 免费限额用 `allTickets.count >= 5`（历史总量），但 UI 文案说"每月 5 张"。两者不一致，需统一（要么改为月度计数，要么改文案为"最多 5 张"）。 | 低 |
+| ~~B2~~ | ~~`WalletView.swift:230`~~ | ~~第二张卡片没有 `onTapGesture`~~ | ✅ 已修复 |
+| B3 | `RecognitionConfirmView.swift:488` / `PhotoImportView.swift:198` | 免费限额用 `allTickets.count >= 5`（历史总量），但 UI 文案说"每月 5 张"。需统一（改为月度计数，或改文案为"最多 5 张"）。 | 低 |
 
 ---
 
@@ -33,12 +33,12 @@
 
 | # | 位置 | 描述 |
 |---|---|---|
-| U1 | `WalletView.swift` | Tab bar 无今日票数角标；可用 `.badge(todayCount)` 在有票时显示数字。 |
-| U2 | `ScanView.swift` | 确认保存后 ScanView 继续停留，需手动关闭；可在 `RecognitionConfirmView` 成功回调里加 `onSaved: () -> Void` 透传 `dismiss`。 |
-| U3 | `ProUpgradeSheet.swift:168` | "省 53%" 硬编码；改为从 `product.price` 动态计算 `(1 - yearly / (monthly × 12)) × 100`。 |
-| U4 | `PassDetailView.swift:16` | `let ticket: Ticket` 改为 `@Bindable var ticket: Ticket`，使 SwiftUI 能追踪字段级变更并按需重绘（当前依赖引用类型副作用，符合正确性但不符合 SwiftUI 惯例）。 |
-| U5 | `project.yml` / `Info.plist` | 缺少 `NSLocationAlwaysAndWhenInUseUsageDescription`；位置提醒在后台触发时需要此 key，否则 iOS 会忽略 `UNLocationNotificationTrigger`。 |
-| U6 | 无 | 缺少 `.storekit` 沙盒配置文件，Pro 升级流程无法在模拟器中测试。需在 Xcode → File → New → StoreKit Configuration 创建并挂载。 |
+| ~~U1~~ | ~~`ContentView.swift`~~ | ~~Tab bar 无今日票数角标~~ | ✅ 已实现 |
+| ~~U2~~ | ~~`ScanView.swift`~~ | ~~保存后 ScanView 继续停留~~ | ✅ 已实现（onDismiss 检测 storeIdentifier） |
+| ~~U3~~ | ~~`ProUpgradeSheet.swift`~~ | ~~"省 53%" 硬编码~~ | ✅ 已动态计算 |
+| ~~U4~~ | ~~`PassDetailView.swift`~~ | ~~`let ticket` 非 `@Bindable`~~ | ✅ 已改为 `@Bindable var` |
+| ~~U5~~ | ~~`project.yml`~~ | ~~缺 `NSLocationAlwaysAndWhenInUseUsageDescription`~~ | ✅ 已补充 |
+| ~~U6~~ | ~~`Passo/Passo.storekit`~~ | ~~缺 StoreKit 沙盒配置文件~~ | ✅ 已创建 |
 
 ---
 
