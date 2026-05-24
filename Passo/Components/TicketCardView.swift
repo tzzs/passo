@@ -33,7 +33,6 @@ struct TicketCardView: View {
                 }
             }
         }
-        .opacity(ticket.isUsed ? 0.5 : 1)
     }
 
     // MARK: Header
@@ -383,9 +382,10 @@ struct TicketCardView: View {
             BarcodeImageView(
                 value: ticket.barcodeValue,
                 format: ticket.barcodeFormat,
-                size: ticket.isUsed ? 72 : 90,
-                color: ticket.isUsed ? Color.gray.opacity(0.5) : .black
+                size: ticket.isUsed ? 72 : 90
             )
+            .saturation(ticket.isUsed ? 0 : 1)
+            .opacity(ticket.isUsed ? 0.35 : 1)
             if !ticket.isUsed {
                 Text(ticket.barcodeValue.isEmpty ? "0000 0000 0000 0000" : formatBarcode(ticket.barcodeValue))
                     .font(.system(size: 10, design: .monospaced))
@@ -485,7 +485,6 @@ struct BarcodeImageView: View {
     let value: String
     let format: String
     let size: CGFloat
-    let color: Color
 
     @State private var barcodeImage: UIImage?
 
@@ -497,7 +496,6 @@ struct BarcodeImageView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: isLinear ? size * 2.2 : size, height: size)
-                    .colorMultiply(color)
             } else {
                 RoundedRectangle(cornerRadius: 4)
                     .fill(Color.gray.opacity(0.15))

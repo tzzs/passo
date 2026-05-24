@@ -160,12 +160,6 @@ enum ReminderService {
     }
 }
 
-// MARK: - TicketSnapshot extension for ReminderService
-
-extension TicketSnapshot {
-    var isUsed: Bool { false }  // ReminderService only sees un-used tickets at call site
-}
-
 // MARK: - Location Auth Delegate
 
 // Helper that bridges CLLocationManagerDelegate callback into async/await.

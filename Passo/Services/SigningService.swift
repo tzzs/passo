@@ -31,6 +31,7 @@ struct TicketSnapshot: Sendable {
     let notes: String
     let sourceApp: String
     let tagsJSON: String
+    let isUsed: Bool
 
     init(ticket: Ticket) {
         title              = ticket.title
@@ -60,6 +61,7 @@ struct TicketSnapshot: Sendable {
         notes              = ticket.notes
         sourceApp          = ticket.sourceApp
         tagsJSON           = ticket.tagsJSON
+        isUsed             = ticket.isUsed
     }
 
     var ticketType: TicketType { TicketType(rawValue: ticketTypeRaw) ?? .generic }

@@ -80,9 +80,10 @@ struct WalletView: View {
                     }
                 }
             }
-        }
-        .navigationDestination(item: $selectedTicket) { ticket in
-            PassDetailView(ticket: ticket)
+            // Must be inside NavigationStack so the destination is registered in the nav graph
+            .navigationDestination(item: $selectedTicket) { ticket in
+                PassDetailView(ticket: ticket)
+            }
         }
         .sheet(isPresented: $showPhotoImport) {
             PhotoImportView()
