@@ -8,6 +8,21 @@ struct PassoApp: App {
 
     private let store = StoreService.shared
 
+    // Singleton container — SwiftData's SQLite store must not be reopened on every body evaluation.
+    // cloudKitDatabase: .none prevents SwiftData from auto-enabling CloudKit via entitlements,
+    // which would require every attribute to be Optional.
+    private static let sharedContainer: ModelContainer = {
+        let config = ModelConfiguration(
+            groupContainer: .none,
+            cloudKitDatabase: .none
+        )
+        do {
+            return try ModelContainer(for: Ticket.self, configurations: config)
+        } catch {
+            fatalError("SwiftData: cannot create ModelContainer – \(error)")
+        }
+    }()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -19,28 +34,6 @@ struct PassoApp: App {
                     NotificationCenter.default.post(name: .passoShareImport, object: nil)
                 }
         }
-        .modelContainer(appContainer)
-    }
-
-    /// CloudKit-backed store when Pro + iCloud sync enabled; local-only otherwise.
-    /// Switching requires an app restart (ModelContainer cannot change at runtime).
-    private var appContainer: ModelContainer {
-        let schema = Schema([Ticket.self])
-
-        if isPro && iCloudSyncEnabled,
-           let container = try? ModelContainer(
-            for: schema,
-            configurations: ModelConfiguration(
-                schema: schema,
-                cloudKitDatabase: .automatic
-            )
-           ) {
-            return container
-        }
-
-        return try! ModelContainer(
-            for: schema,
-            configurations: ModelConfiguration(schema: schema)
-        )
+        .modelContainer(PassoApp.sharedContainer)
     }
 }

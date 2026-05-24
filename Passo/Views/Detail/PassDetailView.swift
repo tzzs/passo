@@ -108,7 +108,7 @@ struct PassDetailView: View {
         guard let serial = ticket.passSerialNumber else { return }
         let typeID = "pass.com.passo.ticket"
         let library = PKPassLibrary()
-        guard let pass = library.passes(ofType: .generic).first(where: {
+        guard let pass = library.passes().first(where: {
             $0.serialNumber == serial && $0.passTypeIdentifier == typeID
         }) else { return }
         let inLibrary = library.containsPass(pass)

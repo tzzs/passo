@@ -117,7 +117,9 @@ struct ProUpgradeSheet: View {
             // Compute savings % dynamically so it stays accurate if prices change
             let yearlySavingsLabel: String? = {
                 guard let m = monthly, let y = yearly, m.price > 0 else { return nil }
-                let pct = Int((1 - y.price / (m.price * 12)) * 100)
+                let annualEquiv = m.price * 12
+                let ratio = y.price / annualEquiv
+                let pct = NSDecimalNumber(decimal: (1 - ratio) * 100).intValue
                 return pct > 0 ? "省 \(pct)%" : nil
             }()
 

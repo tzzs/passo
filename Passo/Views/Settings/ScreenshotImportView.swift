@@ -49,7 +49,7 @@ struct ScreenshotImportView: View {
         .navigationBarTitleDisplayMode(.large)
         .onAppear { checkPermission() }
         .sheet(item: $selectedResult) { result in
-            RecognitionConfirmView(ticket: result.ticket)
+            RecognitionConfirmView(ticket: result.makeTicket())
         }
     }
 
@@ -116,7 +116,7 @@ struct ScreenshotImportView: View {
 
     private var resultSection: some View {
         Section("发现 \(results.count) 张票据") {
-            ForEach(results) { result in
+            ForEach(results) { (result: ScreenshotScanResult) in
                 Button {
                     selectedResult = result
                 } label: {
@@ -132,16 +132,16 @@ struct ScreenshotImportView: View {
                                 .fill(Color(uiColor: .secondarySystemBackground))
                                 .frame(width: 52, height: 52)
                                 .overlay(
-                                    Image(systemName: result.ticket.ticketType.theme.iconName)
+                                    Image(systemName: result.ticketType.iconName)
                                         .foregroundStyle(.secondary)
                                 )
                         }
 
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(result.ticket.title.isEmpty ? "未识别到标题" : result.ticket.title)
+                            Text(result.title.isEmpty ? "未识别到标题" : result.title)
                                 .font(.system(size: 15, weight: .medium))
                                 .lineLimit(1)
-                            Text(result.ticket.ticketType.displayName + "  ·  " + result.ticket.barcodeFormat)
+                            Text(result.ticketType.displayName + "  ·  " + result.barcodeFormat)
                                 .font(.system(size: 12))
                                 .foregroundStyle(.secondary)
                         }
@@ -235,16 +235,17 @@ struct ScreenshotImportView: View {
                 }
 
                 let ticket = TicketParser.parse(barcodeValue: barcodeValue, ocrText: ocrText)
-                ticket.sourceApp = "截图导入"
                 let thumbData = image.preparingThumbnail(
                     of: CGSize(width: 104, height: 104)
                 )?.jpegData(compressionQuality: 0.7)
-                ticket.thumbnailData = thumbData
 
                 continuation.resume(returning: ScreenshotScanResult(
                     id: asset.localIdentifier,
-                    ticket: ticket,
-                    thumbnailData: thumbData
+                    thumbnailData: thumbData,
+                    ticketType: ticket.ticketType,
+                    title: ticket.title,
+                    barcodeFormat: ticket.barcodeFormat,
+                    barcodeValue: barcodeValue
                 ))
             }
         }
@@ -255,8 +256,21 @@ struct ScreenshotImportView: View {
 
 struct ScreenshotScanResult: Identifiable {
     let id: String
-    let ticket: Ticket
     let thumbnailData: Data?
+    // Plain-value snapshot for display — avoids holding a @Model in a @State array
+    let ticketType: TicketType
+    let title: String
+    let barcodeFormat: String
+    // Raw data for lazy Ticket creation when the user taps a result
+    let barcodeValue: String
+
+    func makeTicket() -> Ticket {
+        let ticket = TicketParser.parse(barcodeValue: barcodeValue, ocrText: "")
+        ticket.barcodeFormat = barcodeFormat
+        ticket.sourceApp = "截图导入"
+        ticket.thumbnailData = thumbnailData
+        return ticket
+    }
 }
 
 // MARK: - TicketType icon name helper
