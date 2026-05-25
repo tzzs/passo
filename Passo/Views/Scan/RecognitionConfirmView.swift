@@ -46,7 +46,7 @@ struct RecognitionConfirmView: View {
 
             if showAddedToast { successToast }
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showWalletSheet) {
             if let data = pkpassData {
                 WalletPresenter(passData: data) {

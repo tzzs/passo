@@ -42,7 +42,7 @@ struct PassDetailView: View {
                 }
             }
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .statusBarHidden(false)
         .task {
             reminderEnabled = ticket.reminderEnabled
@@ -173,6 +173,8 @@ struct PassDetailView: View {
                     .background(Color.white.opacity(0.12))
                     .clipShape(Circle())
                     .overlay(Circle().strokeBorder(Color.white.opacity(0.1), lineWidth: 1))
+                    .frame(width: 44, height: 44)          // HIG 44pt hit target
+                    .contentShape(Circle())
             }
         }
         .padding(.horizontal, AppSpacing.md)
@@ -185,7 +187,7 @@ struct PassDetailView: View {
     private var flippableCard: some View {
         ZStack {
             // Front face
-            TicketCardView(ticket: ticket, size: .full, isDark: true)
+            TicketCardView(ticket: ticket, size: .full, isDark: true, useStaticBackground: true)
                 .rotation3DEffect(
                     .degrees(isFlipped ? 180 : 0),
                     axis: (x: 0, y: 1, z: 0),
@@ -203,7 +205,7 @@ struct PassDetailView: View {
                 .opacity(isFlipped ? 1 : 0)
         }
         .animation(AppAnimation.cardFlip, value: isFlipped)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, AppSpacing.md)
         .padding(.bottom, 4)
         .onTapGesture {
             isFlipped.toggle()
@@ -212,7 +214,7 @@ struct PassDetailView: View {
     }
 
     private var cardBackFace: some View {
-        GlassCardView(isDark: true, glowColor: theme.accent) {
+        GlassCardView(isDark: true, glowColor: theme.accent, useStaticBackground: true) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Text("备注 & 详情")

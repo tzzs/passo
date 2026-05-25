@@ -7,27 +7,26 @@ import SwiftUI
 struct GlassCardView<Content: View>: View {
     let isDark: Bool
     let glowColor: Color?
+    /// Skip `.ultraThinMaterial` — it fades to grey once a host `rotation3DEffect` pushes the view into an offscreen buffer.
+    let useStaticBackground: Bool
     let content: () -> Content
 
     init(
         isDark: Bool = true,
         glowColor: Color? = nil,
+        useStaticBackground: Bool = false,
         @ViewBuilder content: @escaping () -> Content
     ) {
-        self.isDark    = isDark
-        self.glowColor = glowColor
-        self.content   = content
+        self.isDark              = isDark
+        self.glowColor           = glowColor
+        self.useStaticBackground = useStaticBackground
+        self.content             = content
     }
 
     var body: some View {
         ZStack(alignment: .top) {
             content()
-                .background(
-                    isDark
-                        ? Color.white.opacity(0.08)
-                        : Color.white.opacity(0.55)
-                )
-                .background(.ultraThinMaterial)
+                .background(glassFill)
                 .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusCard))
                 .overlay(
                     RoundedRectangle(cornerRadius: AppSpacing.radiusCard)
@@ -53,6 +52,26 @@ struct GlassCardView<Content: View>: View {
                 .frame(height: 1)
                 .padding(.horizontal, AppSpacing.sm)
                 .padding(.top, 0)
+        }
+    }
+
+    @ViewBuilder
+    private var glassFill: some View {
+        if useStaticBackground {
+            ZStack {
+                isDark ? Color.white.opacity(0.12) : Color.white.opacity(0.55)
+                if isDark {
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.06), Color.clear],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                }
+            }
+        } else {
+            ZStack {
+                Rectangle().fill(.ultraThinMaterial)
+                isDark ? Color.white.opacity(0.08) : Color.white.opacity(0.55)
+            }
         }
     }
 }

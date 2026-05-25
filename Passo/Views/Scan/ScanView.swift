@@ -113,6 +113,8 @@ struct ScanView: View {
                 .background(Color.white.opacity(0.12))
                 .clipShape(Circle())
                 .overlay(Circle().strokeBorder(Color.white.opacity(0.1), lineWidth: 1))
+                .frame(width: 44, height: 44)          // HIG 44pt hit target
+                .contentShape(Circle())
         }
     }
 
@@ -128,6 +130,8 @@ struct ScanView: View {
                 .background(Color.white.opacity(0.12))
                 .clipShape(Circle())
                 .overlay(Circle().strokeBorder(Color.white.opacity(0.1), lineWidth: 1))
+                .frame(width: 44, height: 44)          // HIG 44pt hit target
+                .contentShape(Circle())
         }
     }
 
