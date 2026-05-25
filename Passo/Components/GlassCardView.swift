@@ -68,7 +68,7 @@ struct GlassPillButton: View {
     var body: some View {
         Button(action: action) {
             icon()
-                .frame(width: 40, height: 40)
+                .frame(width: 44, height: 44)
                 .background(
                     Circle()
                         .fill(isDark ? Color.white.opacity(0.12) : Color.black.opacity(0.05))
