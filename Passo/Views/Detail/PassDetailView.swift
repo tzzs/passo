@@ -20,12 +20,11 @@ struct PassDetailView: View {
     @State private var mapCoordinate: CLLocationCoordinate2D?
     @State private var reminderEnabled: Bool = false
     @State private var scheduledReminderDate: Date?
-    @State private var showMenu = false
     @State private var showEditNotes = false
     @State private var showDeleteConfirm = false
     @State private var editingNotes = ""
 
-    private var isDark: Bool { colorScheme == .dark }
+    private var isDark: Bool { true }
     private var theme: TicketTheme { ticket.ticketType.theme }
 
     var body: some View {
@@ -52,18 +51,6 @@ struct PassDetailView: View {
             await loadMapSnapshot()
             // F2: sync isAddedToWallet with actual PKPassLibrary state
             syncWalletStatus()
-        }
-        .confirmationDialog("操作", isPresented: $showMenu, titleVisibility: .hidden) {
-            Button("分享票据") { shareTicket() }
-            Button("编辑备注") { editingNotes = ticket.notes; showEditNotes = true }
-            if ticket.isUsed {
-                Button("恢复使用") {
-                    ticket.isUsed = false
-                    try? modelContext.save()
-                }
-            }
-            Button("删除票据", role: .destructive) { showDeleteConfirm = true }
-            Button("取消", role: .cancel) {}
         }
         .alert("编辑备注", isPresented: $showEditNotes) {
             TextField("备注内容", text: $editingNotes, axis: .vertical)
@@ -121,7 +108,7 @@ struct PassDetailView: View {
     // MARK: Background
 
     private var backgroundColor: Color {
-        isDark ? Color.black : Color(uiColor: .systemGroupedBackground)
+        Color.black
     }
 
     private var gradientHeader: some View {
@@ -162,16 +149,34 @@ struct PassDetailView: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.white)
             Spacer()
-            GlassPillButton(isDark: true, action: { showMenu = true }) {
-                AnyView(
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white)
-                )
+            Menu {
+                Button { shareTicket() } label: {
+                    Label("分享票据", systemImage: "square.and.arrow.up")
+                }
+                Button { editingNotes = ticket.notes; showEditNotes = true } label: {
+                    Label("编辑备注", systemImage: "square.and.pencil")
+                }
+                if ticket.isUsed {
+                    Button { ticket.isUsed = false; try? modelContext.save() } label: {
+                        Label("恢复使用", systemImage: "arrow.uturn.backward")
+                    }
+                }
+                Divider()
+                Button(role: .destructive) { showDeleteConfirm = true } label: {
+                    Label("删除票据", systemImage: "trash")
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 36, height: 36)
+                    .background(Color.white.opacity(0.12))
+                    .clipShape(Circle())
+                    .overlay(Circle().strokeBorder(Color.white.opacity(0.1), lineWidth: 1))
             }
         }
         .padding(.horizontal, AppSpacing.md)
-        .padding(.top, 62)
+        .padding(.top, 8)
         .padding(.bottom, 8)
     }
 
@@ -270,7 +275,7 @@ struct PassDetailView: View {
             Divider().padding(.horizontal, AppSpacing.md)
             infoRow(icon: "📱", label: "来源",     value: ticket.sourceApp.isEmpty ? "手动录入" : ticket.sourceApp)
         }
-        .background(Color(uiColor: isDark ? .secondarySystemBackground : .systemBackground))
+        .background(Color(uiColor: .systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusCard))
         .shadow(color: .black.opacity(0.06), radius: 12, y: 4)
         .padding(.horizontal, AppSpacing.md)
@@ -410,7 +415,7 @@ struct PassDetailView: View {
                 if reminderEnabled, let date = scheduledReminderDate {
                     Text(date.formatted(date: .abbreviated, time: .shortened))
                         .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(isDark ? .white : .black)
+                        .foregroundStyle(.primary)
                 } else {
                     Text("未设置")
                         .font(.system(size: 15, weight: .medium))
@@ -461,7 +466,7 @@ struct PassDetailView: View {
                     .foregroundStyle(.secondary)
                 Text(value)
                     .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(isDark ? .white : .black)
+                    .foregroundStyle(.primary)
             }
         }
         .padding(.horizontal, AppSpacing.md)

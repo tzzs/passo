@@ -4,13 +4,11 @@ import SwiftData
 // MARK: - Wallet Filter
 
 enum WalletFilter: Int, CaseIterable {
-    case today    = 0
-    case upcoming = 1
-    case all      = 2
+    case upcoming = 0  // 今天 + 即将到来
+    case all      = 1
 
     var label: String {
         switch self {
-        case .today:    return "今天"
         case .upcoming: return "即将"
         case .all:      return "全部"
         }
@@ -43,10 +41,19 @@ struct WalletView: View {
         filteredTickets.first?.ticketType.theme ?? TicketType.generic.theme
     }
 
+    private var activeFilter: WalletFilter {
+        WalletFilter(rawValue: filterIndex) ?? .all
+    }
+
+    private var isTimelineMode: Bool {
+        activeFilter == .all && !filteredTickets.isEmpty
+    }
+
     private var filteredTickets: [Ticket] {
-        switch WalletFilter(rawValue: filterIndex) ?? .all {
-        case .today:    return tickets.filter { $0.isToday && !$0.isUsed }
-        case .upcoming: return tickets.filter { $0.isUpcoming }
+        switch activeFilter {
+        case .upcoming:
+            // Today's tickets (regardless of time) + strictly future events, exclude used
+            return tickets.filter { ($0.isToday || $0.isUpcoming) && !$0.isUsed }
         case .all:
             // Unused tickets first (sorted by date), used tickets sink to bottom
             return tickets.sorted {
@@ -83,6 +90,15 @@ struct WalletView: View {
             // Must be inside NavigationStack so the destination is registered in the nav graph
             .navigationDestination(item: $selectedTicket) { ticket in
                 PassDetailView(ticket: ticket)
+            }
+            // Sticky bottom bar: empty state shows a single primary CTA;
+            // any non-empty list (both tabs) gets the dual action bar.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if filteredTickets.isEmpty {
+                    stickyImportBar
+                } else {
+                    actionBottomBar
+                }
             }
         }
         .sheet(isPresented: $showPhotoImport) {
@@ -159,18 +175,22 @@ struct WalletView: View {
         .padding(.top, 12)
     }
 
+    @ViewBuilder
     private var nextUpLabel: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(activeTheme.accent)
-                .frame(width: 6, height: 6)
-            Text(nextUpText)
-                .font(.system(size: 13))
-                .foregroundStyle(isDark ? .white.opacity(0.5) : .black.opacity(0.4))
+        // Hidden in timeline mode — the countdown chip communicates this instead
+        if !isTimelineMode {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(activeTheme.accent)
+                    .frame(width: 6, height: 6)
+                Text(nextUpText)
+                    .font(.system(size: 13))
+                    .foregroundStyle(isDark ? .white.opacity(0.5) : .black.opacity(0.4))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.top, 14)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.top, 14)
     }
 
     private var nextUpText: String {
@@ -187,8 +207,13 @@ struct WalletView: View {
                 currentEmptyState
                     .padding(.horizontal, AppSpacing.md)
             } else {
-                cardPile
-                    .padding(.horizontal, AppSpacing.md)
+                switch activeFilter {
+                case .upcoming:
+                    cardPile
+                        .padding(.horizontal, AppSpacing.md)
+                case .all:
+                    allTimeline
+                }
             }
         }
         .padding(.top, 10)
@@ -263,65 +288,324 @@ struct WalletView: View {
             )
     }
 
+    // MARK: - Timeline (全部 tab)
+
+    private var allTimeline: some View {
+        VStack(spacing: 0) {
+            countdownSection
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.bottom, 16)
+
+            let groups = dateGrouped(filteredTickets)
+            ForEach(groups, id: \.label) { group in
+                timelineDateSection(group)
+                    .padding(.horizontal, AppSpacing.md)
+            }
+
+            Color.clear.frame(height: 8)
+        }
+        .padding(.top, 4)
+    }
+
     @ViewBuilder
-    private var currentEmptyState: some View {
-        switch WalletFilter(rawValue: filterIndex) ?? .all {
-        case .today:
-            emptyState(
-                icon: "sun.max",
-                title: "今天没有票据",
-                subtitle: "今日无演出、放映或出行计划",
-                showScanButton: false
-            )
-        case .upcoming:
-            emptyState(
-                icon: "calendar.badge.clock",
-                title: "暂无即将到来的票据",
-                subtitle: "添加票据后，未来的行程会显示在这里",
-                showScanButton: true
-            )
-        case .all:
-            emptyState(
-                icon: "wallet.pass",
-                title: "票夹空空如也",
-                subtitle: "拍一张票据，即刻存入 Wallet",
-                showScanButton: true
+    private var countdownSection: some View {
+        let redAccent = Color(hex: "#E94560")
+        if let next = filteredTickets.first(where: { ($0.eventDate ?? .distantPast) > Date() }),
+           let date = next.eventDate {
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("倒计时")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(redAccent.opacity(0.65))
+                    Text("下一张 " + countdownString(to: date))
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(redAccent)
+                }
+                Spacer()
+                ZStack {
+                    Circle()
+                        .fill(redAccent.opacity(0.12))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: timelineIcon(next.ticketType))
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(redAccent)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(redAccent.opacity(isDark ? 0.1 : 0.07))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(redAccent.opacity(0.18), lineWidth: 1)
             )
         }
     }
 
-    private func emptyState(icon: String, title: String, subtitle: String, showScanButton: Bool) -> some View {
-        VStack(spacing: 20) {
-            Image(systemName: icon)
-                .font(.system(size: 56, weight: .light))
-                .foregroundStyle(isDark ? .white.opacity(0.3) : .black.opacity(0.2))
-                .padding(.top, 60)
-
-            VStack(spacing: 8) {
-                Text(title)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(isDark ? .white.opacity(0.8) : .black.opacity(0.7))
-                Text(subtitle)
-                    .font(.system(size: 15))
-                    .foregroundStyle(isDark ? .white.opacity(0.45) : .black.opacity(0.4))
-                    .multilineTextAlignment(.center)
+    private func timelineDateSection(_ group: TimelineDateGroup) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Date header
+            HStack(spacing: 12) {
+                Color.clear.frame(width: 20)
+                Text(group.label)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(isDark ? .white.opacity(0.4) : Color(hex: "#A8A39A"))
             }
+            .padding(.bottom, 10)
 
-            if showScanButton {
-                Button(action: onScanTapped) {
-                    Label("扫描导入", systemImage: "qrcode.viewfinder")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(isDark ? .black : .white)
-                        .frame(height: 50)
-                        .frame(maxWidth: 200)
-                        .background(isDark ? Color.white : Color.black)
-                        .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton))
+            // Ticket rows with vertical timeline line
+            ForEach(Array(group.tickets.enumerated()), id: \.element.persistentModelID) { idx, ticket in
+                HStack(alignment: .top, spacing: 12) {
+                    // Left: dot + vertical connector line
+                    VStack(spacing: 0) {
+                        Circle()
+                            .fill(isDark ? Color.white.opacity(0.3) : Color(hex: "#C5C0B8"))
+                            .frame(width: 8, height: 8)
+                            .padding(.top, 20)
+                        if idx < group.tickets.count - 1 {
+                            Rectangle()
+                                .fill(isDark ? Color.white.opacity(0.1) : Color(hex: "#DDD9D2"))
+                                .frame(width: 1.5)
+                                .frame(maxHeight: .infinity)
+                                .padding(.top, 4)
+                        }
+                    }
+                    .frame(width: 20)
+
+                    // Ticket card
+                    Button { selectedTicket = ticket } label: {
+                        timelineTicketCard(ticket)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.bottom, idx < group.tickets.count - 1 ? 10 : 0)
                 }
-                .padding(.top, 8)
             }
         }
+        .padding(.bottom, 20)
+    }
+
+    private func timelineTicketCard(_ ticket: Ticket) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(ticket.ticketType.theme.accent.opacity(isDark ? 0.2 : 0.12))
+                    .frame(width: 40, height: 40)
+                Image(systemName: timelineIcon(ticket.ticketType))
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(ticket.ticketType.theme.accent)
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(ticket.title.isEmpty ? "未识别标题" : ticket.title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(isDark ? .white.opacity(0.9) : Color(hex: "#111111"))
+                    .lineLimit(1)
+
+                let detail = [ticket.eventTime, ticket.venue]
+                    .filter { !$0.isEmpty }.joined(separator: " · ")
+                if !detail.isEmpty {
+                    Text(detail)
+                        .font(.system(size: 12))
+                        .foregroundStyle(isDark ? .white.opacity(0.45) : Color(hex: "#A8A39A"))
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(isDark ? .white.opacity(0.25) : Color(hex: "#C5C0B8"))
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(isDark ? Color.white.opacity(0.07) : Color(hex: "#FDFCF8"))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(
+                    isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.05),
+                    lineWidth: 1
+                )
+        )
+        .shadow(color: .black.opacity(isDark ? 0 : 0.04), radius: 6, y: 2)
+    }
+
+    // MARK: Timeline Helpers
+
+    private struct TimelineDateGroup: Identifiable {
+        let id = UUID()
+        let label: String
+        let tickets: [Ticket]
+    }
+
+    private func dateGrouped(_ tickets: [Ticket]) -> [TimelineDateGroup] {
+        let cal = Calendar.current
+        let fmt = DateFormatter()
+        fmt.dateFormat = "M月 d日 EEEE"
+        fmt.locale = Locale(identifier: "zh_CN")
+
+        var order: [String] = []
+        var grouped: [String: [Ticket]] = [:]
+
+        for ticket in tickets {
+            let key: String
+            if let date = ticket.eventDate {
+                key = cal.isDateInToday(date) ? "今天" : fmt.string(from: date)
+            } else {
+                key = "日期待定"
+            }
+            if grouped[key] == nil {
+                order.append(key)
+                grouped[key] = []
+            }
+            grouped[key]!.append(ticket)
+        }
+
+        return order.compactMap { key in
+            guard let t = grouped[key] else { return nil }
+            return TimelineDateGroup(label: key, tickets: t)
+        }
+    }
+
+    private func countdownString(to date: Date) -> String {
+        let secs = max(0, Int(date.timeIntervalSinceNow))
+        let d = secs / 86_400
+        let h = (secs % 86_400) / 3600
+        let m = (secs % 3600) / 60
+        if d > 0 { return "\(d)d \(h)h" }
+        if h > 0 { return "\(h)h \(m)m" }
+        if m > 0 { return "\(m)m" }
+        return "即将开始"
+    }
+
+    private func timelineIcon(_ type: TicketType) -> String {
+        switch type {
+        case .movie:   return "film"
+        case .concert: return "music.note"
+        case .train:   return "train.side.front.car"
+        case .scenic:  return "mountain.2"
+        case .member:  return "creditcard"
+        case .generic: return "ticket"
+        }
+    }
+
+    // Dual-action bar shown on both tabs when the list is non-empty.
+    // Primary CTA opens scanner; secondary opens photo-library import.
+    private var actionBottomBar: some View {
+        HStack(spacing: 10) {
+            Button(action: onScanTapped) {
+                Text("＋ 扫一张")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(isDark ? Color.black : Color(hex: "#FDFCF8"))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(isDark ? Color.white : Color.black)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+
+            Button { showPhotoImport = true } label: {
+                Image(systemName: "photo.on.rectangle")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(isDark ? .white.opacity(0.7) : .black.opacity(0.6))
+                    .frame(width: 48, height: 48)
+                    .background(isDark ? Color.white.opacity(0.1) : Color.black.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.vertical, 12)
+        .background(.ultraThinMaterial)
+    }
+
+    // Both tabs use the same rich first-run showcase
+    private var currentEmptyState: some View {
+        emptyShowcase
+    }
+
+    // MARK: Empty State — unified across all filter tabs
+
+    private var emptyShowcase: some View {
+        VStack(spacing: 0) {
+            // Decorative illustration
+            ZStack {
+                Text("✦")
+                    .font(.system(size: 18))
+                    .foregroundStyle(isDark ? .white.opacity(0.3) : .black.opacity(0.2))
+                    .offset(x: -52, y: 6)
+                Text("✦")
+                    .font(.system(size: 11))
+                    .foregroundStyle(isDark ? .white.opacity(0.2) : .black.opacity(0.15))
+                    .offset(x: 54, y: -10)
+                Text("🎟")
+                    .font(.system(size: 72))
+            }
+            .padding(.top, 40)
+
+            Text("还没有票")
+                .font(.system(size: 28, weight: .bold))
+                .foregroundStyle(isDark ? .white.opacity(0.9) : .black.opacity(0.85))
+                .padding(.top, 20)
+
+            VStack(spacing: 3) {
+                Text("拍一张票、截图或二维码")
+                Text("秒速导入，随时亮码")
+            }
+            .font(.system(size: 15))
+            .foregroundStyle(isDark ? .white.opacity(0.38) : .black.opacity(0.38))
+            .multilineTextAlignment(.center)
+            .padding(.top, 10)
+
+            // Entry-point shortcuts — only the two import paths the app actually supports.
+            HStack(spacing: 10) {
+                entryTile("camera.fill", "拍照扫码", action: onScanTapped)
+                entryTile("photo.on.rectangle", "截图导入") { showPhotoImport = true }
+            }
+            .padding(.horizontal, 40)
+            .padding(.top, 28)
+
+            Text("支持电影票 · 高铁票 · 演出票 · 会员卡 · 门票...")
+                .font(.system(size: 12))
+                .foregroundStyle(isDark ? .white.opacity(0.22) : .black.opacity(0.28))
+                .multilineTextAlignment(.center)
+                .padding(.top, 20)
+        }
         .frame(maxWidth: .infinity)
-        .padding(.top, 40)
+        .padding(.top, 12)
+    }
+
+    // iOS-standard sticky bottom bar — placed via safeAreaInset in body
+    private var stickyImportBar: some View {
+        Button(action: onScanTapped) {
+            Text("＋ 扫描导入第一张票")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(isDark ? Color.black : Color(hex: "#FDFCF8"))
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(isDark ? Color.white : Color.black)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.vertical, 12)
+        .background(.ultraThinMaterial)
+    }
+
+    private func entryTile(_ icon: String, _ label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 7) {
+                Image(systemName: icon)
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundStyle(isDark ? .white.opacity(0.65) : .black.opacity(0.55))
+                Text(label)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(isDark ? .white.opacity(0.45) : .black.opacity(0.42))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(isDark ? Color.white.opacity(0.07) : Color.black.opacity(0.04))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
     }
 
     private var pageIndicator: some View {

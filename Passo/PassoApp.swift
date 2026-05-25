@@ -28,6 +28,11 @@ struct PassoApp: App {
             ContentView()
                 .environmentObject(store)
                 .task { await store.refreshEntitlements() }
+                .task {
+                    #if DEBUG
+                    seedPreviewDataIfNeeded()
+                    #endif
+                }
                 .onOpenURL { url in
                     // passo://import — triggered by Share Extension hand-off
                     guard url.scheme == "passo", url.host == "import" else { return }
@@ -36,4 +41,15 @@ struct PassoApp: App {
         }
         .modelContainer(PassoApp.sharedContainer)
     }
+
+    #if DEBUG
+    private func seedPreviewDataIfNeeded() {
+        let ctx = PassoApp.sharedContainer.mainContext
+        guard (try? ctx.fetchCount(FetchDescriptor<Ticket>())) == 0 else { return }
+        for type in TicketType.allCases {
+            ctx.insert(Ticket.preview(type))
+        }
+        try? ctx.save()
+    }
+    #endif
 }

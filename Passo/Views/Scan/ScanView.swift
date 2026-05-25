@@ -25,12 +25,32 @@ struct ScanView: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
+            // Camera + result sheet fill from physical top edge
             VStack(spacing: 0) {
                 cameraRegion
                 if detectedTicket != nil {
                     resultSheet
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
+            }
+            .ignoresSafeArea(edges: .top)
+
+            // iOS-standard top bar — floats over camera, safe area respected automatically
+            VStack(spacing: 6) {
+                HStack {
+                    closeButton
+                    Spacer()
+                    flashButton
+                }
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.top, 8)
+
+                if detectedTicket != nil {
+                    detectedBadge
+                        .transition(.scale(scale: 0.85).combined(with: .opacity))
+                }
+
+                Spacer()
             }
         }
         .statusBarHidden()
@@ -74,27 +94,6 @@ struct ScanView: View {
                 permissionDeniedOverlay
             @unknown default:
                 Color.black
-            }
-
-            // Top controls
-            VStack {
-                HStack {
-                    closeButton
-                    Spacer()
-                    flashButton
-                }
-                .padding(.horizontal, AppSpacing.md)
-                .padding(.top, 58)
-                Spacer()
-            }
-
-            // Detection badge
-            if detectedTicket != nil {
-                VStack {
-                    detectedBadge
-                        .padding(.top, 102)
-                    Spacer()
-                }
             }
 
             scanFrame

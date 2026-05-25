@@ -105,10 +105,10 @@ struct RecognitionConfirmView: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.white)
             Spacer()
-            Color.clear.frame(width: 40)
+            Color.clear.frame(width: 44)
         }
         .padding(.horizontal, AppSpacing.md)
-        .padding(.top, 62)
+        .padding(.top, 8)
         .padding(.bottom, 8)
     }
 
