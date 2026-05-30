@@ -15,6 +15,7 @@ struct ScanView: View {
     @State private var scanLineOffset: CGFloat = -60
     @State private var detectedTicket: Ticket?
     @State private var showConfirmSheet = false
+    @State private var showPhotoImport = false
 
     // The theme used for scan-frame accent color — updates when a ticket is detected
     private var scanAccent: Color {
@@ -51,9 +52,18 @@ struct ScanView: View {
                 }
 
                 Spacer()
+
+                // Album entry — only while still scanning (hidden once a ticket is detected).
+                if detectedTicket == nil {
+                    albumButton
+                        .padding(.bottom, 48)
+                }
             }
         }
         .statusBarHidden()
+        .sheet(isPresented: $showPhotoImport) {
+            PhotoImportView()
+        }
         // Sheet bound to showConfirmSheet so dismiss works independently from detectedTicket.
         // onDismiss: if the ticket was persisted (storeIdentifier non-nil), auto-dismiss ScanView.
         .sheet(isPresented: $showConfirmSheet, onDismiss: {
@@ -132,6 +142,25 @@ struct ScanView: View {
                 .overlay(Circle().strokeBorder(Color.white.opacity(0.1), lineWidth: 1))
                 .frame(width: 44, height: 44)          // HIG 44pt hit target
                 .contentShape(Circle())
+        }
+    }
+
+    private var albumButton: some View {
+        Button {
+            showPhotoImport = true
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "photo.on.rectangle")
+                    .font(.system(size: 16, weight: .medium))
+                Text("相册")
+                    .font(.system(size: 15, weight: .medium))
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 11)
+            .background(Color.white.opacity(0.14))
+            .clipShape(Capsule())
+            .overlay(Capsule().strokeBorder(Color.white.opacity(0.12), lineWidth: 1))
         }
     }
 
