@@ -25,7 +25,7 @@ struct PassDetailView: View {
     @State private var showDeleteConfirm = false
     @State private var editingNotes = ""
 
-    private let hPad: CGFloat = 20
+    private let hPad: CGFloat = AppSpacing.md   // 16pt — unified app-wide content margin
     private var isDark: Bool { true }
     private var theme: TicketTheme { ticket.ticketType.theme }
 
@@ -103,6 +103,22 @@ struct PassDetailView: View {
             .rootViewController?.present(av, animated: true)
     }
 
+    private func archiveTicket() {
+        ticket.isArchived = true
+        ticket.archivedAt = Date()
+        try? modelContext.save()
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        dismiss()
+    }
+
+    private func restoreTicket() {
+        ticket.isArchived = false
+        ticket.isUsed     = false
+        ticket.archivedAt = nil
+        try? modelContext.save()
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+
     private func syncWalletStatus() {
         guard let serial = ticket.passSerialNumber else { return }
         let typeID = "pass.com.passo.ticket"
@@ -164,14 +180,18 @@ struct PassDetailView: View {
                 Button { editingNotes = ticket.notes; showEditNotes = true } label: {
                     Label("编辑备注", systemImage: "square.and.pencil")
                 }
-                if ticket.isUsed {
-                    Button { ticket.isUsed = false; try? modelContext.save() } label: {
-                        Label("恢复使用", systemImage: "arrow.uturn.backward")
+                if ticket.isInArchive {
+                    Button { restoreTicket() } label: {
+                        Label("恢复", systemImage: "arrow.uturn.backward")
+                    }
+                } else {
+                    Button { archiveTicket() } label: {
+                        Label("归档", systemImage: "archivebox")
                     }
                 }
                 Divider()
                 Button(role: .destructive) { showDeleteConfirm = true } label: {
-                    Label("删除票据", systemImage: "trash")
+                    Label("删除", systemImage: "trash")
                 }
             } label: {
                 Image(systemName: "ellipsis")
@@ -301,6 +321,8 @@ struct PassDetailView: View {
             Divider().padding(.horizontal, AppSpacing.md)
             infoRow(systemIcon: "square.and.arrow.down", label: "来源", value: ticket.sourceApp.isEmpty ? "手动录入" : ticket.sourceApp)
         }
+        // Stable full width — independent of whether the map is a placeholder or image.
+        .frame(maxWidth: .infinity)
         .background(Color(uiColor: .systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusCard))
         .shadow(color: .black.opacity(0.06), radius: 12, y: 4)
@@ -313,51 +335,59 @@ struct PassDetailView: View {
         Button {
             openInMaps()
         } label: {
-            ZStack {
-                if let img = mapSnapshot {
-                    Image(uiImage: img)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    // Loading / no-location placeholder
-                    LinearGradient(
-                        colors: isDark
-                            ? [theme.backgroundStart.opacity(0.27), theme.backgroundEnd.opacity(0.27)]
-                            : [Color(hex: "#e8e6e0"), Color(hex: "#d4d1c9")],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
-                    )
-                    if ticket.venueAddress.isEmpty && ticket.latitude == nil {
-                        Label("暂无位置信息", systemImage: "map")
-                            .font(.system(size: 13))
-                            .foregroundStyle(.secondary)
+            // Color.clear (flexible width, 0 ideal) defines the box size; the map
+            // image and chrome are OVERLAYS, which never drive the host's layout —
+            // so a wide scaledToFill snapshot can't widen the info card.
+            Color.clear
+                .frame(maxWidth: .infinity)
+                .frame(height: 110)
+                .overlay {
+                    if let img = mapSnapshot {
+                        Image(uiImage: img)
+                            .resizable()
+                            .scaledToFill()
                     } else {
-                        ProgressView()
+                        ZStack {
+                            LinearGradient(
+                                colors: isDark
+                                    ? [theme.backgroundStart.opacity(0.27), theme.backgroundEnd.opacity(0.27)]
+                                    : [Color(hex: "#e8e6e0"), Color(hex: "#d4d1c9")],
+                                startPoint: .topLeading, endPoint: .bottomTrailing
+                            )
+                            if ticket.venueAddress.isEmpty && ticket.latitude == nil {
+                                Label("暂无位置信息", systemImage: "map")
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                ProgressView()
+                            }
+                        }
                     }
                 }
-
-                // Pin overlay
-                Image(systemName: "mappin.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(theme.accent)
-                    .shadow(color: theme.accent.opacity(0.5), radius: 6)
-                    .opacity(mapSnapshot != nil ? 1 : 0)
-
-                // "在地图中打开" hint
-                if mapSnapshot != nil {
-                    Text("点击在地图中打开")
-                        .font(.system(size: 11, weight: .medium))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(.regularMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                        .padding(8)
+                .overlay {
+                    // Pin
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundStyle(theme.accent)
+                        .shadow(color: theme.accent.opacity(0.5), radius: 6)
+                        .opacity(mapSnapshot != nil ? 1 : 0)
                 }
-            }
+                .overlay(alignment: .bottomTrailing) {
+                    // "在地图中打开" hint
+                    if mapSnapshot != nil {
+                        Text("点击在地图中打开")
+                            .font(.system(size: 11, weight: .medium))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(.regularMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .padding(8)
+                    }
+                }
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
-        .frame(height: 110)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(AppSpacing.md)
         .disabled(mapCoordinate == nil && ticket.venueAddress.isEmpty)
     }
@@ -503,7 +533,9 @@ struct PassDetailView: View {
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(.primary)
             }
+            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, AppSpacing.md)
         .padding(.vertical, 12)
     }
