@@ -17,11 +17,16 @@ struct TicketCardView: View {
     let ticket: Ticket
     let size: TicketCardSize
     let isDark: Bool
+    var useStaticBackground: Bool = false
 
     private var theme: TicketTheme { ticket.ticketType.theme }
 
     var body: some View {
-        GlassCardView(isDark: isDark, glowColor: ticket.isUsed ? nil : theme.accent) {
+        GlassCardView(
+            isDark: isDark,
+            glowColor: ticket.isUsed ? nil : theme.accent,
+            useStaticBackground: useStaticBackground
+        ) {
             VStack(alignment: .leading, spacing: 0) {
                 cardHeader
                 if size == .full {

@@ -231,11 +231,13 @@ private struct ProStatusCard: View {
                     Text("升级")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.white)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 7)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
                         .background(Color.black)
                         .clipShape(Capsule())
                 }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
             }
         }
         .padding(AppSpacing.md)

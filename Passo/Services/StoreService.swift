@@ -21,7 +21,7 @@ final class StoreService: ObservableObject {
         "com.passo.pro.yearly"
     ]
 
-    private var transactionListener: Task<Void, Error>?
+    private nonisolated(unsafe) var transactionListener: Task<Void, Never>?
 
     init() {
         transactionListener = listenForTransactions()
@@ -91,17 +91,14 @@ final class StoreService: ObservableObject {
         UserDefaults.standard.set(isPro, forKey: "isPro")
     }
 
-    private func listenForTransactions() -> Task<Void, Error> {
-        Task.detached { [weak self] in
+    private func listenForTransactions() -> Task<Void, Never> {
+        Task { @MainActor [weak self] in
             for await result in Transaction.updates {
                 guard case .verified(let tx) = result else { continue }
-                await MainActor.run {
-                    self?.purchasedIDs.insert(tx.productID)
-                    self?.syncProStatus()
-                }
+                self?.purchasedIDs.insert(tx.productID)
+                self?.syncProStatus()
                 await tx.finish()
             }
         }
     }
 }
-
