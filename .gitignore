@@ -17,3 +17,5 @@ Package.resolved
 # IDE
 .vscode/
 .idea/
+
+.reasonix/
