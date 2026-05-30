@@ -1,0 +1,68 @@
+name: iOS CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ios-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+
+jobs:
+  validate-project:
+    name: Validate project metadata
+    runs-on: macos-15
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Lint plists and entitlements
+        run: |
+          plutil -lint \
+            Passo/Info.plist \
+            PassoShareExtension/Info.plist \
+            Passo/Passo.entitlements \
+            PassoShareExtension/PassoShareExtension.entitlements
+
+      - name: List Xcode project schemes
+        run: xcodebuild -list -project Passo.xcodeproj
+
+  build:
+    name: Build ${{ matrix.scheme }}
+    runs-on: macos-15
+    timeout-minutes: 30
+    needs: validate-project
+
+    strategy:
+      fail-fast: false
+      matrix:
+        scheme:
+          - Passo
+          - PassoShareExtension
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build ${{ matrix.scheme }} without signing
+        run: |
+          xcodebuild -quiet build \
+            -project Passo.xcodeproj \
+            -scheme "${{ matrix.scheme }}" \
+            -configuration Debug \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO

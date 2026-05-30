@@ -33,7 +33,9 @@ final class ShareViewController: UIViewController {
         if let imageProvider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.image.identifier) }) {
             imageProvider.loadItem(forTypeIdentifier: UTType.image.identifier) { [weak self] data, error in
                 guard error == nil else {
-                    self?.cancel(message: "无法读取图片")
+                    Task { @MainActor in
+                        self?.cancel(message: "无法读取图片")
+                    }
                     return
                 }
                 var image: UIImage?
@@ -42,15 +44,21 @@ final class ShareViewController: UIViewController {
                 if let imgData = data as? Data  { image = UIImage(data: imgData) }
 
                 guard let image else {
-                    self?.cancel(message: "图片格式不支持")
+                    Task { @MainActor in
+                        self?.cancel(message: "图片格式不支持")
+                    }
                     return
                 }
-                Task { await self?.analyze(image: image) }
+                Task { @MainActor in
+                    await self?.analyze(image: image)
+                }
             }
         } else if let urlProvider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.url.identifier) }) {
             urlProvider.loadItem(forTypeIdentifier: UTType.url.identifier) { [weak self] data, _ in
                 let urlString = (data as? URL)?.absoluteString ?? (data as? String ?? "")
-                self?.handOff(barcodeValue: urlString, ocrText: "")
+                Task { @MainActor in
+                    self?.handOff(barcodeValue: urlString, ocrText: "")
+                }
             }
         } else {
             cancel(message: "Passo 暂不支持此类型内容")
@@ -78,7 +86,7 @@ final class ShareViewController: UIViewController {
         try? handler.perform([barcodeReq, ocrReq])
 
         let barcodeValue = (barcodeReq.results?.first as? VNBarcodeObservation)?.payloadStringValue ?? ""
-        let ocrText = (ocrReq.results as? [VNRecognizedTextObservation] ?? [])
+        let ocrText = (ocrReq.results ?? [])
             .compactMap { $0.topCandidates(1).first?.string }
             .joined(separator: " ")
 

@@ -33,7 +33,8 @@ struct WalletPresenter: UIViewControllerRepresentable {
 
     // MARK: - Coordinator
 
-    final class Coordinator: NSObject, PKAddPassesViewControllerDelegate {
+    @MainActor
+    final class Coordinator: NSObject, @preconcurrency PKAddPassesViewControllerDelegate {
         private let onAdded: () -> Void
         private let onCancelled: () -> Void
         private var pass: PKPass?
