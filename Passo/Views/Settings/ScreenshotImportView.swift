@@ -225,7 +225,7 @@ struct ScreenshotImportView: View {
                 try? handler.perform([barcodeReq, ocrReq])
 
                 let barcodeValue = (barcodeReq.results?.first as? VNBarcodeObservation)?.payloadStringValue ?? ""
-                let ocrText = (ocrReq.results as? [VNRecognizedTextObservation] ?? [])
+                let ocrText = (ocrReq.results ?? [])
                     .compactMap { $0.topCandidates(1).first?.string }
                     .joined(separator: " ")
 

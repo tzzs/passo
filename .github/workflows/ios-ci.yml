@@ -59,7 +59,7 @@ jobs:
 
       - name: Build ${{ matrix.scheme }} without signing
         run: |
-          xcodebuild build \
+          xcodebuild -quiet build \
             -project Passo.xcodeproj \
             -scheme "${{ matrix.scheme }}" \
             -configuration Debug \
