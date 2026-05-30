@@ -185,7 +185,7 @@ struct PhotoImportView: View {
 
         let barcodeValue = (barcodeReq.results?.first as? VNBarcodeObservation)?.payloadStringValue ?? ""
         let barcodeFormat = formatString(for: barcodeReq.results?.first as? VNBarcodeObservation)
-        let ocrText = (ocrReq.results as? [VNRecognizedTextObservation] ?? [])
+        let ocrText = (ocrReq.results ?? [])
             .compactMap { $0.topCandidates(1).first?.string }
             .joined(separator: " ")
 
