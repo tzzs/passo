@@ -13,6 +13,7 @@ enum ShareImportService {
 
     struct Payload {
         let barcodeValue: String
+        let barcodeFormat: String
         let ocrText: String
         let thumbnailData: Data?
     }
@@ -31,6 +32,7 @@ enum ShareImportService {
         else { return nil }
 
         let barcodeValue = json["barcode"] ?? ""
+        let barcodeFormat = json["format"] ?? "QR"
         let ocrText      = json["ocr"] ?? ""
         let thumbData    = try? Data(contentsOf: thumbURL)
 
@@ -39,7 +41,12 @@ enum ShareImportService {
         try? FileManager.default.removeItem(at: thumbURL)
 
         guard !barcodeValue.isEmpty || ocrText.count > 10 else { return nil }
-        return Payload(barcodeValue: barcodeValue, ocrText: ocrText, thumbnailData: thumbData)
+        return Payload(
+            barcodeValue: barcodeValue,
+            barcodeFormat: barcodeFormat,
+            ocrText: ocrText,
+            thumbnailData: thumbData
+        )
     }
 }
 

@@ -82,6 +82,7 @@ struct ContentView: View {
     private func handleShareImport() {
         guard let payload = ShareImportService.consumePendingPayload() else { return }
         let ticket = TicketParser.parse(barcodeValue: payload.barcodeValue, ocrText: payload.ocrText)
+        ticket.barcodeFormat = payload.barcodeFormat
         ticket.thumbnailData = payload.thumbnailData
         ticket.sourceApp = "共享扩展"
         shareImportTicket = ticket
