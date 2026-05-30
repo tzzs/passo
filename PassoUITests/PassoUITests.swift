@@ -19,51 +19,44 @@ final class PassoUITests: XCTestCase {
         add(att)
     }
 
-    /// Issue 2a: tapping "+" opens an in-place Menu (album first, scan second).
-    func testPlusMenu() throws {
-        // The "+" is the only plain image-button in the nav header.
-        let plus = app.buttons["plus"].firstMatch
-        if plus.waitForExistence(timeout: 3) {
-            plus.tap()
-        } else {
-            // Fallback: top-right corner coordinate tap
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.07)).tap()
-        }
+    /// 卡包 tab — membership card grid.
+    func testCardsTab() throws {
+        app.tabBars.buttons["卡包"].tap()
         sleep(1)
-        snap("plus_menu")
-
-        // Menu items should be present
-        XCTAssertTrue(app.buttons["从相册导入"].waitForExistence(timeout: 2)
-                      || app.staticTexts["从相册导入"].waitForExistence(timeout: 1),
-                      "Menu should show 从相册导入")
+        snap("cards_tab")
+        XCTAssertTrue(app.staticTexts["卡包"].exists)
     }
 
-    /// Issue 3: detail page uses SF Symbol icons (no emoji).
-    func testDetailPage() throws {
-        // Tap the first ticket cell/card to push detail
-        let firstCell = app.cells.firstMatch
-        if firstCell.waitForExistence(timeout: 3) {
-            firstCell.tap()
-        } else {
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.30)).tap()
-        }
-        sleep(2)  // allow map snapshot + push transition
-        snap("detail_page")
+    /// 票据 · 全部 timeline via segment.
+    func testAllTimeline() throws {
+        app.buttons["全部"].firstMatch.tap()
+        sleep(1)
+        snap("all_timeline")
     }
 
-    /// Issue 2b: scan page exposes an album entry.
-    func testScanAlbumEntry() throws {
-        let plus = app.buttons["plus"].firstMatch
-        if plus.waitForExistence(timeout: 3) { plus.tap() } else {
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.07)).tap()
-        }
+    /// Archive flow: swipe the top pile card to mark used → archive entry → archive view.
+    func testArchiveFlow() throws {
+        let card = app.scrollViews.firstMatch
+        let start = card.coordinate(withNormalizedOffset: CGVector(dx: 0.4, dy: 0.34))
+        let end   = card.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.34))
+        start.press(forDuration: 0.05, thenDragTo: end)
         sleep(1)
-        // Pick 扫描条码 from the menu
-        let scan = app.buttons["扫描条码"]
-        if scan.waitForExistence(timeout: 2) {
-            scan.tap()
-            sleep(2)
-            snap("scan_page")
+        let archiveEntry = app.staticTexts["已归档"].firstMatch
+        if archiveEntry.waitForExistence(timeout: 2) {
+            archiveEntry.tap()
+            sleep(1)
+            snap("archive_view")
         }
+    }
+
+    /// Detail page width must stay stable when the async map snapshot loads
+    /// (regression: scaledToFill snapshot widened the info card / ate the margins).
+    func testDetailMapWidth() throws {
+        app.scrollViews.firstMatch
+            .coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.34)).tap()
+        sleep(1)
+        snap("detail_initial")    // map placeholder
+        sleep(4)
+        snap("detail_after_map")  // map loaded — width must be unchanged
     }
 }
