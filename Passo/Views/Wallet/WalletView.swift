@@ -679,12 +679,24 @@ struct WalletView: View {
 
 // MARK: - Preview
 
-#Preview {
-    let config    = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Ticket.self, configurations: config)
-    for type in TicketType.allCases {
-        container.mainContext.insert(Ticket.preview(type))
+private struct WalletViewPreviewContainer: View {
+    private let container: ModelContainer
+
+    init() {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: Ticket.self, configurations: config)
+        for type in TicketType.allCases {
+            container.mainContext.insert(Ticket.preview(type))
+        }
+        self.container = container
     }
-    return WalletView(onScanTapped: {}, onPhotoTapped: {})
-        .modelContainer(container)
+
+    var body: some View {
+        WalletView(onScanTapped: {}, onPhotoTapped: {})
+            .modelContainer(container)
+    }
+}
+
+#Preview {
+    WalletViewPreviewContainer()
 }

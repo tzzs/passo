@@ -1,4 +1,4 @@
-import AVFoundation
+@preconcurrency import AVFoundation
 import CoreImage
 import SwiftUI
 import UIKit
@@ -24,18 +24,18 @@ final class CameraService: NSObject, ObservableObject {
     /// alongside the barcode value for richer field extraction.
     @Published private(set) var latestOCRText: String = ""
 
-    let previewLayer = AVCaptureVideoPreviewLayer()
+    nonisolated(unsafe) let previewLayer = AVCaptureVideoPreviewLayer()
 
-    private let session      = AVCaptureSession()
+    nonisolated(unsafe) private let session      = AVCaptureSession()
     private let sessionQueue = DispatchQueue(label: "passo.camera.session", qos: .userInitiated)
     private let ocrQueue     = DispatchQueue(label: "passo.camera.ocr",     qos: .utility)
-    private let metadataOutput   = AVCaptureMetadataOutput()
-    private let videoDataOutput  = AVCaptureVideoDataOutput()
+    nonisolated(unsafe) private let metadataOutput   = AVCaptureMetadataOutput()
+    nonisolated(unsafe) private let videoDataOutput  = AVCaptureVideoDataOutput()
 
     private var lastDetectedValue: String?
     // Accessed only from ocrQueue — nonisolated(unsafe) avoids actor-isolation error
     nonisolated(unsafe) private var lastOCRFrameTime: CFTimeInterval = 0
-    private let ocrInterval: CFTimeInterval = 1.5
+    private nonisolated static let ocrInterval: CFTimeInterval = 1.5
 
     // MARK: Lifecycle
 
@@ -44,12 +44,17 @@ final class CameraService: NSObject, ObservableObject {
         authorizationStatus = status
         switch status {
         case .authorized:
-            sessionQueue.async { self.configureAndStart() }
+            sessionQueue.async { [weak self] in
+                self?.configureAndStart()
+            }
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 Task { @MainActor in
                     self?.authorizationStatus = granted ? .authorized : .denied
-                    if granted { self?.sessionQueue.async { self?.configureAndStart() } }
+                    guard granted, let service = self else { return }
+                    service.sessionQueue.async { [weak service] in
+                        service?.configureAndStart()
+                    }
                 }
             }
         default:
@@ -83,7 +88,7 @@ final class CameraService: NSObject, ObservableObject {
 
     // MARK: Private Setup
 
-    private func configureAndStart() {
+    private nonisolated func configureAndStart() {
         guard !session.isRunning else { return }
         session.beginConfiguration()
         session.sessionPreset = .hd1280x720
@@ -102,7 +107,7 @@ final class CameraService: NSObject, ObservableObject {
         if session.canAddOutput(metadataOutput) {
             session.addOutput(metadataOutput)
             metadataOutput.setMetadataObjectsDelegate(self, queue: .main)
-            metadataOutput.metadataObjectTypes = supportedBarcodeTypes
+            metadataOutput.metadataObjectTypes = Self.supportedBarcodeTypes
         }
 
         // Video data output for parallel OCR
@@ -125,7 +130,7 @@ final class CameraService: NSObject, ObservableObject {
         session.startRunning()
     }
 
-    private var supportedBarcodeTypes: [AVMetadataObject.ObjectType] {
+    private nonisolated static var supportedBarcodeTypes: [AVMetadataObject.ObjectType] {
         [.qr, .dataMatrix, .aztec, .code128, .ean13, .ean8, .itf14, .code39]
     }
 }
@@ -176,7 +181,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         from connection: AVCaptureConnection
     ) {
         let now = CACurrentMediaTime()
-        guard now - lastOCRFrameTime >= ocrInterval else { return }
+        guard now - lastOCRFrameTime >= Self.ocrInterval else { return }
         // Note: lastOCRFrameTime is accessed on ocrQueue — no actor isolation needed
         // since this property is only written here and read here (single queue).
         // We use a local nonisolated approach; the published result goes back to MainActor.

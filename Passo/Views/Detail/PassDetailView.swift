@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 import PassKit
-import MapKit
+@preconcurrency import MapKit
 
 // MARK: - Pass Detail View
 
