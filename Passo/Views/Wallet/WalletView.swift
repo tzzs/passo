@@ -17,21 +17,22 @@ enum WalletFilter: Int, CaseIterable {
 
 // MARK: - Wallet View
 
-/// Main home screen — Apple Wallet-style ticket pile with glassmorphism cards.
-/// Design reference: HiFiPile in hifi.jsx
+/// Home screen — Apple Wallet-style ticket pile (upcoming) or timeline (all).
+/// `filter` is fixed at init time; switching between views is handled by TabView in ContentView.
 struct WalletView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme)  private var colorScheme
 
     @Query(sort: \Ticket.eventDate) private var tickets: [Ticket]
 
-    let onScanTapped: () -> Void
+    /// Fixed filter passed from the parent tab — not user-switchable here.
+    let filter:        WalletFilter
+    let onScanTapped:  () -> Void
+    let onPhotoTapped: () -> Void
 
-    @State private var filterIndex = 0
     @State private var selectedTicket: Ticket?
-    @State private var topCardOffset: CGSize = .zero
-    @State private var swipeAction: SwipeAction?
-    @State private var showPhotoImport = false
+    @State private var topCardOffset:  CGSize = .zero
+    @State private var swipeAction:    SwipeAction?
 
     private enum SwipeAction { case delete, markUsed }
 
@@ -41,21 +42,15 @@ struct WalletView: View {
         filteredTickets.first?.ticketType.theme ?? TicketType.generic.theme
     }
 
-    private var activeFilter: WalletFilter {
-        WalletFilter(rawValue: filterIndex) ?? .all
-    }
-
     private var isTimelineMode: Bool {
-        activeFilter == .all && !filteredTickets.isEmpty
+        filter == .all && !filteredTickets.isEmpty
     }
 
     private var filteredTickets: [Ticket] {
-        switch activeFilter {
+        switch filter {
         case .upcoming:
-            // Today's tickets (regardless of time) + strictly future events, exclude used
             return tickets.filter { ($0.isToday || $0.isUpcoming) && !$0.isUsed }
         case .all:
-            // Unused tickets first (sorted by date), used tickets sink to bottom
             return tickets.sorted {
                 if $0.isUsed != $1.isUsed { return !$0.isUsed }
                 let d0 = $0.eventDate ?? .distantFuture
@@ -68,41 +63,24 @@ struct WalletView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background: dynamic gradient in dark mode, system gray in light mode
-                // (matches design spec — see hifi.jsx HiFiPile)
                 background
                     .ignoresSafeArea()
                     .animation(AppAnimation.themeChange, value: filteredTickets.first?.ticketType.rawValue)
 
-                // Ambient glow blobs (dark mode only)
                 if isDark { ambientGlows }
 
                 ScrollView {
                     VStack(spacing: 0) {
                         headerBar
-                        filterControl
                         nextUpLabel
                         cardStack
                         bottomSpacer
                     }
                 }
             }
-            // Must be inside NavigationStack so the destination is registered in the nav graph
             .navigationDestination(item: $selectedTicket) { ticket in
                 PassDetailView(ticket: ticket)
             }
-            // Sticky bottom bar: empty state shows a single primary CTA;
-            // any non-empty list (both tabs) gets the dual action bar.
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if filteredTickets.isEmpty {
-                    stickyImportBar
-                } else {
-                    actionBottomBar
-                }
-            }
-        }
-        .sheet(isPresented: $showPhotoImport) {
-            PhotoImportView()
         }
     }
 
@@ -143,41 +121,43 @@ struct WalletView: View {
 
             Spacer()
 
-            HStack(spacing: 10) {
-                GlassPillButton(isDark: isDark, action: { showPhotoImport = true }) {
-                    AnyView(
-                        Image(systemName: "photo.badge.plus")
-                            .font(.system(size: 17, weight: .medium))
-                            .foregroundStyle(isDark ? .white : .black)
-                    )
+            // "+" import menu — anchored to the button, expands in place (no bottom-sheet jump).
+            // Album first, scan second (usage skews 7:3 toward album imports).
+            Menu {
+                Button {
+                    onPhotoTapped()
+                } label: {
+                    Label("从相册导入", systemImage: "photo.on.rectangle")
                 }
-
-                GlassPillButton(isDark: isDark, action: onScanTapped) {
-                    AnyView(
-                        Image(systemName: "qrcode.viewfinder")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundStyle(isDark ? .white : .black)
-                    )
+                Button {
+                    onScanTapped()
+                } label: {
+                    Label("扫描条码", systemImage: "viewfinder")
                 }
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(isDark ? .white : .black)
+                    .frame(width: 44, height: 44)
+                    .background(
+                        Circle()
+                            .fill(isDark ? Color.white.opacity(0.12) : Color.black.opacity(0.05))
+                            .overlay(
+                                Circle().strokeBorder(
+                                    Color.white.opacity(isDark ? 0.15 : 0.4),
+                                    lineWidth: 1
+                                )
+                            )
+                            .shadow(color: Color.black.opacity(isDark ? 0.2 : 0.06), radius: 4, y: 1)
+                    )
             }
         }
         .padding(.horizontal, AppSpacing.md)
         .padding(.top, 8)
     }
 
-    private var filterControl: some View {
-        GlassSegmentedControl(
-            items: WalletFilter.allCases.map(\.label),
-            selectedIndex: $filterIndex,
-            isDark: isDark
-        )
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.top, 12)
-    }
-
     @ViewBuilder
     private var nextUpLabel: some View {
-        // Hidden in timeline mode — the countdown chip communicates this instead
         if !isTimelineMode {
             HStack(spacing: 6) {
                 Circle()
@@ -207,7 +187,7 @@ struct WalletView: View {
                 currentEmptyState
                     .padding(.horizontal, AppSpacing.md)
             } else {
-                switch activeFilter {
+                switch filter {
                 case .upcoming:
                     cardPile
                         .padding(.horizontal, AppSpacing.md)
@@ -221,10 +201,8 @@ struct WalletView: View {
 
     private var cardPile: some View {
         VStack(spacing: 0) {
-            // Top card with swipe gesture
             ZStack {
                 if let top = filteredTickets.first {
-                    // Ghost depth layers behind the top card
                     if filteredTickets.count > 2 {
                         ghostCard(inset: 26, topOffset: -8, opacity: 0.04, bgOpacity: 0.04)
                     }
@@ -237,10 +215,7 @@ struct WalletView: View {
                             .saturation(top.isUsed ? 0.25 : 1)
                             .opacity(top.isUsed ? 0.7 : 1)
                         swipeLabels(for: top)
-                        // "已使用" stamp overlay
-                        if top.isUsed {
-                            usedStamp
-                        }
+                        if top.isUsed { usedStamp }
                     }
                     .offset(topCardOffset)
                     .rotationEffect(.degrees(Double(topCardOffset.width) / 22))
@@ -250,7 +225,6 @@ struct WalletView: View {
                 }
             }
 
-            // Peek of second card — tappable to navigate to its detail
             if filteredTickets.count > 1 {
                 TicketCardView(ticket: filteredTickets[1], size: .compact, isDark: isDark)
                     .padding(.top, 12)
@@ -261,10 +235,10 @@ struct WalletView: View {
     }
 
     private func ghostCard(inset: CGFloat, topOffset: CGFloat, opacity: Double, bgOpacity: Double) -> some View {
-        RoundedRectangle(cornerRadius: 14)
+        RoundedRectangle(cornerRadius: AppSpacing.radiusCard)
             .fill(isDark ? Color.white.opacity(bgOpacity) : Color.white.opacity(0.4))
             .overlay(
-                RoundedRectangle(cornerRadius: 14)
+                RoundedRectangle(cornerRadius: AppSpacing.radiusCard)
                     .strokeBorder(Color.white.opacity(opacity * 2), lineWidth: 1)
             )
             .frame(height: 24)
@@ -331,12 +305,12 @@ struct WalletView: View {
                         .foregroundStyle(redAccent)
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, AppSpacing.md)
             .padding(.vertical, 14)
             .background(redAccent.opacity(isDark ? 0.1 : 0.07))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusCard))
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: AppSpacing.radiusCard)
                     .strokeBorder(redAccent.opacity(0.18), lineWidth: 1)
             )
         }
@@ -344,7 +318,6 @@ struct WalletView: View {
 
     private func timelineDateSection(_ group: TimelineDateGroup) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Date header
             HStack(spacing: 12) {
                 Color.clear.frame(width: 20)
                 Text(group.label)
@@ -353,10 +326,8 @@ struct WalletView: View {
             }
             .padding(.bottom, 10)
 
-            // Ticket rows with vertical timeline line
             ForEach(Array(group.tickets.enumerated()), id: \.element.persistentModelID) { idx, ticket in
                 HStack(alignment: .top, spacing: 12) {
-                    // Left: dot + vertical connector line
                     VStack(spacing: 0) {
                         Circle()
                             .fill(isDark ? Color.white.opacity(0.3) : Color(hex: "#C5C0B8"))
@@ -372,7 +343,6 @@ struct WalletView: View {
                     }
                     .frame(width: 20)
 
-                    // Ticket card
                     Button { selectedTicket = ticket } label: {
                         timelineTicketCard(ticket)
                     }
@@ -385,14 +355,20 @@ struct WalletView: View {
     }
 
     private func timelineTicketCard(_ ticket: Ticket) -> some View {
-        HStack(spacing: 12) {
+        let accent = ticket.ticketType.theme.accent
+        // Structured seat/hall/quantity info from the generic extra-field slots
+        // (电影=影厅/座位, 火车=车厢/座位, 景点=类型/数量…). Type-adaptive without per-type branches.
+        let extras = [ticket.extraField1Value, ticket.extraField2Value]
+            .filter { !$0.isEmpty }.joined(separator: " · ")
+
+        return HStack(spacing: 12) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(ticket.ticketType.theme.accent.opacity(isDark ? 0.2 : 0.12))
+                    .fill(accent.opacity(isDark ? 0.2 : 0.12))
                     .frame(width: 40, height: 40)
                 Image(systemName: timelineIcon(ticket.ticketType))
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(ticket.ticketType.theme.accent)
+                    .foregroundStyle(accent)
             }
 
             VStack(alignment: .leading, spacing: 3) {
@@ -409,6 +385,14 @@ struct WalletView: View {
                         .foregroundStyle(isDark ? .white.opacity(0.45) : Color(hex: "#A8A39A"))
                         .lineLimit(1)
                 }
+
+                // Enrichment: seat/hall/quantity row, tinted with the type accent
+                if !extras.isEmpty {
+                    Text(extras)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(accent.opacity(isDark ? 0.9 : 0.85))
+                        .lineLimit(1)
+                }
             }
 
             Spacer()
@@ -417,13 +401,20 @@ struct WalletView: View {
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(isDark ? .white.opacity(0.25) : Color(hex: "#C5C0B8"))
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, AppSpacing.md)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(isDark ? Color.white.opacity(0.07) : Color(hex: "#FDFCF8"))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton))
+        // Leading accent bar — gives each row a "card spine" matching its ticket type.
+        .overlay(alignment: .leading) {
+            Capsule()
+                .fill(accent)
+                .frame(width: 3)
+                .padding(.vertical, 10)
+        }
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
+            RoundedRectangle(cornerRadius: AppSpacing.radiusButton)
                 .strokeBorder(
                     isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.05),
                     lineWidth: 1
@@ -446,7 +437,7 @@ struct WalletView: View {
         fmt.dateFormat = "M月 d日 EEEE"
         fmt.locale = Locale(identifier: "zh_CN")
 
-        var order: [String] = []
+        var order:   [String]          = []
         var grouped: [String: [Ticket]] = [:]
 
         for ticket in tickets {
@@ -491,44 +482,12 @@ struct WalletView: View {
         }
     }
 
-    // Dual-action bar shown on both tabs when the list is non-empty.
-    // Primary CTA opens scanner; secondary opens photo-library import.
-    private var actionBottomBar: some View {
-        HStack(spacing: 10) {
-            Button(action: onScanTapped) {
-                Text("＋ 扫一张")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(isDark ? Color.black : Color(hex: "#FDFCF8"))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .background(isDark ? Color.white : Color.black)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-            }
+    // MARK: - Empty State
 
-            Button { showPhotoImport = true } label: {
-                Image(systemName: "photo.on.rectangle")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(isDark ? .white.opacity(0.7) : .black.opacity(0.6))
-                    .frame(width: 48, height: 48)
-                    .background(isDark ? Color.white.opacity(0.1) : Color.black.opacity(0.06))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-            }
-        }
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.vertical, 12)
-        .background(.ultraThinMaterial)
-    }
-
-    // Both tabs use the same rich first-run showcase
-    private var currentEmptyState: some View {
-        emptyShowcase
-    }
-
-    // MARK: Empty State — unified across all filter tabs
+    private var currentEmptyState: some View { emptyShowcase }
 
     private var emptyShowcase: some View {
         VStack(spacing: 0) {
-            // Decorative illustration
             ZStack {
                 Text("✦")
                     .font(.system(size: 18))
@@ -557,10 +516,10 @@ struct WalletView: View {
             .multilineTextAlignment(.center)
             .padding(.top, 10)
 
-            // Entry-point shortcuts — only the two import paths the app actually supports.
+            // Each tile maps directly to its import path.
             HStack(spacing: 10) {
-                entryTile("camera.fill", "拍照扫码", action: onScanTapped)
-                entryTile("photo.on.rectangle", "截图导入") { showPhotoImport = true }
+                entryTile("camera.fill",          "拍照扫码",  action: onScanTapped)
+                entryTile("photo.on.rectangle",   "截图导入",  action: onPhotoTapped)
             }
             .padding(.horizontal, 40)
             .padding(.top, 28)
@@ -573,22 +532,6 @@ struct WalletView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 12)
-    }
-
-    // iOS-standard sticky bottom bar — placed via safeAreaInset in body
-    private var stickyImportBar: some View {
-        Button(action: onScanTapped) {
-            Text("＋ 扫描导入第一张票")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(isDark ? Color.black : Color(hex: "#FDFCF8"))
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(isDark ? Color.white : Color.black)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-        }
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.vertical, 12)
-        .background(.ultraThinMaterial)
     }
 
     private func entryTile(_ icon: String, _ label: String, action: @escaping () -> Void) -> some View {
@@ -604,7 +547,7 @@ struct WalletView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(isDark ? Color.white.opacity(0.07) : Color.black.opacity(0.04))
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton))
         }
     }
 
@@ -631,7 +574,9 @@ struct WalletView: View {
 
     private var bottomSpacer: some View {
         VStack(spacing: 8) {
-            if !filteredTickets.isEmpty {
+            // Page dots + count only make sense for the pile (即将); a vertical
+            // timeline (全部) reads them as a stray horizontal-paging affordance.
+            if filter == .upcoming, !filteredTickets.isEmpty {
                 pageIndicator
                 ticketCountLabel
             }
@@ -643,13 +588,13 @@ struct WalletView: View {
 
     @ViewBuilder
     private func swipeLabels(for ticket: Ticket) -> some View {
-        let dragX = topCardOffset.width
+        let dragX    = topCardOffset.width
         let progress = min(abs(dragX) / swipeThreshold, 1.0)
 
         HStack {
-            // Right swipe → mark used
             if dragX > 20 {
-                Label(ticket.isUsed ? "已归档" : "标记使用", systemImage: ticket.isUsed ? "archivebox" : "checkmark.circle.fill")
+                Label(ticket.isUsed ? "已归档" : "标记使用",
+                      systemImage: ticket.isUsed ? "archivebox" : "checkmark.circle.fill")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 14)
@@ -661,7 +606,6 @@ struct WalletView: View {
                     .padding(.leading, 20)
             }
 
-            // Left swipe → delete
             if dragX < -20 {
                 Label("删除", systemImage: "trash.fill")
                     .font(.system(size: 14, weight: .semibold))
@@ -684,15 +628,13 @@ struct WalletView: View {
     private func swipeGesture(for ticket: Ticket) -> some Gesture {
         DragGesture()
             .onChanged { value in
-                // Only allow horizontal swipe; dampen vertical drift
                 topCardOffset = CGSize(
-                    width: value.translation.width,
+                    width:  value.translation.width,
                     height: value.translation.height * 0.15
                 )
             }
             .onEnded { value in
                 let dx = value.translation.width
-
                 if dx > swipeThreshold {
                     commitSwipe(direction: .right, ticket: ticket)
                 } else if dx < -swipeThreshold {
@@ -727,25 +669,14 @@ struct WalletView: View {
     private enum HorizontalDirection { case left, right }
 }
 
-// MARK: - Photo Import Entry (WalletView header button)
-
-extension WalletView {
-    var photoImportButton: some View {
-        Button { showPhotoImport = true } label: {
-            Image(systemName: "photo.badge.plus")
-                .font(.system(size: 18, weight: .medium))
-                .foregroundStyle(isDark ? .white : .black)
-        }
-    }
-}
+// MARK: - Preview
 
 #Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let config    = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: Ticket.self, configurations: config)
-    // Seed preview data — one ticket per type
     for type in TicketType.allCases {
         container.mainContext.insert(Ticket.preview(type))
     }
-    return WalletView(onScanTapped: {})
+    return WalletView(filter: .upcoming, onScanTapped: {}, onPhotoTapped: {})
         .modelContainer(container)
 }
