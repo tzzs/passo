@@ -46,7 +46,7 @@ struct RecognitionConfirmView: View {
 
             if showAddedToast { successToast }
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showWalletSheet) {
             if let data = pkpassData {
                 WalletPresenter(passData: data) {
@@ -132,15 +132,15 @@ struct RecognitionConfirmView: View {
                 Divider().padding(.horizontal, AppSpacing.md)
 
                 // Field rows
-                fieldRow(icon: "🎬", label: "活动名称",  value: $ticket.title)
+                fieldRow(systemIcon: "textformat",        label: "活动名称",  value: $ticket.title)
                 Divider().padding(.horizontal, AppSpacing.md)
-                fieldRow(icon: "📍", label: "场馆",      value: $ticket.venue)
+                fieldRow(systemIcon: "mappin.and.ellipse", label: "场馆",      value: $ticket.venue)
                 Divider().padding(.horizontal, AppSpacing.md)
                 dateRow
                 Divider().padding(.horizontal, AppSpacing.md)
-                fieldRow(icon: "🕐", label: "时间",      value: $ticket.eventTime)
+                fieldRow(systemIcon: "clock",             label: "时间",      value: $ticket.eventTime)
                 Divider().padding(.horizontal, AppSpacing.md)
-                fieldRow(icon: "💺", label: "座位",      value: $ticket.seatInfo)
+                fieldRow(systemIcon: "chair.lounge",      label: "座位",      value: $ticket.seatInfo)
 
                 Divider().padding(.horizontal, AppSpacing.md)
                 tagsRow
@@ -205,9 +205,7 @@ struct RecognitionConfirmView: View {
 
     private var dateRow: some View {
         HStack(spacing: 12) {
-            Text("📅")
-                .font(.system(size: 18))
-                .frame(width: 28, alignment: .center)
+            iconTile("calendar")
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("日期")
@@ -233,11 +231,21 @@ struct RecognitionConfirmView: View {
         .padding(.vertical, 10)
     }
 
-    private func fieldRow(icon: String, label: String, value: Binding<String>) -> some View {
+    /// Themed SF Symbol tile — rounded square with the ticket's accent tint.
+    private func iconTile(_ systemName: String) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(theme.accent.opacity(0.15))
+                .frame(width: 32, height: 32)
+            Image(systemName: systemName)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(theme.accent)
+        }
+    }
+
+    private func fieldRow(systemIcon: String, label: String, value: Binding<String>) -> some View {
         HStack(spacing: 12) {
-            Text(icon)
-                .font(.system(size: 18))
-                .frame(width: 28, alignment: .center)
+            iconTile(systemIcon)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(label)
@@ -323,9 +331,7 @@ struct RecognitionConfirmView: View {
     private var tagsRow: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("🏷️")
-                    .font(.system(size: 18))
-                    .frame(width: 28, alignment: .center)
+                iconTile("tag")
                 VStack(alignment: .leading, spacing: 1) {
                     Text("标签")
                         .font(.system(size: 12))
@@ -439,9 +445,9 @@ struct RecognitionConfirmView: View {
                 }
                 .foregroundStyle(isDark ? Color.black : Color.white)
                 .frame(maxWidth: .infinity)
-                .frame(height: 54)
+                .frame(height: 50)
                 .background(isDark ? Color.white : Color.black)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton))
                 .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
             }
             .disabled(isSigning)

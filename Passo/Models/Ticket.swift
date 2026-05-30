@@ -58,6 +58,8 @@ final class Ticket {
     var sourceApp: String           // "猫眼电影", "12306", "截图导入", etc.
     var importedAt: Date
     var isUsed: Bool
+    var isArchived: Bool = false    // Explicit manual archive (declaration default = SwiftData migration default)
+    var archivedAt: Date?           // When it entered the archive (manual) — for sorting
     var thumbnailData: Data?        // Cropped source image for card thumbnail
 
     // Reminder
@@ -115,6 +117,8 @@ final class Ticket {
         self.sourceApp          = sourceApp
         self.importedAt         = Date()
         self.isUsed             = false
+        self.isArchived         = false
+        self.archivedAt         = nil
         self.thumbnailData      = nil
         self.reminderDate       = nil
         self.reminderEnabled    = false
@@ -149,6 +153,32 @@ extension Ticket {
     var isExpired: Bool {
         guard let exp = expiresAt else { return false }
         return exp < Date()
+    }
+
+    // MARK: Ticket vs Card classification
+
+    /// A "card" is a long-lived, reusable pass (membership / loyalty) with no
+    /// appointment time. The split keys on `eventDate` (the attend-at moment),
+    /// NOT `expiresAt` — a 月卡 has a validity end but is still a card.
+    /// Event-bound types (movie/concert/train/scenic) stay tickets even if the
+    /// date is missing (incomplete OCR), so they're never misfiled as cards.
+    var isCard: Bool {
+        switch ticketType {
+        case .member:  return true
+        case .generic: return eventDate == nil
+        default:       return false
+        }
+    }
+
+    /// Unified archive bucket for both tickets and cards: manually archived,
+    /// expired (auto), or already used.
+    var isInArchive: Bool { isArchived || isExpired || isUsed }
+
+    /// A still-valid card within 7 days of its validity end — surfaced visually
+    /// in the card wallet (no system notification).
+    var isExpiringSoon: Bool {
+        guard let exp = expiresAt, !isExpired else { return false }
+        return exp.timeIntervalSinceNow <= 7 * 86_400
     }
 
     var isUpcoming: Bool {
