@@ -16,6 +16,7 @@ struct PassDetailView: View {
     @Bindable var ticket: Ticket
 
     @State private var isFlipped = false
+    @State private var cardHeight: CGFloat = 0
     @State private var mapSnapshot: UIImage?
     @State private var mapCoordinate: CLLocationCoordinate2D?
     @State private var reminderEnabled: Bool = false
@@ -24,12 +25,23 @@ struct PassDetailView: View {
     @State private var showDeleteConfirm = false
     @State private var editingNotes = ""
 
+    private let hPad: CGFloat = 20
     private var isDark: Bool { true }
     private var theme: TicketTheme { ticket.ticketType.theme }
 
     var body: some View {
         ZStack {
-            backgroundColor.ignoresSafeArea()
+            // Background: dark behind the header, fades to system background behind info cards.
+            LinearGradient(
+                stops: [
+                    .init(color: .black, location: 0),
+                    .init(color: .black, location: 0.56),
+                    .init(color: Color(uiColor: .systemBackground), location: 0.70),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
             gradientHeader.ignoresSafeArea(edges: .top)
 
             ScrollView {
@@ -105,11 +117,7 @@ struct PassDetailView: View {
         }
     }
 
-    // MARK: Background
-
-    private var backgroundColor: Color {
-        Color.black
-    }
+    // MARK: Gradient Header
 
     private var gradientHeader: some View {
         VStack {
@@ -118,7 +126,7 @@ struct PassDetailView: View {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
-            .frame(height: UIScreen.main.bounds.height * 0.52)
+            .frame(height: UIScreen.main.bounds.height * 0.62)
             .overlay(
                 // Ambient glow
                 Circle()
@@ -177,7 +185,7 @@ struct PassDetailView: View {
                     .contentShape(Circle())
             }
         }
-        .padding(.horizontal, AppSpacing.md)
+        .padding(.horizontal, hPad)
         .padding(.top, 8)
         .padding(.bottom, 8)
     }
@@ -186,8 +194,14 @@ struct PassDetailView: View {
 
     private var flippableCard: some View {
         ZStack {
-            // Front face
+            // Front face — GeometryReader in background captures the rendered height
+            // so we can pin the back face to exactly the same dimension.
             TicketCardView(ticket: ticket, size: .full, isDark: true, useStaticBackground: true)
+                .background(
+                    GeometryReader { geo in
+                        Color.clear.onAppear { cardHeight = geo.size.height }
+                    }
+                )
                 .rotation3DEffect(
                     .degrees(isFlipped ? 180 : 0),
                     axis: (x: 0, y: 1, z: 0),
@@ -195,8 +209,13 @@ struct PassDetailView: View {
                 )
                 .opacity(isFlipped ? 0 : 1)
 
-            // Back face
+            // Back face — explicit height pins it to the front face measurement.
             cardBackFace
+                .frame(
+                    maxWidth: .infinity,
+                    minHeight: cardHeight > 0 ? cardHeight : nil,
+                    maxHeight: cardHeight > 0 ? cardHeight : nil
+                )
                 .rotation3DEffect(
                     .degrees(isFlipped ? 0 : -180),
                     axis: (x: 0, y: 1, z: 0),
@@ -205,7 +224,7 @@ struct PassDetailView: View {
                 .opacity(isFlipped ? 1 : 0)
         }
         .animation(AppAnimation.cardFlip, value: isFlipped)
-        .padding(.horizontal, AppSpacing.md)
+        .padding(.horizontal, hPad)
         .padding(.bottom, 4)
         .onTapGesture {
             isFlipped.toggle()
@@ -229,8 +248,13 @@ struct PassDetailView: View {
                 backInfoBlock(title: "备注", content: ticket.notes.isEmpty ? "暂无备注" : ticket.notes)
                 backInfoBlock(title: "原始条码", content: ticket.barcodeValue.isEmpty ? "—" : ticket.barcodeValue, isMonospaced: true)
                 backInfoBlock(title: "来源", content: ticket.sourceApp.isEmpty ? "手动录入" : ticket.sourceApp)
+
+                Spacer(minLength: 0)
             }
+            // Padding before frame so the VStack fills (cardHeight - 2×padding),
+            // matching the GlassCardView's proposed height exactly.
             .padding(AppSpacing.md)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
     }
 
@@ -271,16 +295,16 @@ struct PassDetailView: View {
     private var infoCard: some View {
         VStack(spacing: 0) {
             mapPreview
-            infoRow(icon: "🕐", label: "过期时间", value: expiryText)
+            infoRow(systemIcon: "clock", label: "过期时间", value: expiryText)
             Divider().padding(.horizontal, AppSpacing.md)
             reminderRow
             Divider().padding(.horizontal, AppSpacing.md)
-            infoRow(icon: "📱", label: "来源",     value: ticket.sourceApp.isEmpty ? "手动录入" : ticket.sourceApp)
+            infoRow(systemIcon: "square.and.arrow.down", label: "来源", value: ticket.sourceApp.isEmpty ? "手动录入" : ticket.sourceApp)
         }
         .background(Color(uiColor: .systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusCard))
         .shadow(color: .black.opacity(0.06), radius: 12, y: 4)
-        .padding(.horizontal, AppSpacing.md)
+        .padding(.horizontal, hPad)
     }
 
     // MARK: M5 — Map Preview
@@ -361,7 +385,7 @@ struct PassDetailView: View {
             latitudinalMeters: 600,
             longitudinalMeters: 600
         )
-        options.size = CGSize(width: UIScreen.main.bounds.width - 32, height: 110)
+        options.size = CGSize(width: UIScreen.main.bounds.width - 40, height: 110)
         options.scale = UIScreen.main.scale
         options.mapType = .standard
         options.showsBuildings = true
@@ -406,9 +430,7 @@ struct PassDetailView: View {
 
     private var reminderRow: some View {
         HStack(spacing: 12) {
-            Text("🔔")
-                .font(.system(size: 18))
-                .frame(width: 28, alignment: .center)
+            iconTile(reminderEnabled ? "bell.badge" : "bell")
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("提醒")
@@ -457,11 +479,22 @@ struct PassDetailView: View {
         try? modelContext.save()
     }
 
-    private func infoRow(icon: String, label: String, value: String) -> some View {
+    /// Themed SF Symbol tile — rounded square with the ticket's accent tint.
+    /// Replaces ad-hoc emoji icons for a consistent, crisp look across info rows.
+    private func iconTile(_ systemName: String) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(theme.accent.opacity(0.15))
+                .frame(width: 32, height: 32)
+            Image(systemName: systemName)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(theme.accent)
+        }
+    }
+
+    private func infoRow(systemIcon: String, label: String, value: String) -> some View {
         HStack(spacing: 12) {
-            Text(icon)
-                .font(.system(size: 18))
-                .frame(width: 28, alignment: .center)
+            iconTile(systemIcon)
             VStack(alignment: .leading, spacing: 1) {
                 Text(label)
                     .font(.system(size: 12))
@@ -492,7 +525,7 @@ struct PassDetailView: View {
             .background(isDark ? Color(hex: "#2c2c2e") : Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
-        .padding(.horizontal, AppSpacing.md)
+        .padding(.horizontal, hPad)
         .padding(.vertical, 12)
         .padding(.bottom, 40)
         .disabled(!ticket.isAddedToWallet)
