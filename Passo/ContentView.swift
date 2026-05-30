@@ -4,22 +4,22 @@ import SwiftData
 // MARK: - Tab Definition
 
 enum AppTab: Int, CaseIterable {
-    case upcoming = 0  // 即将
-    case all      = 1  // 全部
+    case tickets  = 0  // 票据（即将/全部 + 归档入口）
+    case cards    = 1  // 卡包（会员/长期卡）
     case settings = 2  // 设置
 
     var title: String {
         switch self {
-        case .upcoming: return "即将"
-        case .all:      return "全部"
+        case .tickets:  return "票据"
+        case .cards:    return "卡包"
         case .settings: return "设置"
         }
     }
 
     var icon: String {
         switch self {
-        case .upcoming: return "calendar"
-        case .all:      return "list.bullet.rectangle.portrait"
+        case .tickets:  return "ticket"
+        case .cards:    return "creditcard"
         case .settings: return "gearshape"
         }
     }
@@ -28,7 +28,7 @@ enum AppTab: Int, CaseIterable {
 // MARK: - Content View
 
 struct ContentView: View {
-    @State private var selectedTab:      AppTab = .upcoming
+    @State private var selectedTab:      AppTab = .tickets
     @State private var showScanSheet     = false  // ScanView fullScreenCover
     @State private var showPhotoImport   = false  // PhotoImportView sheet
     @State private var shareImportTicket: Ticket?
@@ -36,27 +36,25 @@ struct ContentView: View {
     // Badge: today's active ticket count shown on the 即将 tab
     @Query private var allTickets: [Ticket]
     private var todayBadgeCount: Int {
-        allTickets.filter { $0.isToday && !$0.isUsed }.count
+        allTickets.filter { $0.isToday && !$0.isCard && !$0.isInArchive }.count
     }
 
     var body: some View {
         TabView(selection: $selectedTab) {
             WalletView(
-                filter: .upcoming,
                 onScanTapped:  { showScanSheet = true },
                 onPhotoTapped: { showPhotoImport = true }
             )
-            .tabItem { Label(AppTab.upcoming.title, systemImage: AppTab.upcoming.icon) }
+            .tabItem { Label(AppTab.tickets.title, systemImage: AppTab.tickets.icon) }
             .badge(todayBadgeCount > 0 ? todayBadgeCount : 0)
-            .tag(AppTab.upcoming)
+            .tag(AppTab.tickets)
 
-            WalletView(
-                filter: .all,
+            CardWalletView(
                 onScanTapped:  { showScanSheet = true },
                 onPhotoTapped: { showPhotoImport = true }
             )
-            .tabItem { Label(AppTab.all.title, systemImage: AppTab.all.icon) }
-            .tag(AppTab.all)
+            .tabItem { Label(AppTab.cards.title, systemImage: AppTab.cards.icon) }
+            .tag(AppTab.cards)
 
             SettingsView()
                 .tabItem { Label(AppTab.settings.title, systemImage: AppTab.settings.icon) }

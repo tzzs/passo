@@ -17,6 +17,7 @@
 		3AEBCE9DA388017D5D7AED13 /* ScreenshotImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D516DDC4C03CC891607C4B49 /* ScreenshotImportView.swift */; };
 		57424267B76A02553DCA4D5D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A65A73C8BED644269BF1DA /* AppTheme.swift */; };
 		5803B46810466E043C9CF870 /* PassoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08A53EA9CF0617E7DD190B23 /* PassoUITests.swift */; };
+		6413F97BEF955C4F207416C4 /* CardWalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 822E91A10616729C0723C96D /* CardWalletView.swift */; };
 		689B93C3266DA49529596DAF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A75BC8D84604AB861352F1F /* Foundation.framework */; };
 		698DB139BFF2BBFDBE4DCA51 /* ScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA0887C01B87EB0EF76CA62 /* ScanView.swift */; };
 		6ED0D67F72EEFDFAADCE4B9B /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C0EEE25F45C15570C3516D9 /* CameraService.swift */; };
@@ -32,6 +33,7 @@
 		BCAB63311E2C8AF9756404BF /* StoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCE1EC0A750A2164DE38A167 /* StoreService.swift */; };
 		C95D66DC169C0C63A51DDC97 /* ShareImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF46936704AE3E9E67560C2 /* ShareImportService.swift */; };
 		D5A002BA5101A4D7409F8268 /* ProUpgradeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1DF6A4D119802D65B15991 /* ProUpgradeSheet.swift */; };
+		D6F0493B0E482B0E6913BC94 /* ArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9E8DB542B554555439D4C2 /* ArchiveView.swift */; };
 		E0E127DEAED7F0F6ED9C98F4 /* PassBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21CCD280CACB4267082FB60B /* PassBuilder.swift */; };
 /* End PBXBuildFile section */
 
@@ -66,7 +68,9 @@
 		6B793F634581EDB604F0042D /* PassoShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PassoShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7414454046D0D20E7B0A3BC0 /* SigningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SigningService.swift; sourceTree = "<group>"; };
 		779091FEBA240173A77EE3AC /* PassoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassoApp.swift; sourceTree = "<group>"; };
+		822E91A10616729C0723C96D /* CardWalletView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CardWalletView.swift; sourceTree = "<group>"; };
 		8785A1542D28E66674E87567 /* PhotoImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoImportView.swift; sourceTree = "<group>"; };
+		8A9E8DB542B554555439D4C2 /* ArchiveView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ArchiveView.swift; sourceTree = "<group>"; };
 		97C9F3780B86FBC897F44E9A /* Passo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Passo.entitlements; sourceTree = "<group>"; };
 		9EEDC446E43178C3565AFF53 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A5828C11113B0230DCC90670 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -203,6 +207,8 @@
 			isa = PBXGroup;
 			children = (
 				3AC67683C5D8ACEE177AA30B /* WalletView.swift */,
+				822E91A10616729C0723C96D /* CardWalletView.swift */,
+				8A9E8DB542B554555439D4C2 /* ArchiveView.swift */,
 			);
 			path = Wallet;
 			sourceTree = "<group>";
@@ -397,6 +403,8 @@
 				700999EB5649B621B1161297 /* TicketParser.swift in Sources */,
 				003E646DC8A61AC3812A623A /* WalletPresenter.swift in Sources */,
 				1ABD982041FF0E0D14B84B3F /* WalletView.swift in Sources */,
+				6413F97BEF955C4F207416C4 /* CardWalletView.swift in Sources */,
+				D6F0493B0E482B0E6913BC94 /* ArchiveView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
