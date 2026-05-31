@@ -47,11 +47,16 @@ struct WalletPresenter: UIViewControllerRepresentable {
 
         func addPassesViewControllerDidFinish(_ controller: PKAddPassesViewController) {
             controller.dismiss(animated: true)
-            // Use containsPass for precise membership check rather than passes().isEmpty
-            if let pass, PKPassLibrary().containsPass(pass) {
-                onAdded()
-            } else {
-                onCancelled()
+            // PKPassLibrary may not reflect the just-added pass synchronously,
+            // so give it a beat before the membership check to avoid a false
+            // "cancelled" right after a successful add.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+                guard let self else { return }
+                if let pass = self.pass, PKPassLibrary().containsPass(pass) {
+                    self.onAdded()
+                } else {
+                    self.onCancelled()
+                }
             }
         }
     }

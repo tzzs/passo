@@ -58,6 +58,8 @@ final class Ticket {
     var sourceApp: String           // "猫眼电影", "12306", "截图导入", etc.
     var importedAt: Date
     var isUsed: Bool
+    var isArchived: Bool = false    // Explicit manual archive (declaration default = SwiftData migration default)
+    var archivedAt: Date?           // When it entered the archive (manual) — for sorting
     var thumbnailData: Data?        // Cropped source image for card thumbnail
 
     // Reminder
@@ -115,6 +117,8 @@ final class Ticket {
         self.sourceApp          = sourceApp
         self.importedAt         = Date()
         self.isUsed             = false
+        self.isArchived         = false
+        self.archivedAt         = nil
         self.thumbnailData      = nil
         self.reminderDate       = nil
         self.reminderEnabled    = false
@@ -149,6 +153,34 @@ extension Ticket {
     var isExpired: Bool {
         guard let exp = expiresAt else { return false }
         return exp < Date()
+    }
+
+    // MARK: Ticket vs Card classification
+
+    /// A "card" is a long-lived, reusable pass (membership / loyalty). Only the
+    /// explicit `.member` type qualifies — we deliberately do NOT auto-card a
+    /// dateless `.generic` item, because incomplete OCR (no parsed event date)
+    /// would otherwise bury ordinary tickets in the card wallet where users
+    /// can't find them. Card imports default to `.member` at the import source
+    /// (see ContentView `preferredType`), so genuine cards land here correctly.
+    var isCard: Bool { ticketType == .member }
+
+    /// Unified archive bucket for both tickets and cards: manually archived,
+    /// expired (auto), or already used.
+    var isInArchive: Bool { isArchived || isExpired || isUsed }
+
+    /// Whether "restore" can actually move this item back to the active list.
+    /// Restore clears `isArchived`/`isUsed`, but it cannot un-expire a ticket —
+    /// an auto-expired item stays in the archive regardless. So we only offer
+    /// "restore" when the item would genuinely leave the archive afterwards.
+    /// Expired items need an explicit "edit validity" flow instead (see P2-1).
+    var canRestore: Bool { isInArchive && !isExpired }
+
+    /// A still-valid card within 7 days of its validity end — surfaced visually
+    /// in the card wallet (no system notification).
+    var isExpiringSoon: Bool {
+        guard let exp = expiresAt, !isExpired else { return false }
+        return exp.timeIntervalSinceNow <= 7 * 86_400
     }
 
     var isUpcoming: Bool {

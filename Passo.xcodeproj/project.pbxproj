@@ -11,15 +11,20 @@
 		031731B8F7CB0DB60E36965E /* PhotoImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8785A1542D28E66674E87567 /* PhotoImportView.swift */; };
 		15DAA7D09B3C0A810D95D76F /* Passo.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 130949084EA1B9812008F736 /* Passo.storekit */; };
 		1ABD982041FF0E0D14B84B3F /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC67683C5D8ACEE177AA30B /* WalletView.swift */; };
+		2367D51AFA90F491EBD95588 /* PassBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6650C39ED4A591466089266 /* PassBuilderTests.swift */; };
 		2E39365D20EBD50AB9BF8BFD /* TicketCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F056606A6ADCE2DECE67CFD1 /* TicketCardView.swift */; };
+		33344080FC2090B0E75E3012 /* ImportQuotaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954D8C922DB7D11CFEC22FF6 /* ImportQuotaTests.swift */; };
 		347F9E1028F31F2A08F5052C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EEDC446E43178C3565AFF53 /* SettingsView.swift */; };
 		3AB947B2F7597ADB274B85C9 /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34380143A1056CF5DF006171 /* ReminderService.swift */; };
 		3AEBCE9DA388017D5D7AED13 /* ScreenshotImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D516DDC4C03CC891607C4B49 /* ScreenshotImportView.swift */; };
+		40E858CA92E0767DDF7D29F3 /* TicketModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE169E8AD9AAFB1F47FADF29 /* TicketModelTests.swift */; };
+		452FE746D302E74BA0E40581 /* ArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 860470D6261E032B5AA6C4F3 /* ArchiveView.swift */; };
 		57424267B76A02553DCA4D5D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A65A73C8BED644269BF1DA /* AppTheme.swift */; };
 		698DB139BFF2BBFDBE4DCA51 /* ScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA0887C01B87EB0EF76CA62 /* ScanView.swift */; };
 		6ED0D67F72EEFDFAADCE4B9B /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C0EEE25F45C15570C3516D9 /* CameraService.swift */; };
 		700999EB5649B621B1161297 /* TicketParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC63ABB292ACF839C7C55C1 /* TicketParser.swift */; };
 		84C7CE115C0D3557EF6F5DDC /* PassDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A04F3BB9D8DF2E510103862 /* PassDetailView.swift */; };
+		8D759A8B0C6609A5C403174A /* CardWalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95E2D5DDBDF0CF7C7BB75A84 /* CardWalletView.swift */; };
 		92E38410C52186A2F117578C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7372016D63A2348DAD153AE /* ContentView.swift */; };
 		99B2A05CF21020DCCA6CE3DE /* PassoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 779091FEBA240173A77EE3AC /* PassoApp.swift */; };
 		A10C0CBCED3D61588DE5F225 /* RecognitionConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52B6103FEDB9C1AB75B55EB1 /* RecognitionConfirmView.swift */; };
@@ -31,7 +36,26 @@
 		C95D66DC169C0C63A51DDC97 /* ShareImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF46936704AE3E9E67560C2 /* ShareImportService.swift */; };
 		D5A002BA5101A4D7409F8268 /* ProUpgradeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1DF6A4D119802D65B15991 /* ProUpgradeSheet.swift */; };
 		E0E127DEAED7F0F6ED9C98F4 /* PassBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21CCD280CACB4267082FB60B /* PassBuilder.swift */; };
+		E21994F89A5B401CF4B92353 /* TicketParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BA6BE4619F4C8BEB0074DE6 /* TicketParserTests.swift */; };
+		EBC81943CD6E37640B2A2678 /* PassoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1E7D0B3F933B3A26880CC9 /* PassoUITests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4CEF348F132F6BEF5549E3AD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 94067BF3B1AA1391FB21C835 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5BD4D1EC7FCCFCC2C7706B6;
+			remoteInfo = Passo;
+		};
+		CCCA55A7346CB00D4CA76D92 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 94067BF3B1AA1391FB21C835 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5BD4D1EC7FCCFCC2C7706B6;
+			remoteInfo = Passo;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		0C0EEE25F45C15570C3516D9 /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
@@ -40,6 +64,7 @@
 		130949084EA1B9812008F736 /* Passo.storekit */ = {isa = PBXFileReference; path = Passo.storekit; sourceTree = "<group>"; };
 		161D2CD54A35C6FA4BDD7D4B /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		1A04F3BB9D8DF2E510103862 /* PassDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassDetailView.swift; sourceTree = "<group>"; };
+		1A1E7D0B3F933B3A26880CC9 /* PassoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassoUITests.swift; sourceTree = "<group>"; };
 		1D0D485E8E2B4B02FC945F9C /* WalletPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletPresenter.swift; sourceTree = "<group>"; };
 		21CCD280CACB4267082FB60B /* PassBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassBuilder.swift; sourceTree = "<group>"; };
 		34380143A1056CF5DF006171 /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
@@ -47,14 +72,21 @@
 		4F3EE53288228D726ED912E9 /* PassoShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PassoShareExtension.entitlements; sourceTree = "<group>"; };
 		52B6103FEDB9C1AB75B55EB1 /* RecognitionConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognitionConfirmView.swift; sourceTree = "<group>"; };
 		56B3637ABE30F5345353721C /* GlassCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCardView.swift; sourceTree = "<group>"; };
+		5BA6BE4619F4C8BEB0074DE6 /* TicketParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketParserTests.swift; sourceTree = "<group>"; };
 		5EB4FFFB3E5323A44702A848 /* Ticket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ticket.swift; sourceTree = "<group>"; };
 		6B793F634581EDB604F0042D /* PassoShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PassoShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7414454046D0D20E7B0A3BC0 /* SigningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SigningService.swift; sourceTree = "<group>"; };
 		779091FEBA240173A77EE3AC /* PassoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassoApp.swift; sourceTree = "<group>"; };
+		860470D6261E032B5AA6C4F3 /* ArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveView.swift; sourceTree = "<group>"; };
 		8785A1542D28E66674E87567 /* PhotoImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoImportView.swift; sourceTree = "<group>"; };
+		954D8C922DB7D11CFEC22FF6 /* ImportQuotaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportQuotaTests.swift; sourceTree = "<group>"; };
+		95E2D5DDBDF0CF7C7BB75A84 /* CardWalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardWalletView.swift; sourceTree = "<group>"; };
+		97BE5AE8813C3ACFEE794BCB /* PassoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PassoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		97C9F3780B86FBC897F44E9A /* Passo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Passo.entitlements; sourceTree = "<group>"; };
 		9EEDC446E43178C3565AFF53 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A5828C11113B0230DCC90670 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A5F4B2C44AB8A2B9891D9637 /* PassoTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PassoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A6650C39ED4A591466089266 /* PassBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassBuilderTests.swift; sourceTree = "<group>"; };
 		A7372016D63A2348DAD153AE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C40D0BBFE1FBA5D4F792822E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C536FDC78C8D1D8B55083031 /* Passo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Passo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -62,6 +94,7 @@
 		D516DDC4C03CC891607C4B49 /* ScreenshotImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotImportView.swift; sourceTree = "<group>"; };
 		E0A65A73C8BED644269BF1DA /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		EAC63ABB292ACF839C7C55C1 /* TicketParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketParser.swift; sourceTree = "<group>"; };
+		EE169E8AD9AAFB1F47FADF29 /* TicketModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketModelTests.swift; sourceTree = "<group>"; };
 		F056606A6ADCE2DECE67CFD1 /* TicketCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketCardView.swift; sourceTree = "<group>"; };
 		FCE1EC0A750A2164DE38A167 /* StoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -103,6 +136,14 @@
 			path = Passo;
 			sourceTree = "<group>";
 		};
+		3D9024CE57946DB54E7BDA9B /* PassoUITests */ = {
+			isa = PBXGroup;
+			children = (
+				1A1E7D0B3F933B3A26880CC9 /* PassoUITests.swift */,
+			);
+			path = PassoUITests;
+			sourceTree = "<group>";
+		};
 		4948FFFE7C6B79219A911331 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -134,6 +175,8 @@
 			children = (
 				C536FDC78C8D1D8B55083031 /* Passo.app */,
 				6B793F634581EDB604F0042D /* PassoShareExtension.appex */,
+				A5F4B2C44AB8A2B9891D9637 /* PassoTests.xctest */,
+				97BE5AE8813C3ACFEE794BCB /* PassoUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -151,9 +194,22 @@
 		C4B4955E40D33D4E1477343E /* Wallet */ = {
 			isa = PBXGroup;
 			children = (
+				860470D6261E032B5AA6C4F3 /* ArchiveView.swift */,
+				95E2D5DDBDF0CF7C7BB75A84 /* CardWalletView.swift */,
 				3AC67683C5D8ACEE177AA30B /* WalletView.swift */,
 			);
 			path = Wallet;
+			sourceTree = "<group>";
+		};
+		D3E35CA4EA9F007ACDDDFB94 /* PassoTests */ = {
+			isa = PBXGroup;
+			children = (
+				954D8C922DB7D11CFEC22FF6 /* ImportQuotaTests.swift */,
+				A6650C39ED4A591466089266 /* PassBuilderTests.swift */,
+				EE169E8AD9AAFB1F47FADF29 /* TicketModelTests.swift */,
+				5BA6BE4619F4C8BEB0074DE6 /* TicketParserTests.swift */,
+			);
+			path = PassoTests;
 			sourceTree = "<group>";
 		};
 		E04ACFAE03756E7A22129A7D = {
@@ -161,6 +217,8 @@
 			children = (
 				301D739E8F31B59796D45D55 /* Passo */,
 				0F94FF738C34C02755004D4F /* PassoShareExtension */,
+				D3E35CA4EA9F007ACDDDFB94 /* PassoTests */,
+				3D9024CE57946DB54E7BDA9B /* PassoUITests */,
 				9F2EB66CC34EA10D876FC799 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -202,6 +260,42 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		AB9074CAFA5C74A51D496C34 /* PassoUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 48C6DE6E320A5FDC40200609 /* Build configuration list for PBXNativeTarget "PassoUITests" */;
+			buildPhases = (
+				AECB75419AAB7CA8F51F652B /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DF30AEC9E79AC8596E65688B /* PBXTargetDependency */,
+			);
+			name = PassoUITests;
+			packageProductDependencies = (
+			);
+			productName = PassoUITests;
+			productReference = 97BE5AE8813C3ACFEE794BCB /* PassoUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		C5E8BC934039E0239441323C /* PassoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 560ECD6ED6E750E0C967E2E3 /* Build configuration list for PBXNativeTarget "PassoTests" */;
+			buildPhases = (
+				089811561A328DE9030ADCDE /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D59369665A444742A0248952 /* PBXTargetDependency */,
+			);
+			name = PassoTests;
+			packageProductDependencies = (
+			);
+			productName = PassoTests;
+			productReference = A5F4B2C44AB8A2B9891D9637 /* PassoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		E2B7095B8E0E5D64B7254936 /* PassoShareExtension */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F02EC464140FB64F1E2369A6 /* Build configuration list for PBXNativeTarget "PassoShareExtension" */;
@@ -246,6 +340,15 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					AB9074CAFA5C74A51D496C34 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+						TestTargetID = F5BD4D1EC7FCCFCC2C7706B6;
+					};
+					C5E8BC934039E0239441323C = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
 					E2B7095B8E0E5D64B7254936 = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
@@ -272,6 +375,8 @@
 			targets = (
 				F5BD4D1EC7FCCFCC2C7706B6 /* Passo */,
 				E2B7095B8E0E5D64B7254936 /* PassoShareExtension */,
+				C5E8BC934039E0239441323C /* PassoTests */,
+				AB9074CAFA5C74A51D496C34 /* PassoUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -288,12 +393,25 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		089811561A328DE9030ADCDE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				33344080FC2090B0E75E3012 /* ImportQuotaTests.swift in Sources */,
+				2367D51AFA90F491EBD95588 /* PassBuilderTests.swift in Sources */,
+				40E858CA92E0767DDF7D29F3 /* TicketModelTests.swift in Sources */,
+				E21994F89A5B401CF4B92353 /* TicketParserTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A0FA1A95E2D0520F208180C5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				57424267B76A02553DCA4D5D /* AppTheme.swift in Sources */,
+				452FE746D302E74BA0E40581 /* ArchiveView.swift in Sources */,
 				6ED0D67F72EEFDFAADCE4B9B /* CameraService.swift in Sources */,
+				8D759A8B0C6609A5C403174A /* CardWalletView.swift in Sources */,
 				92E38410C52186A2F117578C /* ContentView.swift in Sources */,
 				BB8E8003CD161D5635D2FCC3 /* GlassCardView.swift in Sources */,
 				E0E127DEAED7F0F6ED9C98F4 /* PassBuilder.swift in Sources */,
@@ -317,6 +435,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AECB75419AAB7CA8F51F652B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EBC81943CD6E37640B2A2678 /* PassoUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CC7E6DF39671EBB7397A817C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -327,7 +453,39 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		D59369665A444742A0248952 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F5BD4D1EC7FCCFCC2C7706B6 /* Passo */;
+			targetProxy = CCCA55A7346CB00D4CA76D92 /* PBXContainerItemProxy */;
+		};
+		DF30AEC9E79AC8596E65688B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F5BD4D1EC7FCCFCC2C7706B6 /* Passo */;
+			targetProxy = 4CEF348F132F6BEF5549E3AD /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		0A3DC522C4596E6A81F5CDA8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.passo.app.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Passo;
+			};
+			name = Release;
+		};
 		2612C0428984EAF236DDDA6B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -384,6 +542,25 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		532D036EEC49801BA33EACA9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.passo.app.tests;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Passo.app/Passo";
 			};
 			name = Release;
 		};
@@ -537,6 +714,44 @@
 			};
 			name = Release;
 		};
+		C35CF40135D06EC5383D21CB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.passo.app.tests;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Passo.app/Passo";
+			};
+			name = Debug;
+		};
+		EAB6E3FC8FDC77146B8E3026 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.passo.app.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Passo;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -545,6 +760,24 @@
 			buildConfigurations = (
 				3C964148F5CCBB999377ABEF /* Debug */,
 				96C7FC787C3A31255DC5815F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		48C6DE6E320A5FDC40200609 /* Build configuration list for PBXNativeTarget "PassoUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EAB6E3FC8FDC77146B8E3026 /* Debug */,
+				0A3DC522C4596E6A81F5CDA8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		560ECD6ED6E750E0C967E2E3 /* Build configuration list for PBXNativeTarget "PassoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C35CF40135D06EC5383D21CB /* Debug */,
+				532D036EEC49801BA33EACA9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

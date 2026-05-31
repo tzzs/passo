@@ -26,12 +26,18 @@ enum PassBuilder {
             "description": snapshot.title.isEmpty ? "票据" : snapshot.title,
         ]
 
-        pass["barcodes"] = [[
-            "message": snapshot.barcodeValue,
-            "format": pkBarcodeFormat(snapshot.barcodeFormat),
-            "messageEncoding": "iso-8859-1"
-        ]]
-        pass["barcode"] = pass["barcodes"]
+        // Barcode: emit only when we actually have a value (an empty `message`
+        // is rejected by PassKit). `barcodes` (iOS 9+) is an array; `barcode`
+        // (legacy, iOS 8) must be a *single* dictionary — not the array.
+        if !snapshot.barcodeValue.isEmpty {
+            let barcode: [String: Any] = [
+                "message": snapshot.barcodeValue,
+                "format": pkBarcodeFormat(snapshot.barcodeFormat),
+                "messageEncoding": "iso-8859-1"
+            ]
+            pass["barcodes"] = [barcode]
+            pass["barcode"]  = barcode
+        }
 
         if let date = snapshot.eventDate {
             pass["relevantDate"] = ISO8601DateFormatter().string(from: date)
@@ -49,8 +55,19 @@ enum PassBuilder {
             pass["maxDistance"] = 500
         }
 
+        // Per-type colors so the signed pass matches the in-app card theme.
+        let colors = passColors(for: snapshot.ticketType)
+        pass["backgroundColor"] = colors.background
+        pass["foregroundColor"] = colors.foreground
+        pass["labelColor"]      = colors.label
+
         let style = passStyle(for: snapshot.ticketType)
-        pass[style] = buildFields(for: snapshot)
+        var fields = buildFields(for: snapshot)
+        // `transitType` is required by — and only valid inside — a boardingPass.
+        if style == "boardingPass" {
+            fields["transitType"] = transitType(for: snapshot.ticketType)
+        }
+        pass[style] = fields
 
         return pass
     }
@@ -114,6 +131,30 @@ enum PassBuilder {
         case .train:             return "boardingPass"
         case .member:            return "storeCard"
         case .movie, .concert, .scenic, .generic: return "eventTicket"
+        }
+    }
+
+    private static func transitType(for type: TicketType) -> String {
+        switch type {
+        case .train: return "PKTransitTypeTrain"
+        default:     return "PKTransitTypeGeneric"
+        }
+    }
+
+    /// PassKit color triplet per ticket type, mirroring `TicketTheme`
+    /// (`backgroundStart` → background, `accent` → label) so the signed pass
+    /// looks consistent with the in-app card. Foreground stays white because
+    /// every theme background is dark. Values are `rgb(r, g, b)` strings as
+    /// required by the pass.json spec.
+    private static func passColors(for type: TicketType) -> (background: String, foreground: String, label: String) {
+        let foreground = "rgb(255, 255, 255)"
+        switch type {
+        case .movie:   return ("rgb(26, 26, 46)",  foreground, "rgb(233, 69, 96)")
+        case .concert: return ("rgb(13, 2, 33)",   foreground, "rgb(255, 107, 107)")
+        case .train:   return ("rgb(0, 51, 102)",  foreground, "rgb(0, 201, 255)")
+        case .member:  return ("rgb(27, 67, 50)",  foreground, "rgb(82, 183, 136)")
+        case .scenic:  return ("rgb(45, 74, 30)",  foreground, "rgb(168, 213, 162)")
+        case .generic: return ("rgb(44, 44, 46)",  foreground, "rgb(142, 142, 147)")
         }
     }
 

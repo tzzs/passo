@@ -10,6 +10,10 @@ struct PhotoImportView: View {
     @Environment(\.dismiss)      private var dismiss
     @Environment(\.modelContext) private var modelContext
 
+    /// When imported from the card wallet, an unrecognized result defaults here
+    /// (.member) instead of .generic. nil = imported from the ticket flow.
+    var preferredType: TicketType? = nil
+
     @AppStorage("isPro") private var isPro = false
     @Query private var allTickets: [Ticket]
 
@@ -96,7 +100,7 @@ struct PhotoImportView: View {
 
             Spacer()
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, AppSpacing.xl)
         .onChange(of: selectedItem) { _, item in
             guard let item else { return }
             Task { await analyze(item: item) }
@@ -149,7 +153,7 @@ struct PhotoImportView: View {
 
             Spacer()
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, AppSpacing.xl)
     }
 
     // MARK: Analysis Pipeline
@@ -158,78 +162,47 @@ struct PhotoImportView: View {
         phase = .analyzing
 
         guard let data = try? await item.loadTransferable(type: Data.self),
-              let uiImage = UIImage(data: data),
-              let cgImage = uiImage.cgImage
+              let uiImage = UIImage(data: data)
         else {
             phase = .failed("无法读取图片，请重试")
             return
         }
 
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-
-        // Run barcode detection + OCR in a single pass
-        let barcodeReq = VNDetectBarcodesRequest()
-        barcodeReq.symbologies = [.qr, .dataMatrix, .aztec, .code128, .ean13, .itf14, .code39]
-
-        let ocrReq = VNRecognizeTextRequest()
-        ocrReq.recognitionLevel = .accurate
-        ocrReq.recognitionLanguages = ["zh-Hans", "en-US"]
-        ocrReq.usesLanguageCorrection = true
-
+        let analysis: TicketParser.ImageAnalysisResult
         do {
-            try handler.perform([barcodeReq, ocrReq])
+            analysis = try TicketParser.analyzeImage(uiImage)
         } catch {
             phase = .failed("图像分析失败：\(error.localizedDescription)")
             return
         }
 
-        let barcodeValue = (barcodeReq.results?.first as? VNBarcodeObservation)?.payloadStringValue ?? ""
-        let barcodeFormat = formatString(for: barcodeReq.results?.first as? VNBarcodeObservation)
-        let ocrText = (ocrReq.results ?? [])
-            .compactMap { $0.topCandidates(1).first?.string }
-            .joined(separator: " ")
-
-        if barcodeValue.isEmpty && ocrText.isEmpty {
+        if !analysis.hasRecognizedContent {
             phase = .failed("未在图片中检测到票据信息，请确认图片包含条码或二维码")
             return
         }
 
-        // Free tier gate: max 5 imports per calendar month
-        if !isPro {
-            let startOfMonth = Calendar.current.date(
-                from: Calendar.current.dateComponents([.year, .month], from: Date())
-            ) ?? Date()
-            if allTickets.filter({ $0.importedAt >= startOfMonth }).count >= 5 {
-                phase = .picking
-                showProGate = true
-                return
-            }
+        // Free tier gate: max 5 imports per calendar month (centralized in StoreService)
+        if StoreService.isAtFreeImportLimit(isPro: isPro, tickets: allTickets) {
+            phase = .picking
+            showProGate = true
+            return
         }
 
-        let ticket = TicketParser.parse(barcodeValue: barcodeValue, ocrText: ocrText)
-        ticket.barcodeFormat = barcodeFormat
+        let ticket = TicketParser.parse(barcodeValue: analysis.barcodeValue, ocrText: analysis.ocrText)
+        ticket.barcodeFormat = analysis.barcodeFormat
         ticket.sourceApp = "相册导入"
+
+        // Card-wallet imports: fall back to the preferred type only when the
+        // parser couldn't recognize a specific type (still .generic).
+        if let pref = preferredType, ticket.ticketType == .generic {
+            ticket.ticketType = pref
+        }
 
         // Capture thumbnail from selected image
         ticket.thumbnailData = await thumbnailData(from: uiImage)
 
         phase = .confirmed
         detectedTicket = ticket
-    }
-
-    private func formatString(for obs: VNBarcodeObservation?) -> String {
-        guard let obs else { return "QR" }
-        switch obs.symbology {
-        case .qr:         return "QR"
-        case .code128:    return "Code128"
-        case .ean13:      return "EAN13"
-        case .ean8:       return "EAN8"
-        case .dataMatrix: return "DataMatrix"
-        case .aztec:      return "Aztec"
-        case .itf14:      return "ITF14"
-        case .code39:     return "Code39"
-        default:          return "QR"
-        }
     }
 
     private func thumbnailData(from image: UIImage) async -> Data? {

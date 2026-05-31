@@ -208,33 +208,27 @@ struct ScreenshotImportView: View {
                 contentMode: .aspectFit,
                 options: options
             ) { image, _ in
-                guard let image, let cgImage = image.cgImage else {
+                guard let image else {
                     continuation.resume(returning: nil)
                     return
                 }
 
-                let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-                let barcodeReq = VNDetectBarcodesRequest()
-                barcodeReq.symbologies = [.qr, .dataMatrix, .aztec, .code128, .ean13, .itf14, .code39]
-
-                let ocrReq = VNRecognizeTextRequest()
-                ocrReq.recognitionLevel = .fast
-                ocrReq.recognitionLanguages = ["zh-Hans", "en-US"]
-                ocrReq.usesLanguageCorrection = false
-
-                try? handler.perform([barcodeReq, ocrReq])
-
-                let barcodeValue = (barcodeReq.results?.first as? VNBarcodeObservation)?.payloadStringValue ?? ""
-                let ocrText = (ocrReq.results ?? [])
-                    .compactMap { $0.topCandidates(1).first?.string }
-                    .joined(separator: " ")
-
-                guard !barcodeValue.isEmpty || ocrText.count > 20 else {
+                guard let analysis = try? TicketParser.analyzeImage(
+                    image,
+                    textRecognitionLevel: .fast,
+                    usesLanguageCorrection: false
+                ) else {
                     continuation.resume(returning: nil)
                     return
                 }
 
-                let ticket = TicketParser.parse(barcodeValue: barcodeValue, ocrText: ocrText)
+                guard !analysis.barcodeValue.isEmpty || analysis.ocrText.count > 20 else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                let ticket = TicketParser.parse(barcodeValue: analysis.barcodeValue, ocrText: analysis.ocrText)
+                ticket.barcodeFormat = analysis.barcodeFormat
                 let thumbData = image.preparingThumbnail(
                     of: CGSize(width: 104, height: 104)
                 )?.jpegData(compressionQuality: 0.7)
@@ -244,8 +238,9 @@ struct ScreenshotImportView: View {
                     thumbnailData: thumbData,
                     ticketType: ticket.ticketType,
                     title: ticket.title,
-                    barcodeFormat: ticket.barcodeFormat,
-                    barcodeValue: barcodeValue
+                    barcodeFormat: analysis.barcodeFormat,
+                    barcodeValue: analysis.barcodeValue,
+                    ocrText: analysis.ocrText
                 ))
             }
         }
@@ -263,9 +258,10 @@ struct ScreenshotScanResult: Identifiable {
     let barcodeFormat: String
     // Raw data for lazy Ticket creation when the user taps a result
     let barcodeValue: String
+    let ocrText: String
 
     func makeTicket() -> Ticket {
-        let ticket = TicketParser.parse(barcodeValue: barcodeValue, ocrText: "")
+        let ticket = TicketParser.parse(barcodeValue: barcodeValue, ocrText: ocrText)
         ticket.barcodeFormat = barcodeFormat
         ticket.sourceApp = "截图导入"
         ticket.thumbnailData = thumbnailData

@@ -13,6 +13,11 @@ struct RecognitionConfirmView: View {
 
     @Bindable var ticket: Ticket
 
+    /// `.confirm` = import / manual-create flow (wallet + save-only, gated).
+    /// `.edit` = editing an already-saved ticket (single 保存 button, no gates).
+    enum Mode { case confirm, edit }
+    var mode: Mode = .confirm
+
     @AppStorage("signingNodePreference") private var nodeRaw = NodePreference.auto.rawValue
     @AppStorage("isPro") private var isPro = false
 
@@ -27,6 +32,12 @@ struct RecognitionConfirmView: View {
     @State private var newFieldLabel = ""
     @State private var newFieldValue = ""
     @State private var showProGate = false
+    @State private var showDuplicateAlert = false
+    @State private var pendingAfterDuplicate: PendingAction?
+    @State private var saveError: String?
+
+    /// Which import path to resume after the user acknowledges a duplicate.
+    private enum PendingAction { case wallet, saveOnly }
 
     private var nodePreference: NodePreference { NodePreference(rawValue: nodeRaw) ?? .auto }
 
@@ -58,9 +69,30 @@ struct RecognitionConfirmView: View {
             }
         }
         .alert("签名失败", isPresented: .constant(signingError != nil), actions: {
-            Button("确定") { signingError = nil }
+            Button("仅保存到票夹") { signingError = nil; performSaveOnly() }
+            Button("重试") { signingError = nil; Task { await addToWallet() } }
+            Button("取消", role: .cancel) { signingError = nil }
         }, message: {
-            Text(signingError ?? "")
+            Text((signingError ?? "") + "\n\n可以先仅保存到票夹，稍后在详情页重新生成 Wallet 票券。")
+        })
+        .alert("保存失败", isPresented: .constant(saveError != nil), actions: {
+            Button("确定") { saveError = nil }
+        }, message: {
+            Text(saveError ?? "")
+        })
+        .alert("可能重复导入", isPresented: $showDuplicateAlert, actions: {
+            Button("仍然保存") {
+                // pendingAfterDuplicate is already set to the originating path;
+                // re-invoke it — the gate now passes since the flag is non-nil.
+                switch pendingAfterDuplicate {
+                case .wallet:   Task { await addToWallet() }
+                case .saveOnly: saveTicketOnly()
+                case .none:     break
+                }
+            }
+            Button("取消", role: .cancel) { pendingAfterDuplicate = nil }
+        }, message: {
+            Text("票夹里已有一张条码、日期、场馆都相同的票据。")
         })
         .sheet(isPresented: $showProGate) {
             ProUpgradeSheet()
@@ -101,7 +133,7 @@ struct RecognitionConfirmView: View {
                 )
             }
             Spacer()
-            Text("确认信息")
+            Text(mode == .edit ? "编辑票据" : "确认信息")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.white)
             Spacer()
@@ -132,15 +164,15 @@ struct RecognitionConfirmView: View {
                 Divider().padding(.horizontal, AppSpacing.md)
 
                 // Field rows
-                fieldRow(icon: "🎬", label: "活动名称",  value: $ticket.title)
+                fieldRow(systemIcon: "textformat",        label: "活动名称",  value: $ticket.title)
                 Divider().padding(.horizontal, AppSpacing.md)
-                fieldRow(icon: "📍", label: "场馆",      value: $ticket.venue)
+                fieldRow(systemIcon: "mappin.and.ellipse", label: "场馆",      value: $ticket.venue)
                 Divider().padding(.horizontal, AppSpacing.md)
                 dateRow
                 Divider().padding(.horizontal, AppSpacing.md)
-                fieldRow(icon: "🕐", label: "时间",      value: $ticket.eventTime)
+                fieldRow(systemIcon: "clock",             label: "时间",      value: $ticket.eventTime)
                 Divider().padding(.horizontal, AppSpacing.md)
-                fieldRow(icon: "💺", label: "座位",      value: $ticket.seatInfo)
+                fieldRow(systemIcon: "chair.lounge",      label: "座位",      value: $ticket.seatInfo)
 
                 Divider().padding(.horizontal, AppSpacing.md)
                 tagsRow
@@ -205,9 +237,7 @@ struct RecognitionConfirmView: View {
 
     private var dateRow: some View {
         HStack(spacing: 12) {
-            Text("📅")
-                .font(.system(size: 18))
-                .frame(width: 28, alignment: .center)
+            iconTile("calendar")
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("日期")
@@ -233,11 +263,21 @@ struct RecognitionConfirmView: View {
         .padding(.vertical, 10)
     }
 
-    private func fieldRow(icon: String, label: String, value: Binding<String>) -> some View {
+    /// Themed SF Symbol tile — rounded square with the ticket's accent tint.
+    private func iconTile(_ systemName: String) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(theme.accent.opacity(0.15))
+                .frame(width: 32, height: 32)
+            Image(systemName: systemName)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(theme.accent)
+        }
+    }
+
+    private func fieldRow(systemIcon: String, label: String, value: Binding<String>) -> some View {
         HStack(spacing: 12) {
-            Text(icon)
-                .font(.system(size: 18))
-                .frame(width: 28, alignment: .center)
+            iconTile(systemIcon)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(label)
@@ -323,9 +363,7 @@ struct RecognitionConfirmView: View {
     private var tagsRow: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("🏷️")
-                    .font(.system(size: 18))
-                    .frame(width: 28, alignment: .center)
+                iconTile("tag")
                 VStack(alignment: .leading, spacing: 1) {
                     Text("标签")
                         .font(.system(size: 12))
@@ -421,7 +459,16 @@ struct RecognitionConfirmView: View {
 
     // MARK: Add to Wallet Button
 
+    @ViewBuilder
     private var addToWalletButton: some View {
+        if mode == .edit {
+            editSaveButton
+        } else {
+            confirmButtons
+        }
+    }
+
+    private var confirmButtons: some View {
         VStack(spacing: 10) {
             Button {
                 Task { await addToWallet() }
@@ -439,9 +486,9 @@ struct RecognitionConfirmView: View {
                 }
                 .foregroundStyle(isDark ? Color.black : Color.white)
                 .frame(maxWidth: .infinity)
-                .frame(height: 54)
+                .frame(height: 50)
                 .background(isDark ? Color.white : Color.black)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton))
                 .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
             }
             .disabled(isSigning)
@@ -455,6 +502,24 @@ struct RecognitionConfirmView: View {
                     .foregroundStyle(.secondary)
             }
             .disabled(isSigning)
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.vertical, 12)
+        .padding(.bottom, 40)
+    }
+
+    private var editSaveButton: some View {
+        Button {
+            saveEdits()
+        } label: {
+            Text("保存")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(isDark ? Color.black : Color.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .background(isDark ? Color.white : Color.black)
+                .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton))
+                .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
         }
         .padding(.horizontal, AppSpacing.md)
         .padding(.vertical, 12)
@@ -485,11 +550,20 @@ struct RecognitionConfirmView: View {
     // MARK: Actions
 
     private var isAtFreeLimit: Bool {
-        guard !isPro else { return false }
-        let startOfMonth = Calendar.current.date(
-            from: Calendar.current.dateComponents([.year, .month], from: Date())
-        ) ?? Date()
-        return allTickets.filter { $0.importedAt >= startOfMonth }.count >= 5
+        StoreService.isAtFreeImportLimit(isPro: isPro, tickets: allTickets)
+    }
+
+    /// An already-saved ticket matching this one on barcode + date + venue.
+    /// Requires a barcode — without one we can't tell imports apart, so we
+    /// never block. nil means "no duplicate, safe to save".
+    private var duplicateTicket: Ticket? {
+        guard !ticket.barcodeValue.isEmpty else { return nil }
+        return allTickets.first {
+            $0.persistentModelID != ticket.persistentModelID
+                && $0.barcodeValue == ticket.barcodeValue
+                && $0.eventDate == ticket.eventDate
+                && $0.venue == ticket.venue
+        }
     }
 
     private func addToWallet() async {
@@ -497,6 +571,13 @@ struct RecognitionConfirmView: View {
             showProGate = true
             return
         }
+        // Stop at a duplicate unless the user already acknowledged it.
+        if pendingAfterDuplicate == nil, duplicateTicket != nil {
+            pendingAfterDuplicate = .wallet
+            showDuplicateAlert = true
+            return
+        }
+        pendingAfterDuplicate = nil
 
         isSigning = true
         defer { isSigning = false }
@@ -520,7 +601,20 @@ struct RecognitionConfirmView: View {
 
     private func saveTicketOnly() {
         guard !isAtFreeLimit else { showProGate = true; return }
-        persistTicket(addedToWallet: false)
+        // Stop at a duplicate unless the user already acknowledged it.
+        if pendingAfterDuplicate == nil, duplicateTicket != nil {
+            pendingAfterDuplicate = .saveOnly
+            showDuplicateAlert = true
+            return
+        }
+        pendingAfterDuplicate = nil
+        performSaveOnly()
+    }
+
+    /// Persist locally + toast + dismiss, with no gate checks. Used by the
+    /// save-only button (after gating) and by the signing-failure fallback.
+    private func performSaveOnly() {
+        guard persistTicket(addedToWallet: false) else { return }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         withAnimation { showAddedToast = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
@@ -529,8 +623,26 @@ struct RecognitionConfirmView: View {
         }
     }
 
+    /// Edit mode: the @Bindable ticket is already persisted, so its fields are
+    /// mutated live — just flush the context and dismiss.
+    private func saveEdits() {
+        do {
+            try modelContext.save()
+        } catch {
+            saveError = "保存失败：\(error.localizedDescription)"
+            return
+        }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        dismiss()
+    }
+
     private func onPassAdded() {
-        persistTicket(addedToWallet: true)
+        // Pass is already in Wallet; surface a local-save failure but don't lose
+        // the success feedback for the Wallet add itself.
+        guard persistTicket(addedToWallet: true) else {
+            showWalletSheet = false
+            return
+        }
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         showWalletSheet = false
         withAnimation { showAddedToast = true }
@@ -541,12 +653,21 @@ struct RecognitionConfirmView: View {
     }
 
     /// Insert ticket into SwiftData context (if not already inserted) and save.
-    private func persistTicket(addedToWallet: Bool) {
+    /// Returns false (and sets `saveError`) when the save fails, so callers can
+    /// avoid showing a misleading success toast.
+    @discardableResult
+    private func persistTicket(addedToWallet: Bool) -> Bool {
         ticket.isAddedToWallet = addedToWallet
         // Insert only if the ticket has no persistent model ID yet
         if ticket.persistentModelID.storeIdentifier == nil {
             modelContext.insert(ticket)
         }
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+            return true
+        } catch {
+            saveError = "保存失败：\(error.localizedDescription)"
+            return false
+        }
     }
 }
