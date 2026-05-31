@@ -63,4 +63,63 @@ final class TicketModelTests: XCTestCase {
         // No event date → 7-day fallback (non-nil).
         XCTAssertNotNil(Ticket.defaultExpiry(for: .movie, eventDate: nil))
     }
+
+    // MARK: Detail map target selection
+
+    func testMapPreviewUsesVenueAddressBeforeVenueForRegularTickets() {
+        let ticket = Ticket(
+            title: "奥本海默",
+            venue: "万达影城 · 来福士店",
+            ticketType: .movie,
+            venueAddress: "上海市黄浦区西藏中路 268 号"
+        )
+
+        XCTAssertEqual(PassDetailMapTarget.previewQuery(for: ticket), "上海市黄浦区西藏中路 268 号")
+    }
+
+    func testMapPreviewFallsBackToVenueForRegularTickets() {
+        let ticket = Ticket(
+            title: "时代巡回演唱会",
+            venue: "梅赛德斯·奔驰中心",
+            ticketType: .concert
+        )
+
+        XCTAssertEqual(PassDetailMapTarget.previewQuery(for: ticket), "梅赛德斯·奔驰中心")
+    }
+
+    func testTrainMapPreviewUsesDestinationInsteadOfRouteVenue() {
+        let ticket = Ticket(
+            title: "G1234",
+            venue: "北京南 → 上海虹桥",
+            ticketType: .train,
+            routeOrigin: "北京南",
+            routeDestination: "上海虹桥"
+        )
+
+        XCTAssertEqual(PassDetailMapTarget.previewQuery(for: ticket), "上海虹桥")
+        XCTAssertNotEqual(PassDetailMapTarget.previewQuery(for: ticket), "北京南 → 上海虹桥")
+    }
+
+    func testTrainMapPreviewFallsBackToOriginWhenDestinationMissing() {
+        let ticket = Ticket(
+            title: "G1234",
+            venue: "北京南 → 上海虹桥",
+            ticketType: .train,
+            routeOrigin: "北京南"
+        )
+
+        XCTAssertEqual(PassDetailMapTarget.previewQuery(for: ticket), "北京南")
+    }
+
+    func testTrainMapsOpenModeUsesRouteWhenOriginAndDestinationExist() {
+        let ticket = Ticket(
+            title: "G1234",
+            venue: "北京南 → 上海虹桥",
+            ticketType: .train,
+            routeOrigin: "北京南",
+            routeDestination: "上海虹桥"
+        )
+
+        XCTAssertEqual(PassDetailMapTarget.openMode(for: ticket), .route(origin: "北京南", destination: "上海虹桥"))
+    }
 }
