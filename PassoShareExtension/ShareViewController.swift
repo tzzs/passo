@@ -1,5 +1,6 @@
 import UIKit
 import Social
+import ImageIO
 import Vision
 import UniformTypeIdentifiers
 
@@ -57,7 +58,7 @@ final class ShareViewController: UIViewController {
             urlProvider.loadItem(forTypeIdentifier: UTType.url.identifier) { [weak self] data, _ in
                 let urlString = (data as? URL)?.absoluteString ?? (data as? String ?? "")
                 Task { @MainActor in
-                    self?.handOff(barcodeValue: urlString, ocrText: "")
+                    self?.handOff(barcodeValue: urlString, barcodeFormat: "QR", ocrText: "")
                 }
             }
         } else {
@@ -73,7 +74,11 @@ final class ShareViewController: UIViewController {
             return
         }
 
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        let handler = VNImageRequestHandler(
+            cgImage: cgImage,
+            orientation: cgImagePropertyOrientation(from: image.imageOrientation),
+            options: [:]
+        )
 
         let barcodeReq = VNDetectBarcodesRequest()
         barcodeReq.symbologies = [.qr, .dataMatrix, .aztec, .code128, .ean13, .itf14, .code39]
@@ -85,8 +90,10 @@ final class ShareViewController: UIViewController {
 
         try? handler.perform([barcodeReq, ocrReq])
 
-        let barcodeValue = (barcodeReq.results?.first as? VNBarcodeObservation)?.payloadStringValue ?? ""
-        let ocrText = (ocrReq.results ?? [])
+        let barcode = barcodeReq.results?.first
+        let barcodeValue = barcode?.payloadStringValue ?? ""
+        let barcodeFormat = barcodeFormatString(for: barcode?.symbology)
+        let ocrText = (ocrReq.results as? [VNRecognizedTextObservation] ?? [])
             .compactMap { $0.topCandidates(1).first?.string }
             .joined(separator: " ")
 
@@ -98,12 +105,12 @@ final class ShareViewController: UIViewController {
             try? thumbData.write(to: thumbURL)
         }
 
-        handOff(barcodeValue: barcodeValue, ocrText: ocrText)
+        handOff(barcodeValue: barcodeValue, barcodeFormat: barcodeFormat, ocrText: ocrText)
     }
 
     // MARK: - Hand-Off
 
-    private func handOff(barcodeValue: String, ocrText: String) {
+    private func handOff(barcodeValue: String, barcodeFormat: String, ocrText: String) {
         guard !barcodeValue.isEmpty || ocrText.count > 10 else {
             cancel(message: "未识别到票据信息")
             return
@@ -111,7 +118,7 @@ final class ShareViewController: UIViewController {
 
         // Persist payload in App Group so Passo app can read on launch
         if let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) {
-            let payload: [String: String] = ["barcode": barcodeValue, "ocr": ocrText]
+            let payload: [String: String] = ["barcode": barcodeValue, "format": barcodeFormat, "ocr": ocrText]
             let payloadURL = container.appendingPathComponent("pending_import.json")
             if let data = try? JSONSerialization.data(withJSONObject: payload) {
                 try? data.write(to: payloadURL)
@@ -134,6 +141,35 @@ final class ShareViewController: UIViewController {
                 ))
             })
             self?.present(alert, animated: true)
+        }
+    }
+
+    private func barcodeFormatString(for symbology: VNBarcodeSymbology?) -> String {
+        guard let symbology else { return "QR" }
+        switch symbology {
+        case .qr:         return "QR"
+        case .code128:    return "Code128"
+        case .ean13:      return "EAN13"
+        case .ean8:       return "EAN8"
+        case .dataMatrix: return "DataMatrix"
+        case .aztec:      return "Aztec"
+        case .itf14:      return "ITF14"
+        case .code39:     return "Code39"
+        default:          return "QR"
+        }
+    }
+
+    private func cgImagePropertyOrientation(from orientation: UIImage.Orientation) -> CGImagePropertyOrientation {
+        switch orientation {
+        case .up:            return .up
+        case .upMirrored:    return .upMirrored
+        case .down:          return .down
+        case .downMirrored:  return .downMirrored
+        case .left:          return .left
+        case .leftMirrored:  return .leftMirrored
+        case .right:         return .right
+        case .rightMirrored: return .rightMirrored
+        @unknown default:    return .up
         }
     }
 }

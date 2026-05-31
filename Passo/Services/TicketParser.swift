@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 import Vision
 import UIKit
 
@@ -7,6 +8,16 @@ import UIKit
 /// Classifies a barcode + OCR text into a Ticket with best-effort field extraction.
 /// All parsing is local, deterministic, and never throws — worst case returns a .generic ticket.
 enum TicketParser {
+
+    struct ImageAnalysisResult {
+        let barcodeValue: String
+        let barcodeFormat: String
+        let ocrText: String
+
+        var hasRecognizedContent: Bool {
+            !barcodeValue.isEmpty || !ocrText.isEmpty
+        }
+    }
 
     // MARK: - Main Entry Point
 
@@ -44,8 +55,85 @@ enum TicketParser {
             request.recognitionLanguages = ["zh-Hans", "en-US"]
             request.usesLanguageCorrection = true
 
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            let handler = VNImageRequestHandler(
+                cgImage: cgImage,
+                orientation: cgImagePropertyOrientation(from: image.imageOrientation),
+                options: [:]
+            )
             try? handler.perform([request])
+        }
+    }
+
+    /// Run barcode detection and OCR on a still image.
+    /// Uses the UIImage orientation so rotated screenshots/photos are analyzed correctly.
+    static func analyzeImage(
+        _ image: UIImage,
+        textRecognitionLevel: VNRequestTextRecognitionLevel = .accurate,
+        usesLanguageCorrection: Bool = true
+    ) throws -> ImageAnalysisResult {
+        guard let cgImage = image.cgImage else {
+            return ImageAnalysisResult(barcodeValue: "", barcodeFormat: "QR", ocrText: "")
+        }
+
+        let handler = VNImageRequestHandler(
+            cgImage: cgImage,
+            orientation: cgImagePropertyOrientation(from: image.imageOrientation),
+            options: [:]
+        )
+
+        let barcodeReq = VNDetectBarcodesRequest()
+        barcodeReq.symbologies = supportedBarcodeSymbologies
+
+        let ocrReq = VNRecognizeTextRequest()
+        ocrReq.recognitionLevel = textRecognitionLevel
+        ocrReq.recognitionLanguages = ["zh-Hans", "en-US"]
+        ocrReq.usesLanguageCorrection = usesLanguageCorrection
+
+        try handler.perform([barcodeReq, ocrReq])
+
+        let barcode = barcodeReq.results?.first
+        let barcodeValue = barcode?.payloadStringValue ?? ""
+        let ocrText = (ocrReq.results ?? [])
+            .compactMap { $0.topCandidates(1).first?.string }
+            .joined(separator: " ")
+
+        return ImageAnalysisResult(
+            barcodeValue: barcodeValue,
+            barcodeFormat: barcodeFormatString(for: barcode?.symbology),
+            ocrText: ocrText
+        )
+    }
+
+    static func barcodeFormatString(for symbology: VNBarcodeSymbology?) -> String {
+        guard let symbology else { return "QR" }
+        switch symbology {
+        case .qr:         return "QR"
+        case .code128:    return "Code128"
+        case .ean13:      return "EAN13"
+        case .ean8:       return "EAN8"
+        case .dataMatrix: return "DataMatrix"
+        case .aztec:      return "Aztec"
+        case .itf14:      return "ITF14"
+        case .code39:     return "Code39"
+        default:          return "QR"
+        }
+    }
+
+    private static var supportedBarcodeSymbologies: [VNBarcodeSymbology] {
+        [.qr, .dataMatrix, .aztec, .code128, .ean13, .itf14, .code39]
+    }
+
+    private static func cgImagePropertyOrientation(from orientation: UIImage.Orientation) -> CGImagePropertyOrientation {
+        switch orientation {
+        case .up:            return .up
+        case .upMirrored:    return .upMirrored
+        case .down:          return .down
+        case .downMirrored:  return .downMirrored
+        case .left:          return .left
+        case .leftMirrored:  return .leftMirrored
+        case .right:         return .right
+        case .rightMirrored: return .rightMirrored
+        @unknown default:    return .up
         }
     }
 

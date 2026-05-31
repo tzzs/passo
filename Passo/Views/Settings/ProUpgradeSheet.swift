@@ -199,16 +199,18 @@ struct UpgradeProductCard: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 12)
                     .background(Color.black)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusTag))
             }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
-        .padding(16)
+        .padding(AppSpacing.md)
         .background(Color(uiColor: .secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton))
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
+            RoundedRectangle(cornerRadius: AppSpacing.radiusButton)
                 .strokeBorder(
                     isYearly ? Color(hex: "#E94560").opacity(0.4) : Color.clear,
                     lineWidth: 1.5

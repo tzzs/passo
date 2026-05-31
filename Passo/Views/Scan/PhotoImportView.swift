@@ -158,38 +158,21 @@ struct PhotoImportView: View {
         phase = .analyzing
 
         guard let data = try? await item.loadTransferable(type: Data.self),
-              let uiImage = UIImage(data: data),
-              let cgImage = uiImage.cgImage
+              let uiImage = UIImage(data: data)
         else {
             phase = .failed("无法读取图片，请重试")
             return
         }
 
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-
-        // Run barcode detection + OCR in a single pass
-        let barcodeReq = VNDetectBarcodesRequest()
-        barcodeReq.symbologies = [.qr, .dataMatrix, .aztec, .code128, .ean13, .itf14, .code39]
-
-        let ocrReq = VNRecognizeTextRequest()
-        ocrReq.recognitionLevel = .accurate
-        ocrReq.recognitionLanguages = ["zh-Hans", "en-US"]
-        ocrReq.usesLanguageCorrection = true
-
+        let analysis: TicketParser.ImageAnalysisResult
         do {
-            try handler.perform([barcodeReq, ocrReq])
+            analysis = try TicketParser.analyzeImage(uiImage)
         } catch {
             phase = .failed("图像分析失败：\(error.localizedDescription)")
             return
         }
 
-        let barcodeValue = (barcodeReq.results?.first as? VNBarcodeObservation)?.payloadStringValue ?? ""
-        let barcodeFormat = formatString(for: barcodeReq.results?.first as? VNBarcodeObservation)
-        let ocrText = (ocrReq.results ?? [])
-            .compactMap { $0.topCandidates(1).first?.string }
-            .joined(separator: " ")
-
-        if barcodeValue.isEmpty && ocrText.isEmpty {
+        if !analysis.hasRecognizedContent {
             phase = .failed("未在图片中检测到票据信息，请确认图片包含条码或二维码")
             return
         }
@@ -206,8 +189,8 @@ struct PhotoImportView: View {
             }
         }
 
-        let ticket = TicketParser.parse(barcodeValue: barcodeValue, ocrText: ocrText)
-        ticket.barcodeFormat = barcodeFormat
+        let ticket = TicketParser.parse(barcodeValue: analysis.barcodeValue, ocrText: analysis.ocrText)
+        ticket.barcodeFormat = analysis.barcodeFormat
         ticket.sourceApp = "相册导入"
 
         // Capture thumbnail from selected image
@@ -215,21 +198,6 @@ struct PhotoImportView: View {
 
         phase = .confirmed
         detectedTicket = ticket
-    }
-
-    private func formatString(for obs: VNBarcodeObservation?) -> String {
-        guard let obs else { return "QR" }
-        switch obs.symbology {
-        case .qr:         return "QR"
-        case .code128:    return "Code128"
-        case .ean13:      return "EAN13"
-        case .ean8:       return "EAN8"
-        case .dataMatrix: return "DataMatrix"
-        case .aztec:      return "Aztec"
-        case .itf14:      return "ITF14"
-        case .code39:     return "Code39"
-        default:          return "QR"
-        }
     }
 
     private func thumbnailData(from image: UIImage) async -> Data? {
