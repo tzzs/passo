@@ -19,3 +19,6 @@ Package.resolved
 .idea/
 
 .reasonix/
+
+# Local isolated worktrees
+.worktrees/
