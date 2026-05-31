@@ -14,10 +14,12 @@ To run on a physical device, a valid Apple Developer signing identity must be se
 
 **Entry point**: `PassoApp.swift` — wires the SwiftData `ModelContainer` for `Ticket` and presents `ContentView`.
 
-**Tab structure** (`ContentView.swift`):
-- `WalletView` (票夹) — home screen, always the active destination
-- Scan tab — a *trigger*, not a destination: tapping it sets `selectedTab` back to `.wallet` and presents `ScanView` as a `fullScreenCover`. There is no view bound to the scan tab itself.
-- `SettingsView` (设置)
+**Tab structure** (`ContentView.swift`) — three tabs (`AppTab`):
+- `WalletView` (票据) — event tickets, with an in-tab 即将 / 全部 segmented control. 全部 mode adds a search field + per-type filter chips. Excludes cards (`isCard`) and archived items.
+- `CardWalletView` (卡包) — long-lived membership cards (`ticketType == .member`). Grid layout, no timeline.
+- `SettingsView` (设置).
+- Imports launch from a `+` menu (从相册导入 / 扫描条码 / 手动新建) in the Wallet/Card headers, presenting `PhotoImportView` (sheet), `ScanView` (fullScreenCover), or an empty-`Ticket` `RecognitionConfirmView`. `ContentView` threads `importPreferredType` so card-wallet imports default an unrecognized result to `.member`.
+- `ArchiveView` (已归档) — unified archive for expired/used/manually-archived tickets AND cards, reachable from both the Wallet and Card tabs.
 
 **Data model** (`Models/Ticket.swift`):
 - Single SwiftData `@Model` class `Ticket`. `TicketType` is persisted as its `rawValue` string via `ticketTypeRaw`; the computed `ticketType` property re-hydrates it.
@@ -33,19 +35,24 @@ To run on a physical device, a valid Apple Developer signing identity must be se
 - `TicketCardView` — primary ticket card; renders in `.full` (with barcode) or `.compact` (without barcode) size. Drives its theme from `ticket.ticketType.theme`.
 - `GlassPillButton`, `GlassSegmentedControl`, `TicketTypeBadge` — shared UI atoms.
 
-**Scan flow**:
-1. `ScanView` — camera region (currently a placeholder gradient; production needs `AVCaptureVideoPreviewLayer`) + animated scan line + bottom result sheet.
-2. `RecognitionConfirmView` — editable field list where the user confirms OCR-extracted data before saving. Calls `addToWallet()` which stubs PassKit signing.
+**Scan / import flow**:
+1. `ScanView` — live `AVCaptureVideoPreviewLayer` preview (`CameraService`), torch toggle, Vision barcode metadata + throttled OCR, animated scan line, bottom result sheet. Also has an album-import entry.
+2. `PhotoImportView` / `ScreenshotImportView` — pick or scan recent screenshots; `TicketParser.analyzeImage` runs barcode + OCR.
+3. `RecognitionConfirmView` — editable field list confirming parsed data. `mode: .confirm` shows 添加到 Wallet + 仅保存到票夹 (free-quota + duplicate gated); `mode: .edit` shows a single 保存 for editing an already-saved ticket. Signing failures offer 仅保存 / 重试.
 
-## Key Stubs (not yet implemented)
+**Client pipeline is fully implemented** — `CameraService` (preview/torch/Vision), `TicketParser` (classify + field extraction; OCR text is newline-joined so `extractTitle` works), `PassBuilder` (pass.json with per-type colors, `transitType` for boarding passes, single legacy `barcode` dict), `SigningService` (POST pass.json → signed `.pkpass`, node failover), and `WalletPresenter` (`PKAddPassesViewController`). `PassDetailView` can re-generate a Wallet pass for a save-only ticket.
 
-| Location | What's missing |
+## Remaining Stubs / External Dependencies
+
+The client is complete; what's left needs external resources (see `plan.md` 批次 4):
+
+| Area | What's missing |
 |---|---|
-| `ScanView` camera region | `UIViewRepresentable` wrapping `AVCaptureVideoPreviewLayer` |
-| `ScanView` flash button | `AVCaptureDevice` torch toggle |
-| `ScanView` detection | Vision framework barcode/QR reading |
-| `RecognitionConfirmView.addToWallet()` | PassKit `.pkpass` generation + server-side certificate signing |
-| `PassDetailView` open Wallet button | `passTypeIdentifier://` URL scheme |
+| Signing nodes (`SigningService`) | The two endpoints (`sign.passo.cn`, `passo-sign.workers.dev`) are placeholders — no server deployed yet |
+| Team ID / Pass Type ID | `SigningService.teamIdentifier` reads an Info.plist key that Xcode doesn't auto-inject; needs build-setting config |
+| `ProUpgradeSheet` | Upgrade UI is a placeholder; App Store Connect products not created |
+| Share Extension embed | `PassoShareExtension` may not embed in the main app's PlugIns (verify `project.yml`) |
+| iCloud sync | `ModelConfiguration` is fixed at `cloudKitDatabase: .none`; the settings toggle is currently inert |
 
 ## Signing Nodes
 
@@ -53,7 +60,7 @@ Pass signing requires a remote server. `NodePreference` (`SettingsView.swift`) l
 
 ## Pro Gating
 
-`@AppStorage("isPro")` is the single source of truth for Pro status. Features gated behind it: iCloud sync, unlimited imports, LLM classification. The upgrade sheet is `ProUpgradeView` (currently a placeholder).
+`@AppStorage("isPro")` is the single source of truth for Pro status, synced from `StoreService` (StoreKit 2). Free tier allows 5 imports/calendar-month — centralized in `StoreService.remainingFreeImports(isPro:tickets:)` / `isAtFreeImportLimit(...)`; all import entry points call it. The upgrade sheet is `ProUpgradeSheet` (currently a placeholder).
 
 ## Git Commit Messages
 

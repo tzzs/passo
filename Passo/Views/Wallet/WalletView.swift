@@ -27,11 +27,14 @@ struct WalletView: View {
 
     let onScanTapped:  () -> Void
     let onPhotoTapped: () -> Void
+    var onManualTapped: () -> Void = {}
 
     @State private var filterIndex = 0
     @State private var selectedTicket: Ticket?
     @State private var topCardOffset:  CGSize = .zero
     @State private var swipeAction:    SwipeAction?
+    @State private var searchText = ""
+    @State private var typeFilter: TicketType?   // nil = 全部类型
 
     private enum SwipeAction { case delete, markUsed }
 
@@ -55,12 +58,28 @@ struct WalletView: View {
         case .upcoming:
             return active.filter { $0.isToday || $0.isUpcoming }
         case .all:
-            return active.sorted {
-                let d0 = $0.eventDate ?? .distantFuture
-                let d1 = $1.eventDate ?? .distantFuture
-                return d0 < d1
-            }
+            return active
+                .filter { matchesSearch($0) && matchesTypeFilter($0) }
+                .sorted {
+                    let d0 = $0.eventDate ?? .distantFuture
+                    let d1 = $1.eventDate ?? .distantFuture
+                    return d0 < d1
+                }
         }
+    }
+
+    private func matchesSearch(_ t: Ticket) -> Bool {
+        guard !searchText.isEmpty else { return true }
+        let q = searchText.lowercased()
+        return t.title.lowercased().contains(q)
+            || t.venue.lowercased().contains(q)
+            || t.seatInfo.lowercased().contains(q)
+            || t.tags.contains { $0.lowercased().contains(q) }
+    }
+
+    private func matchesTypeFilter(_ t: Ticket) -> Bool {
+        guard let typeFilter else { return true }
+        return t.ticketType == typeFilter
     }
 
     /// Count across all items (tickets + cards) that have moved to the archive.
@@ -81,6 +100,7 @@ struct WalletView: View {
                     VStack(spacing: 0) {
                         headerBar
                         filterControl
+                        searchFilterBar
                         nextUpLabel
                         cardStack
                         archiveEntry
@@ -102,6 +122,70 @@ struct WalletView: View {
         )
         .padding(.horizontal, AppSpacing.md)
         .padding(.top, 12)
+    }
+
+    // Search + type filter — only in 全部 (timeline) mode, where the list can grow.
+    @ViewBuilder
+    private var searchFilterBar: some View {
+        if filter == .all {
+            VStack(spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                    TextField("搜索标题、场馆、座位、标签", text: $searchText)
+                        .font(.system(size: 15))
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .accessibilityIdentifier("ticketSearchField")
+                    if !searchText.isEmpty {
+                        Button { searchText = "" } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .background(isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.04))
+                .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton, style: .continuous))
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        typeFilterChip(nil, label: "全部")
+                        ForEach(ticketTypeFilters, id: \.rawValue) { type in
+                            typeFilterChip(type, label: type.displayName)
+                        }
+                    }
+                    .padding(.horizontal, 2)
+                }
+            }
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.top, 12)
+        }
+    }
+
+    // 票据 tab excludes .member (那是卡包).
+    private var ticketTypeFilters: [TicketType] {
+        [.movie, .concert, .train, .scenic, .generic]
+    }
+
+    private func typeFilterChip(_ type: TicketType?, label: String) -> some View {
+        let isActive = typeFilter == type
+        let accent = (type ?? .generic).theme.accent
+        return Button {
+            withAnimation(.easeOut(duration: 0.2)) { typeFilter = type }
+        } label: {
+            Text(label)
+                .font(.system(size: 13, weight: .medium))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(isActive ? accent.opacity(0.15) : (isDark ? Color.white.opacity(0.06) : Color.black.opacity(0.04)))
+                .foregroundStyle(isActive ? accent : (isDark ? .white.opacity(0.7) : .black.opacity(0.6)))
+                .overlay(Capsule().strokeBorder(isActive ? accent.opacity(0.4) : .clear, lineWidth: 1))
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     // "已归档 (N)" entry — pushes the unified archive (expired/used tickets + cards).
@@ -132,6 +216,7 @@ struct WalletView: View {
                 .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton, style: .continuous))
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("archiveEntry")
             .padding(.horizontal, AppSpacing.md)
             .padding(.top, 18)
         }
@@ -187,6 +272,12 @@ struct WalletView: View {
                 } label: {
                     Label("扫描条码", systemImage: "viewfinder")
                 }
+                Divider()
+                Button {
+                    onManualTapped()
+                } label: {
+                    Label("手动新建", systemImage: "square.and.pencil")
+                }
             } label: {
                 Image(systemName: "plus")
                     .font(.system(size: 17, weight: .semibold))
@@ -204,6 +295,7 @@ struct WalletView: View {
                             .shadow(color: Color.black.opacity(isDark ? 0.2 : 0.06), radius: 4, y: 1)
                     )
             }
+            .accessibilityIdentifier("importMenu")
         }
         .padding(.horizontal, AppSpacing.md)
         .padding(.top, 8)
@@ -274,6 +366,7 @@ struct WalletView: View {
                     .rotationEffect(.degrees(Double(topCardOffset.width) / 22))
                     .gesture(swipeGesture(for: top))
                     .onTapGesture { selectedTicket = top }
+                    .accessibilityIdentifier("topTicketCard")
                     .zIndex(10)
                 }
             }
@@ -665,6 +758,7 @@ struct WalletView: View {
             topCardOffset = .zero
             if direction == .right {
                 ticket.isUsed = true
+                ticket.archivedAt = Date()   // stamp entry time so the archive sorts newest-first
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
             } else {
                 modelContext.delete(ticket)

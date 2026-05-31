@@ -102,3 +102,25 @@ final class StoreService: ObservableObject {
         }
     }
 }
+
+// MARK: - Free Import Quota
+
+extension StoreService {
+    /// Free tier allows this many imports per calendar month.
+    nonisolated static let freeMonthlyImportLimit = 5
+
+    /// Imports still available this calendar month (`.max` when Pro).
+    /// Pure + `nonisolated` so every import entry point shares one definition
+    /// and the rule stays unit-testable without MainActor friction.
+    nonisolated static func remainingFreeImports(isPro: Bool, tickets: [Ticket], now: Date = Date()) -> Int {
+        guard !isPro else { return .max }
+        let cal = Calendar.current
+        let startOfMonth = cal.date(from: cal.dateComponents([.year, .month], from: now)) ?? now
+        let usedThisMonth = tickets.filter { $0.importedAt >= startOfMonth }.count
+        return max(0, freeMonthlyImportLimit - usedThisMonth)
+    }
+
+    nonisolated static func isAtFreeImportLimit(isPro: Bool, tickets: [Ticket], now: Date = Date()) -> Bool {
+        remainingFreeImports(isPro: isPro, tickets: tickets, now: now) <= 0
+    }
+}

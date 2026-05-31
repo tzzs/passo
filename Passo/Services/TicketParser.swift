@@ -49,7 +49,8 @@ enum TicketParser {
             let request = VNRecognizeTextRequest { request, _ in
                 let lines = (request.results as? [VNRecognizedTextObservation] ?? [])
                     .compactMap { $0.topCandidates(1).first?.string }
-                continuation.resume(returning: lines.joined(separator: " "))
+                // Keep line breaks: extractTitle() relies on per-line splitting.
+                continuation.resume(returning: lines.joined(separator: "\n"))
             }
             request.recognitionLevel = .accurate
             request.recognitionLanguages = ["zh-Hans", "en-US"]
@@ -93,9 +94,10 @@ enum TicketParser {
 
         let barcode = barcodeReq.results?.first
         let barcodeValue = barcode?.payloadStringValue ?? ""
+        // Keep line breaks: extractTitle() relies on per-line splitting.
         let ocrText = (ocrReq.results ?? [])
             .compactMap { $0.topCandidates(1).first?.string }
-            .joined(separator: " ")
+            .joined(separator: "\n")
 
         return ImageAnalysisResult(
             barcodeValue: barcodeValue,
@@ -320,7 +322,9 @@ enum TicketParser {
 
     private static func extractPattern(_ pattern: String, in text: String) -> String? {
         guard
-            let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+            // dotMatchesLineSeparators so `.*?` lookaheads still span the now
+            // newline-joined OCR text (e.g. train route origin → destination).
+            let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive, .dotMatchesLineSeparators]),
             let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
             match.numberOfRanges >= 2
         else { return nil }

@@ -75,7 +75,7 @@ struct ProUpgradeSheet: View {
         .padding(14)
         .background(Color.orange.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal, 24)
+        .padding(.horizontal, AppSpacing.lg)
     }
 
     private var featureList: some View {
@@ -84,7 +84,7 @@ struct ProUpgradeSheet: View {
             featureRow("icloud.fill",    "iCloud 跨设备同步", "多台设备实时同步票据")
             featureRow("bolt.fill",      "优先扫描通道",     "更快的识别速度")
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, AppSpacing.lg)
     }
 
     private func featureRow(_ icon: String, _ title: String, _ subtitle: String) -> some View {
@@ -110,7 +110,7 @@ struct ProUpgradeSheet: View {
                 .font(.system(size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, AppSpacing.lg)
         } else {
             let monthly = store.products.first { $0.id.contains("monthly") }
             let yearly  = store.products.first { $0.id.contains("yearly") }
@@ -131,7 +131,7 @@ struct ProUpgradeSheet: View {
                     }
                 }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, AppSpacing.lg)
         }
     }
 
@@ -141,7 +141,7 @@ struct ProUpgradeSheet: View {
             Text(err)
                 .font(.system(size: 13))
                 .foregroundStyle(.red)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, AppSpacing.lg)
         }
     }
 
@@ -160,7 +160,7 @@ struct ProUpgradeSheet: View {
             .font(.system(size: 11))
             .foregroundStyle(.tertiary)
             .multilineTextAlignment(.center)
-            .padding(.horizontal, 32)
+            .padding(.horizontal, AppSpacing.xl)
     }
 }
 

@@ -157,22 +157,24 @@ extension Ticket {
 
     // MARK: Ticket vs Card classification
 
-    /// A "card" is a long-lived, reusable pass (membership / loyalty) with no
-    /// appointment time. The split keys on `eventDate` (the attend-at moment),
-    /// NOT `expiresAt` — a 月卡 has a validity end but is still a card.
-    /// Event-bound types (movie/concert/train/scenic) stay tickets even if the
-    /// date is missing (incomplete OCR), so they're never misfiled as cards.
-    var isCard: Bool {
-        switch ticketType {
-        case .member:  return true
-        case .generic: return eventDate == nil
-        default:       return false
-        }
-    }
+    /// A "card" is a long-lived, reusable pass (membership / loyalty). Only the
+    /// explicit `.member` type qualifies — we deliberately do NOT auto-card a
+    /// dateless `.generic` item, because incomplete OCR (no parsed event date)
+    /// would otherwise bury ordinary tickets in the card wallet where users
+    /// can't find them. Card imports default to `.member` at the import source
+    /// (see ContentView `preferredType`), so genuine cards land here correctly.
+    var isCard: Bool { ticketType == .member }
 
     /// Unified archive bucket for both tickets and cards: manually archived,
     /// expired (auto), or already used.
     var isInArchive: Bool { isArchived || isExpired || isUsed }
+
+    /// Whether "restore" can actually move this item back to the active list.
+    /// Restore clears `isArchived`/`isUsed`, but it cannot un-expire a ticket —
+    /// an auto-expired item stays in the archive regardless. So we only offer
+    /// "restore" when the item would genuinely leave the archive afterwards.
+    /// Expired items need an explicit "edit validity" flow instead (see P2-1).
+    var canRestore: Bool { isInArchive && !isExpired }
 
     /// A still-valid card within 7 days of its validity end — surfaced visually
     /// in the card wallet (no system notification).

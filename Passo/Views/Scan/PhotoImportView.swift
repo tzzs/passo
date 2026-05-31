@@ -10,6 +10,10 @@ struct PhotoImportView: View {
     @Environment(\.dismiss)      private var dismiss
     @Environment(\.modelContext) private var modelContext
 
+    /// When imported from the card wallet, an unrecognized result defaults here
+    /// (.member) instead of .generic. nil = imported from the ticket flow.
+    var preferredType: TicketType? = nil
+
     @AppStorage("isPro") private var isPro = false
     @Query private var allTickets: [Ticket]
 
@@ -96,7 +100,7 @@ struct PhotoImportView: View {
 
             Spacer()
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, AppSpacing.xl)
         .onChange(of: selectedItem) { _, item in
             guard let item else { return }
             Task { await analyze(item: item) }
@@ -149,7 +153,7 @@ struct PhotoImportView: View {
 
             Spacer()
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, AppSpacing.xl)
     }
 
     // MARK: Analysis Pipeline
@@ -177,21 +181,22 @@ struct PhotoImportView: View {
             return
         }
 
-        // Free tier gate: max 5 imports per calendar month
-        if !isPro {
-            let startOfMonth = Calendar.current.date(
-                from: Calendar.current.dateComponents([.year, .month], from: Date())
-            ) ?? Date()
-            if allTickets.filter({ $0.importedAt >= startOfMonth }).count >= 5 {
-                phase = .picking
-                showProGate = true
-                return
-            }
+        // Free tier gate: max 5 imports per calendar month (centralized in StoreService)
+        if StoreService.isAtFreeImportLimit(isPro: isPro, tickets: allTickets) {
+            phase = .picking
+            showProGate = true
+            return
         }
 
         let ticket = TicketParser.parse(barcodeValue: analysis.barcodeValue, ocrText: analysis.ocrText)
         ticket.barcodeFormat = analysis.barcodeFormat
         ticket.sourceApp = "相册导入"
+
+        // Card-wallet imports: fall back to the preferred type only when the
+        // parser couldn't recognize a specific type (still .generic).
+        if let pref = preferredType, ticket.ticketType == .generic {
+            ticket.ticketType = pref
+        }
 
         // Capture thumbnail from selected image
         ticket.thumbnailData = await thumbnailData(from: uiImage)

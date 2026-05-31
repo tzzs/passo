@@ -23,7 +23,15 @@ struct PassDetailView: View {
     @State private var scheduledReminderDate: Date?
     @State private var showEditNotes = false
     @State private var showDeleteConfirm = false
+    @State private var showEditTicket = false
     @State private var editingNotes = ""
+
+    // Wallet pass (re)generation — lets a save-only ticket get signed later.
+    @AppStorage("signingNodePreference") private var nodeRaw = NodePreference.auto.rawValue
+    @State private var isSigningWallet = false
+    @State private var walletSigningError: String?
+    @State private var pkpassData: Data?
+    @State private var showWalletSheet = false
 
     private let hPad: CGFloat = AppSpacing.md   // 16pt — unified app-wide content margin
     private var isDark: Bool { true }
@@ -64,6 +72,28 @@ struct PassDetailView: View {
             // F2: sync isAddedToWallet with actual PKPassLibrary state
             syncWalletStatus()
         }
+        .sheet(isPresented: $showEditTicket) {
+            NavigationStack {
+                RecognitionConfirmView(ticket: ticket, mode: .edit)
+            }
+        }
+        .sheet(isPresented: $showWalletSheet) {
+            if let data = pkpassData {
+                WalletPresenter(passData: data) {
+                    ticket.isAddedToWallet = true
+                    try? modelContext.save()
+                    showWalletSheet = false
+                } onCancelled: {
+                    showWalletSheet = false
+                }
+                .ignoresSafeArea()
+            }
+        }
+        .alert("签名失败", isPresented: .constant(walletSigningError != nil), actions: {
+            Button("确定") { walletSigningError = nil }
+        }, message: {
+            Text(walletSigningError ?? "")
+        })
         .alert("编辑备注", isPresented: $showEditNotes) {
             TextField("备注内容", text: $editingNotes, axis: .vertical)
                 .lineLimit(3...6)
@@ -177,12 +207,19 @@ struct PassDetailView: View {
                 Button { shareTicket() } label: {
                     Label("分享票据", systemImage: "square.and.arrow.up")
                 }
+                Button { showEditTicket = true } label: {
+                    Label("编辑票据", systemImage: "pencil")
+                }
                 Button { editingNotes = ticket.notes; showEditNotes = true } label: {
                     Label("编辑备注", systemImage: "square.and.pencil")
                 }
                 if ticket.isInArchive {
-                    Button { restoreTicket() } label: {
-                        Label("恢复", systemImage: "arrow.uturn.backward")
+                    // Only offer restore when it can actually re-activate the item
+                    // (auto-expired tickets stay archived — no misleading no-op).
+                    if ticket.canRestore {
+                        Button { restoreTicket() } label: {
+                            Label("恢复", systemImage: "arrow.uturn.backward")
+                        }
                     }
                 } else {
                     Button { archiveTicket() } label: {
@@ -542,26 +579,62 @@ struct PassDetailView: View {
 
     // MARK: Open Wallet Button
 
+    @ViewBuilder
     private var openWalletButton: some View {
-        Button {
-            UIApplication.shared.openWallet()
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "wallet.pass")
-                Text("在 Wallet 中查看")
-                    .font(.system(size: 16, weight: .medium))
+        Group {
+            if ticket.isAddedToWallet {
+                Button {
+                    UIApplication.shared.openWallet()
+                } label: {
+                    walletButtonLabel(icon: "wallet.pass", title: "在 Wallet 中查看")
+                }
+            } else {
+                // Save-only ticket — offer to (re)generate the signed pass now.
+                Button {
+                    Task { await generateWalletPass() }
+                } label: {
+                    HStack(spacing: 8) {
+                        if isSigningWallet {
+                            ProgressView().tint(isDark ? .white : .black)
+                        } else {
+                            walletButtonLabel(icon: "wallet.pass.fill", title: "添加到 Wallet")
+                        }
+                    }
+                }
+                .disabled(isSigningWallet)
             }
-            .foregroundStyle(isDark ? .white : .black)
-            .frame(maxWidth: .infinity)
-            .frame(height: 50)
-            .background(isDark ? Color(hex: "#2c2c2e") : Color(uiColor: .secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
         .padding(.horizontal, hPad)
         .padding(.vertical, 12)
         .padding(.bottom, 40)
-        .disabled(!ticket.isAddedToWallet)
-        .opacity(ticket.isAddedToWallet ? 1 : 0.4)
+    }
+
+    private func walletButtonLabel(icon: String, title: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+            Text(title).font(.system(size: 16, weight: .medium))
+        }
+        .foregroundStyle(isDark ? .white : .black)
+        .frame(maxWidth: .infinity)
+        .frame(height: 50)
+        .background(isDark ? Color(hex: "#2c2c2e") : Color(uiColor: .secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+
+    private func generateWalletPass() async {
+        isSigningWallet = true
+        defer { isSigningWallet = false }
+        if ticket.passSerialNumber == nil {
+            ticket.passSerialNumber = UUID().uuidString
+        }
+        let snapshot = TicketSnapshot(ticket: ticket)
+        let pref = NodePreference(rawValue: nodeRaw) ?? .auto
+        do {
+            pkpassData = try await SigningService.sign(snapshot: snapshot, nodePreference: pref)
+            showWalletSheet = true
+        } catch {
+            walletSigningError = (error as? SigningError)?.errorDescription ?? error.localizedDescription
+        }
     }
 
     // MARK: Computed strings

@@ -201,7 +201,8 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
 
         let lines = (request.results ?? [])
             .compactMap { $0.topCandidates(1).first?.string }
-        let text = lines.joined(separator: " ")
+        // Keep line breaks: TicketParser.extractTitle() relies on per-line splitting.
+        let text = lines.joined(separator: "\n")
 
         guard !text.isEmpty else { return }
         Task { @MainActor in

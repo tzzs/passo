@@ -5,7 +5,7 @@ final class PassoUITests: XCTestCase {
 
     var app: XCUIApplication!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launch()
@@ -27,21 +27,31 @@ final class PassoUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["卡包"].exists)
     }
 
-    /// 票据 · 全部 timeline via segment.
+    /// 票据 · 全部 timeline via segment (stable accessibility id).
     func testAllTimeline() throws {
-        app.buttons["全部"].firstMatch.tap()
+        let allSegment = app.buttons["segment.全部"]
+        XCTAssertTrue(allSegment.waitForExistence(timeout: 2))
+        allSegment.tap()
         sleep(1)
         snap("all_timeline")
     }
 
+    /// 全部 mode exposes the search field.
+    func testSearchFieldVisible() throws {
+        app.buttons["segment.全部"].tap()
+        XCTAssertTrue(app.textFields["ticketSearchField"].waitForExistence(timeout: 2))
+    }
+
     /// Archive flow: swipe the top pile card to mark used → archive entry → archive view.
     func testArchiveFlow() throws {
-        let card = app.scrollViews.firstMatch
-        let start = card.coordinate(withNormalizedOffset: CGVector(dx: 0.4, dy: 0.34))
-        let end   = card.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.34))
-        start.press(forDuration: 0.05, thenDragTo: end)
-        sleep(1)
-        let archiveEntry = app.staticTexts["已归档"].firstMatch
+        let card = app.descendants(matching: .any).matching(identifier: "topTicketCard").firstMatch
+        if card.waitForExistence(timeout: 2) {
+            let start = card.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
+            let end   = card.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5))
+            start.press(forDuration: 0.05, thenDragTo: end)
+            sleep(1)
+        }
+        let archiveEntry = app.buttons["archiveEntry"].firstMatch
         if archiveEntry.waitForExistence(timeout: 2) {
             archiveEntry.tap()
             sleep(1)
@@ -52,8 +62,9 @@ final class PassoUITests: XCTestCase {
     /// Detail page width must stay stable when the async map snapshot loads
     /// (regression: scaledToFill snapshot widened the info card / ate the margins).
     func testDetailMapWidth() throws {
-        app.scrollViews.firstMatch
-            .coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.34)).tap()
+        let card = app.descendants(matching: .any).matching(identifier: "topTicketCard").firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 2))
+        card.tap()
         sleep(1)
         snap("detail_initial")    // map placeholder
         sleep(4)
