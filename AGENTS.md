@@ -10,6 +10,14 @@ Repository guidance for agents and coding assistants working on Passo.
 - Portrait-only, single scene.
 - Physical device runs require a valid Apple Developer signing identity in Signing & Capabilities.
 
+## Worktree Isolation
+
+- For non-trivial feature, review, or refactor work, create an isolated project-local worktree under `.worktrees/<task-name>`.
+- Use a short kebab-case task name, for example `.worktrees/release-please` or `.worktrees/archive-review`.
+- Create the worktree from the current intended base branch, then work from inside that directory so unrelated local changes stay out of the task.
+- Keep `.worktrees/` ignored; never commit nested worktree contents.
+- Prefer branch names that match the task, such as `codex/<task-name>`, unless the local ref namespace requires a collision-free variant.
+
 ## Architecture
 
 - **Entry**: `PassoApp.swift` creates the shared SwiftData `ModelContainer` for `Ticket`, injects `StoreService.shared`, handles `passo://import`, and shows `ContentView`.
