@@ -25,6 +25,7 @@ struct PassDetailView: View {
     @State private var showDeleteConfirm = false
     @State private var showEditTicket = false
     @State private var editingNotes = ""
+    @State private var expiryEditDraft: ExpiryEditDraft?
 
     // Wallet pass (re)generation — lets a save-only ticket get signed later.
     @AppStorage("signingNodePreference") private var nodeRaw = NodePreference.auto.rawValue
@@ -76,6 +77,14 @@ struct PassDetailView: View {
             NavigationStack {
                 RecognitionConfirmView(ticket: ticket, mode: .edit)
             }
+        }
+        .sheet(item: $expiryEditDraft) { draft in
+            ExpiryEditorSheet(
+                draft: draft,
+                accent: theme.accent,
+                onCancel: { expiryEditDraft = nil },
+                onSave: saveEditedExpiry
+            )
         }
         .sheet(isPresented: $showWalletSheet) {
             if let data = pkpassData {
@@ -160,6 +169,38 @@ struct PassDetailView: View {
         if ticket.isAddedToWallet != inLibrary {
             ticket.isAddedToWallet = inLibrary
             try? modelContext.save()
+        }
+    }
+
+    private func beginEditingExpiry() {
+        let hasExpiry = ticket.expiresAt != nil
+        let expiryDate = ticket.expiresAt
+            ?? Ticket.defaultExpiry(for: ticket.ticketType, eventDate: ticket.eventDate)
+            ?? Calendar.current.date(byAdding: .year, value: 1, to: Date())
+            ?? Date()
+        expiryEditDraft = ExpiryEditDraft(
+            hasExpiry: hasExpiry,
+            expiryDate: expiryDate,
+            isCurrentlyExpired: ticket.isExpired
+        )
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
+    private func saveEditedExpiry(hasExpiry: Bool, expiryDate: Date) {
+        ticket.expiresAt = hasExpiry ? expiryDate : nil
+        let shouldRescheduleReminder = hasExpiry && reminderEnabled
+        if !hasExpiry {
+            ticket.reminderEnabled = false
+            ticket.reminderDate = nil
+            reminderEnabled = false
+            scheduledReminderDate = nil
+            ReminderService.cancelReminder(ticketID: ticket.id)
+        }
+        try? modelContext.save()
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        expiryEditDraft = nil
+        if shouldRescheduleReminder {
+            Task { await toggleReminder(true) }
         }
     }
 
@@ -352,7 +393,7 @@ struct PassDetailView: View {
     private var infoCard: some View {
         VStack(spacing: 0) {
             mapPreview
-            infoRow(systemIcon: "clock", label: "过期时间", value: expiryText)
+            expiryRow
             Divider().padding(.horizontal, AppSpacing.md)
             reminderRow
             Divider().padding(.horizontal, AppSpacing.md)
@@ -427,6 +468,35 @@ struct PassDetailView: View {
         .buttonStyle(.plain)
         .padding(AppSpacing.md)
         .disabled(mapCoordinate == nil && ticket.venueAddress.isEmpty)
+    }
+
+    private var expiryRow: some View {
+        Button {
+            beginEditingExpiry()
+        } label: {
+            HStack(spacing: 12) {
+                iconTile("clock")
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("过期时间")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                    Text(expiryText)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.primary)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("detailExpiryRow")
+        .accessibilityLabel("编辑过期时间")
     }
 
     private func loadMapSnapshot() async {
@@ -644,4 +714,72 @@ struct PassDetailView: View {
         return exp.formatted(date: .abbreviated, time: .shortened)
     }
 
+}
+
+private struct ExpiryEditDraft: Identifiable {
+    let id = UUID()
+    let hasExpiry: Bool
+    let expiryDate: Date
+    let isCurrentlyExpired: Bool
+}
+
+private struct ExpiryEditorSheet: View {
+    let draft: ExpiryEditDraft
+    let accent: Color
+    let onCancel: () -> Void
+    let onSave: (_ hasExpiry: Bool, _ expiryDate: Date) -> Void
+
+    @State private var hasExpiry: Bool
+    @State private var expiryDate: Date
+
+    init(
+        draft: ExpiryEditDraft,
+        accent: Color,
+        onCancel: @escaping () -> Void,
+        onSave: @escaping (_ hasExpiry: Bool, _ expiryDate: Date) -> Void
+    ) {
+        self.draft = draft
+        self.accent = accent
+        self.onCancel = onCancel
+        self.onSave = onSave
+        _hasExpiry = State(initialValue: draft.hasExpiry)
+        _expiryDate = State(initialValue: draft.expiryDate)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Toggle("设置过期时间", isOn: $hasExpiry)
+                        .tint(accent)
+                    if hasExpiry {
+                        VStack {
+                            DatePicker(
+                                "过期时间",
+                                selection: $expiryDate,
+                                displayedComponents: [.date, .hourAndMinute]
+                            )
+                            .datePickerStyle(.graphical)
+                            .environment(\.locale, Locale(identifier: "zh_CN"))
+                            .accessibilityIdentifier("expiryDatePicker")
+                        }
+                    }
+                } footer: {
+                    if draft.isCurrentlyExpired && hasExpiry {
+                        Text("保存未来时间后，非手动归档且未使用的票卡会回到有效列表。")
+                    }
+                }
+            }
+            .navigationTitle("编辑过期时间")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消", action: onCancel)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("保存") { onSave(hasExpiry, expiryDate) }
+                }
+            }
+        }
+    }
 }

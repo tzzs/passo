@@ -70,4 +70,30 @@ final class PassoUITests: XCTestCase {
         sleep(4)
         snap("detail_after_map")  // map loaded — width must be unchanged
     }
+
+    /// Detail expiry row should open a focused validity editor.
+    func testDetailExpiryRowOpensEditor() throws {
+        app.tabBars.buttons["卡包"].tap()
+
+        let memberCard = app.staticTexts["星巴克金卡"].firstMatch
+        XCTAssertTrue(memberCard.waitForExistence(timeout: 2))
+        memberCard.tap()
+
+        let expiryRow = app.buttons["detailExpiryRow"]
+        XCTAssertTrue(expiryRow.waitForExistence(timeout: 2))
+        expiryRow.tap()
+
+        XCTAssertTrue(app.navigationBars["编辑过期时间"].waitForExistence(timeout: 2))
+
+        let expiryToggle = app.switches["设置过期时间"]
+        XCTAssertTrue(expiryToggle.waitForExistence(timeout: 2))
+        XCTAssertEqual(expiryToggle.value as? String, "0")
+        XCTAssertFalse(app.datePickers["过期时间"].exists)
+
+        expiryToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let enabledPredicate = NSPredicate(format: "value == %@", "1")
+        expectation(for: enabledPredicate, evaluatedWith: expiryToggle)
+        waitForExpectations(timeout: 2)
+        XCTAssertTrue(app.descendants(matching: .any)["expiryDatePicker"].waitForExistence(timeout: 2))
+    }
 }
