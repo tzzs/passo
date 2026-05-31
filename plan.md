@@ -1,6 +1,79 @@
 # Passo 待办事项
 
-> 最后更新：2026-05-31 · 当前新增了「票据 / 卡包 / 已归档」信息架构，`CardWalletView` 和 `ArchiveView` 已加入 Xcode target。**当前剩余事项包含上线配置、PassKit/iCloud 阻塞项，以及卡包/归档新流程的边界修复。**
+> 最后更新：2026-05-31（晚） · 已把 `origin/main` 的 17 个 commit 合入工作分支（含「票据 / 卡包 / 已归档」IA、`ArchiveView`、`CardWalletView`、richer timeline、in-place 导入菜单）。iPhone 17 Pro / iOS 26.5 模拟器构建通过（0 warning / 0 error），主导航、票据 timeline、卡包、归档入口、设置全部可达。**当前剩余事项包含上线配置、PassKit / iCloud 阻塞项，以及卡包 / 归档新流程的边界修复。CLAUDE.md "Key Stubs" 表已严重过期（5 项 stub 全部已实现），需随 P3-2 / P2-8 一并更新。**
+
+---
+
+## 开发执行计划（待用户确认）
+
+执行顺序（用户确认）：**先做本地可闭环 → 体验补强 → 工程质量，上线配置 / 服务端依赖批次移到最后**（需 Apple Developer 后台 + 服务器，单独安排）。
+
+### 批次 1 · 客户端可独立闭环（不依赖外部资源，~1 天）
+1. **P0-3** `PassBuilder` 字段完整性：`barcode` legacy 字段单 dict、`boardingPass` 加 `transitType`、补 foreground/background/label/text colors
+2. **P0-6 + P0-7** 归档语义整治：`archivedAt` 在右滑标记使用 / 手动归档时写入；过期项的"恢复"改为"编辑有效期"或禁用；`ArchiveView` 排序兜底
+3. **P0-8** SwiftData 轻量迁移验证：用旧 store 在模拟器上做一次升级跑，必要时写 `SchemaMigrationPlan`
+4. **P1-6 + P1-7 + P1-8** 卡 / 票分类收紧：`.member` 严格归卡；卡包 `+` 入口传 `importMode: .card` 让确认页默认到会员卡；卡包稳定二级排序
+
+✅ 完成后 release-blocking 的客户端 bug 全部清零，剩下都是外部依赖。
+
+### 批次 2 · 导入链路 / 计费 / 体验补强（~1 天）
+5. **P1-1 + P1-2** OCR 全链路保留 `\n`，`ScreenshotScanResult` 携带 `ocrText / barcodeFormat / thumbnailData`，确认页不再重解析丢字段
+6. **P1-3** `ImportQuotaService`（或 `StoreService.remainingFreeImports(context:)`）统一额度检查
+7. **P1-4** 导入去重：保存前按 `barcodeValue + eventDate + venue` 查重
+8. **P1-5** Share Extension 错误可观测：App Group 写失败显式提示
+9. **P2-1 + P2-2** 详情页"编辑票据" + `+` 菜单加"手动新建"（复用确认页 UI）
+10. **P2-3** 签名失败降级：失败时保留"仅保存"和"稍后重试"
+11. **P2-4** Wallet 添加状态：关闭 `PKAddPassesViewController` 后延迟一次 `containsPass` 重检
+12. **P2-5** 票据列表搜索 / 筛选（"全部"页加 search bar + 类型筛选）
+13. **P2-7** 归档入口在卡包 tab 也可见
+
+### 批次 3 · 测试 / 文档 / 工程质量（~半天）
+14. **P2-6 + P3-1** 给关键控件加 `.accessibilityIdentifier`；补 `TicketParser` / `Ticket.defaultExpiry` / `PassBuilder` / `ImportQuotaService` 单元测试
+15. **P2-8 + P3-2** 文档同步：
+    - `CLAUDE.md` 删掉"Key Stubs"表（5 项全部已实现），改为列当前真正 stub 的项（签名节点、Pro 升级页内容）
+    - `AGENTS.md`、`docs/review-2026-05-26.md` 同步票据 / 卡包 / 归档新 IA
+16. **P3-3** 关键链路 `try?` 改为可诊断错误（保存 / OCR / 签名 / App Group I/O）
+17. **P3-4** 设计 token 清理：页面级 spacing / radius 统一到 `AppSpacing`
+
+### 批次 4 · 上线配置 / 服务端依赖（最后执行，需 Apple Developer 后台 + 服务器，~半天）
+18. **P0-4** Team ID / Pass Type ID 配置化：`xcconfig` 或 `Info.plist` build setting 注入 `DEVELOPMENT_TEAM` / `PASS_TYPE_IDENTIFIER`，模拟器空值时给清晰错误
+19. **P0-5** 签名节点部署：Cloudflare Worker 先行（KV 存证书），国内节点可后置；端到端跑通一次真 `.pkpass`
+20. **P0-1** Share Extension 在主 App 的 PlugIns 嵌入：补 `project.yml` dependency + `xcodegen generate`，真机分享菜单验证
+21. **P0-2** iCloud 同步策略二选一：要么把 `cloudKitDatabase: .none` 切到 `.privateCloudDatabase`+ 处理 schema 约束，要么 UI 暂时隐藏开关
+
+### 完成判据
+- 批次 1 完成：模拟器跑通归档 / 卡包 / Pass JSON 校验，旧 store 迁移无数据丢失
+- 批次 2 完成：导入 6 张同条码截图只剩 1 张，免费配额无法绕开
+- 批次 3 完成：CI 跑 UI Test + 单测全绿，`CLAUDE.md` / `AGENTS.md` 无过期描述
+- 批次 4 完成（最后）：真机分享 → 主 App 落卡，签名节点回包 `.pkpass`，Wallet 接收成功
+
+---
+
+## 执行记录（2026-05-31 · 批次 1–3 已完成）
+
+批次 1–3 共 17 项全部实现，模拟器构建 0 warning / 0 error，**20/20 测试通过**（15 单元 + 5 UI）。批次 4（上线配置 / 服务端）按计划保留待办。
+
+| 批次 | 项 | 状态 | 关键改动 |
+|---|---|---|---|
+| 1 | P0-3 | ✅ | `PassBuilder`：`barcode` 单 dict + 空值跳过、`transitType`、per-type 颜色 |
+| 1 | P0-6/P0-7 | ✅ | `Ticket.canRestore`（仅非过期可恢复）；右滑标记使用写 `archivedAt`；恢复手势/菜单按 `canRestore` 显隐 |
+| 1 | P0-8 | ✅ | 旧 schema store 经新构建无损打开，实证轻量迁移成功（无需 `SchemaMigrationPlan`） |
+| 1 | P1-6/7/8 | ✅ | `isCard` 仅认 `.member`；`ContentView.importPreferredType` 让卡包导入默认会员卡；`CardWalletView` 稳定二级排序 |
+| 2 | P1-1 | ✅ | OCR 全链路改 `\n` 拼接 + `extractPattern` 加 `.dotMatchesLineSeparators`（P1-2 合并代码已实现） |
+| 2 | P1-3 | ✅ | `StoreService.remainingFreeImports/isAtFreeImportLimit`（nonisolated static），两处内联检查归一 |
+| 2 | P1-4 | ✅ | 确认页按 `barcodeValue+eventDate+venue` 去重 + "仍然保存/取消" |
+| 2 | P1-5 | ✅ | ShareViewController App Group 写失败弹明确错误（不再静默打开主 App） |
+| 2 | P2-1/P2-2 | ✅ | `RecognitionConfirmView.mode`（confirm/edit）；详情页"编辑票据"；`+` 菜单"手动新建" |
+| 2 | P2-3 | ✅ | 签名失败弹 仅保存 / 重试 / 取消；详情页可对未签名票据"添加到 Wallet"重生成 |
+| 2 | P2-4 | ✅ | `WalletPresenter` 关闭后延迟 0.4s 再查 `containsPass`，避免误判取消 |
+| 2 | P2-5 | ✅ | 全部页搜索框（标题/场馆/座位/标签）+ 类型筛选 chips |
+| 2 | P2-7 | ✅ | 卡包 tab 也有已归档入口 |
+| 3 | P2-6/P3-1 | ✅ | 关键控件加 `accessibilityIdentifier`；新增 `PassoTests` 单测 target（15 单测）；UI 测试改用 id |
+| 3 | P2-8/P3-2 | ✅ | `CLAUDE.md` 删过期 Key Stubs 表、`AGENTS.md` 同步三 tab IA + xcodegen 说明 |
+| 3 | P3-3 | ✅ | `RecognitionConfirmView` 保存路径失败弹"保存失败"，不再静默丢数据（详情页次要修改仍 best-effort） |
+| 3 | P3-4 | ✅ | sheet 级 `32→AppSpacing.xl`、`24→AppSpacing.lg`（等值，无视觉漂移；`20pt` 无对应 token 保留） |
+
+**工程结构变更（需注意）**：原 `Passo.xcodeproj` 与 `project.yml` 已脱节（pbxproj 手改，含 yml 缺失的 `PassoUITests`）。本次把 `PassoTests` + `PassoUITests` + `Passo` scheme 的 test action 补进 `project.yml` 并执行 `xcodegen generate` 重新生成工程——已验证 entitlements / App Group / iCloud / CloudKit 全部保留，构建与测试全绿。**今后请以 `project.yml` 为准，改文件后跑 `xcodegen generate`。**
 
 ---
 
@@ -67,7 +140,7 @@ WalletView 时间轴重做引入：
 |---|---|---|---|---|
 | P2-6 | 更新 UI Test 为稳定选择器 | `testArchiveFlow` 用 `scrollViews.firstMatch` 坐标滑动，容易滑到列表/空白；`testAllTimeline` 直接点 `全部` 也可能命中非分段控件 | `PassoUITests/PassoUITests.swift`, SwiftUI views | 给关键控件添加 `.accessibilityIdentifier`，测试用 identifier 查找 tab、segmented control、顶部卡片、归档入口 |
 | P2-7 | 归档入口可发现性 | 归档入口只在票据 tab 且 `archivedCount > 0` 时出现，卡包用户归档卡片后要回票据 tab 找入口 | `WalletView.swift`, `CardWalletView.swift`, `ContentView.swift` | 在卡包 tab 也提供归档入口，或把归档做成设置/统一二级入口 |
-| P2-8 | 修正文档中的旧 tab 架构 | 当前已从「即将 / 全部 / 设置」变成「票据 / 卡包 / 设置」，旧文档仍会误导后续实现 | `AGENTS.md`, `docs/review-2026-05-26.md`, `plan.md` | 同步当前 tab、分段、卡包、统一归档的实际架构 |
+| P2-8 | 修正文档中的旧 tab 架构 + `CLAUDE.md` Key Stubs 全部失效 | 当前 IA 已从「即将 / 全部 / 设置」变成「票据 / 卡包 / 设置」；`CLAUDE.md` 列出的 5 项 stub（相机预览、闪光灯、Vision、PassKit 签名、Wallet 跳转）实际全部已实现，新人按此修改会重复造轮子 | `CLAUDE.md`, `AGENTS.md`, `docs/review-2026-05-26.md`, `plan.md` | `CLAUDE.md` 删除 Key Stubs 表或改写为"当前真正未落地：签名节点、`ProUpgradeSheet` 内容"；其余文档同步票据 / 卡包 / 归档 IA |
 
 ---
 
@@ -108,7 +181,7 @@ WalletView 时间轴重做引入：
 | 编号 | 待办 | 价值 | 涉及文件 | 建议处理 |
 |---|---|---|---|---|
 | P3-1 | 补核心单元测试 | 降低解析、过期、Pass JSON 回归风险 | 新增 test target 或 XCTest files | 覆盖 `TicketParser`, `Ticket.defaultExpiry`, `PassBuilder`, 配额逻辑 |
-| P3-2 | 更新过期文档 | 避免后续按错误架构改代码 | `AGENTS.md`, `docs/review-2026-05-26.md`, `plan.md` | 同步当前三 tab 架构、Share Extension、StoreKit、iCloud 实际状态 |
+| P3-2 | 更新过期文档 | 避免后续按错误架构改代码（与 P2-8 配对） | `CLAUDE.md`, `AGENTS.md`, `docs/review-2026-05-26.md`, `plan.md` | 同步当前 票据 / 卡包 / 归档 三 tab 架构、Share Extension 嵌入状态、StoreKit、iCloud 实际状态；`CLAUDE.md` Key Stubs 表整体重写 |
 | P3-3 | 减少 `try?` 静默失败 | 关键链路失败时应可诊断 | Services 和导入视图 | 对保存、OCR、签名、App Group 读写加错误状态和用户提示 |
 | P3-4 | 设计 token 清理 | 降低视觉漂移 | SwiftUI views | 页面级 spacing/radius 优先替换为 `AppSpacing`；装饰性小常量可保留 |
 

@@ -93,9 +93,10 @@ final class ShareViewController: UIViewController {
         let barcode = barcodeReq.results?.first
         let barcodeValue = barcode?.payloadStringValue ?? ""
         let barcodeFormat = barcodeFormatString(for: barcode?.symbology)
+        // Keep line breaks: TicketParser.extractTitle() relies on per-line splitting.
         let ocrText = (ocrReq.results as? [VNRecognizedTextObservation] ?? [])
             .compactMap { $0.topCandidates(1).first?.string }
-            .joined(separator: " ")
+            .joined(separator: "\n")
 
         // Save thumbnail to App Group container so main app can read it
         let thumbData = image.preparingThumbnail(of: CGSize(width: 400, height: 400))?.jpegData(compressionQuality: 0.75)
@@ -116,13 +117,22 @@ final class ShareViewController: UIViewController {
             return
         }
 
-        // Persist payload in App Group so Passo app can read on launch
-        if let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) {
-            let payload: [String: String] = ["barcode": barcodeValue, "format": barcodeFormat, "ocr": ocrText]
-            let payloadURL = container.appendingPathComponent("pending_import.json")
-            if let data = try? JSONSerialization.data(withJSONObject: payload) {
-                try? data.write(to: payloadURL)
-            }
+        // Persist payload in App Group so Passo app can read on launch.
+        // Surface failures instead of silently opening the app with no data —
+        // a nil container almost always means the App Group is misconfigured.
+        guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
+            cancel(message: "无法访问共享存储，请确认已开启 App Group（\(appGroupID)）")
+            return
+        }
+
+        let payload: [String: String] = ["barcode": barcodeValue, "format": barcodeFormat, "ocr": ocrText]
+        let payloadURL = container.appendingPathComponent("pending_import.json")
+        do {
+            let data = try JSONSerialization.data(withJSONObject: payload)
+            try data.write(to: payloadURL)
+        } catch {
+            cancel(message: "保存导入数据失败：\(error.localizedDescription)")
+            return
         }
 
         // Open main app via custom URL scheme

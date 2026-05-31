@@ -18,12 +18,25 @@ struct CardWalletView: View {
 
     private var isDark: Bool { colorScheme == .dark }
 
+    /// Count across all items (tickets + cards) currently in the archive.
+    private var archivedCount: Int {
+        tickets.filter(\.isInArchive).count
+    }
+
     /// Valid cards only — expired ones live in the archive.
     private var cards: [Ticket] {
         tickets
             .filter { $0.isCard && !$0.isInArchive }
-            // Soon-to-expire first so renewals surface to the top.
-            .sorted { ($0.isExpiringSoon ? 0 : 1) < ($1.isExpiringSoon ? 0 : 1) }
+            .sorted { a, b in
+                // 1) Soon-to-expire first so renewals surface to the top.
+                if a.isExpiringSoon != b.isExpiringSoon { return a.isExpiringSoon }
+                // 2) Then by earliest validity end (no-expiry cards sink last).
+                let ae = a.expiresAt ?? .distantFuture
+                let be = b.expiresAt ?? .distantFuture
+                if ae != be { return ae < be }
+                // 3) Stable tiebreak: most recently imported first.
+                return a.importedAt > b.importedAt
+            }
     }
 
     private let columns = [
@@ -52,12 +65,48 @@ struct CardWalletView: View {
                             .padding(.horizontal, AppSpacing.md)
                             .padding(.top, 16)
                         }
+
+                        archiveEntry
                     }
                 }
             }
             .navigationDestination(item: $selectedTicket) { ticket in
                 PassDetailView(ticket: ticket)
             }
+        }
+    }
+
+    // 已归档入口 — 与票据 tab 共用统一归档页，卡包用户归档卡片后也能在此找到。
+    @ViewBuilder
+    private var archiveEntry: some View {
+        if archivedCount > 0 {
+            NavigationLink {
+                ArchiveView()
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "archivebox")
+                        .font(.system(size: 15, weight: .medium))
+                    Text("已归档")
+                        .font(.system(size: 15, weight: .medium))
+                    Spacer()
+                    Text("\(archivedCount)")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                }
+                .foregroundStyle(isDark ? .white.opacity(0.7) : .black.opacity(0.65))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .frame(maxWidth: .infinity)
+                .background(isDark ? Color.white.opacity(0.05) : Color.black.opacity(0.03))
+                .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("archiveEntry")
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.top, 18)
         }
     }
 

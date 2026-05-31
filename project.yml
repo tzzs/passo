@@ -101,3 +101,49 @@ targets:
         INFOPLIST_FILE: PassoShareExtension/Info.plist
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: ""
+
+  # NOTE: the live Passo.xcodeproj is currently hand/Xcode-maintained and has
+  # diverged from this file (it already contains PassoUITests, which was added
+  # directly to the pbxproj). Both test targets are declared here so a future
+  # `xcodegen generate` reproduces the full project. Verify the regenerated
+  # project before committing — see plan.md 批次 3 / P3-1.
+  PassoTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: PassoTests
+    dependencies:
+      - target: Passo
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.passo.app.tests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Passo.app/Passo"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_STRICT_CONCURRENCY: minimal
+
+  PassoUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: PassoUITests
+    dependencies:
+      - target: Passo
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.passo.app.uitests
+        TEST_TARGET_NAME: Passo
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_STRICT_CONCURRENCY: minimal
+
+schemes:
+  Passo:
+    build:
+      targets:
+        Passo: all
+    test:
+      targets:
+        - PassoTests
+        - PassoUITests

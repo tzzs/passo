@@ -37,10 +37,14 @@ struct ArchiveView: View {
                             }
                         }
                         .swipeActions(edge: .leading) {
-                            Button { restore(ticket) } label: {
-                                Label("恢复", systemImage: "arrow.uturn.backward")
+                            // Restore only when it would actually leave the archive.
+                            // Auto-expired items can't be un-expired, so no restore.
+                            if ticket.canRestore {
+                                Button { restore(ticket) } label: {
+                                    Label("恢复", systemImage: "arrow.uturn.backward")
+                                }
+                                .tint(.green)
                             }
-                            .tint(.green)
                         }
                     }
                 }

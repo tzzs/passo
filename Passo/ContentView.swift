@@ -32,6 +32,10 @@ struct ContentView: View {
     @State private var showScanSheet     = false  // ScanView fullScreenCover
     @State private var showPhotoImport   = false  // PhotoImportView sheet
     @State private var shareImportTicket: Ticket?
+    @State private var manualTicket: Ticket?
+    // Carries the import source's preferred type into the confirm step:
+    // card-wallet imports default an unrecognized result to .member.
+    @State private var importPreferredType: TicketType?
 
     // Badge: today's active ticket count shown on the 即将 tab
     @Query private var allTickets: [Ticket]
@@ -42,16 +46,17 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             WalletView(
-                onScanTapped:  { showScanSheet = true },
-                onPhotoTapped: { showPhotoImport = true }
+                onScanTapped:  { importPreferredType = nil; showScanSheet = true },
+                onPhotoTapped: { importPreferredType = nil; showPhotoImport = true },
+                onManualTapped: { manualTicket = Ticket() }
             )
             .tabItem { Label(AppTab.tickets.title, systemImage: AppTab.tickets.icon) }
             .badge(todayBadgeCount > 0 ? todayBadgeCount : 0)
             .tag(AppTab.tickets)
 
             CardWalletView(
-                onScanTapped:  { showScanSheet = true },
-                onPhotoTapped: { showPhotoImport = true }
+                onScanTapped:  { importPreferredType = .member; showScanSheet = true },
+                onPhotoTapped: { importPreferredType = .member; showPhotoImport = true }
             )
             .tabItem { Label(AppTab.cards.title, systemImage: AppTab.cards.icon) }
             .tag(AppTab.cards)
@@ -61,13 +66,17 @@ struct ContentView: View {
                 .tag(AppTab.settings)
         }
         .fullScreenCover(isPresented: $showScanSheet) {
-            ScanView()
+            ScanView(preferredType: importPreferredType)
         }
         .sheet(isPresented: $showPhotoImport) {
-            PhotoImportView()
+            PhotoImportView(preferredType: importPreferredType)
         }
         // Share-extension import path — ticket arrives via passo:// URL or NSNotification
         .sheet(item: $shareImportTicket) { ticket in
+            RecognitionConfirmView(ticket: ticket)
+        }
+        // Manual create — empty ticket from the + menu's "手动新建"
+        .sheet(item: $manualTicket) { ticket in
             RecognitionConfirmView(ticket: ticket)
         }
         .onReceive(NotificationCenter.default.publisher(for: .passoShareImport)) { _ in

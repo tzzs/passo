@@ -142,6 +142,7 @@ struct GlassSegmentedControl: View {
                         )
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("segment.\(items[i])")
             }
         }
         .padding(3)

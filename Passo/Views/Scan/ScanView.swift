@@ -9,6 +9,10 @@ struct ScanView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
+    /// When scanning from the card wallet, an unrecognized result defaults here
+    /// (.member) instead of .generic. nil = scanned from the ticket flow.
+    var preferredType: TicketType? = nil
+
     @StateObject private var camera = CameraService()
 
     @State private var isFlashOn = false
@@ -62,7 +66,7 @@ struct ScanView: View {
         }
         .statusBarHidden()
         .sheet(isPresented: $showPhotoImport) {
-            PhotoImportView()
+            PhotoImportView(preferredType: preferredType)
         }
         // Sheet bound to showConfirmSheet so dismiss works independently from detectedTicket.
         // onDismiss: if the ticket was persisted (storeIdentifier non-nil), auto-dismiss ScanView.
@@ -87,6 +91,11 @@ struct ScanView: View {
             let ticket = TicketParser.parse(barcodeValue: result.value, ocrText: camera.latestOCRText)
             ticket.barcodeFormat = result.format
             ticket.sourceApp = "相机扫描"
+            // Card-wallet scans: fall back to the preferred type only when the
+            // parser couldn't recognize a specific type (still .generic).
+            if let pref = preferredType, ticket.ticketType == .generic {
+                ticket.ticketType = pref
+            }
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 detectedTicket = ticket
             }
@@ -239,7 +248,7 @@ struct ScanView: View {
             }
             .font(.system(size: 15, weight: .medium))
             .foregroundStyle(.white)
-            .padding(.horizontal, 24)
+            .padding(.horizontal, AppSpacing.lg)
             .padding(.vertical, 10)
             .background(Color.white.opacity(0.15))
             .clipShape(Capsule())
