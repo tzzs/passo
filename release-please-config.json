@@ -1,0 +1,24 @@
+{
+  "include-component-in-tag": false,
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "package-name": "passo",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "project.yml"
+        },
+        {
+          "type": "generic",
+          "path": "Passo/Info.plist"
+        },
+        {
+          "type": "generic",
+          "path": "PassoShareExtension/Info.plist"
+        }
+      ]
+    }
+  }
+}
