@@ -54,10 +54,12 @@ struct SettingsView: View {
 
     private var subscriptionSection: some View {
         Section {
-            ProStatusCard(isPro: isPro) { showProSheet = true }
+            ProStatusCard(
+                isPro: isPro,
+                remaining: isPro ? 0 : StoreService.remainingFreeImports(isPro: false, tickets: tickets),
+                limit: StoreService.freeMonthlyImportLimit
+            ) { showProSheet = true }
         }
-        .listRowInsets(EdgeInsets())
-        .listRowBackground(Color.clear)
     }
 
     private var importSection: some View {
@@ -196,55 +198,101 @@ struct SettingsView: View {
 
 private struct ProStatusCard: View {
     let isPro: Bool
+    /// Imports left this month (only meaningful when `!isPro`).
+    let remaining: Int
+    let limit: Int
     let onUpgrade: () -> Void
 
+    private var isDepleted: Bool { !isPro && remaining <= 0 }
+    /// Fraction of quota *remaining* — full bar means plenty left.
+    private var progress: Double {
+        guard limit > 0 else { return 0 }
+        return Double(max(0, min(limit, remaining))) / Double(limit)
+    }
+    /// Bar color tracks how much is left: plenty → brand green, almost out → amber, depleted → red.
+    private var meterColor: Color {
+        switch remaining {
+        case 0:  return Color(hex: "#E94560")
+        case 1:  return Color(hex: "#FF9500")
+        default: return Color(hex: "#34C759")
+        }
+    }
+
     var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(
-                        LinearGradient(
-                            colors: isPro
-                                ? [Color(hex: "#1A1A2E"), Color(hex: "#E94560")]
-                                : [Color(uiColor: .secondarySystemBackground), Color(uiColor: .tertiarySystemBackground)],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: AppSpacing.radiusButton)
+                        .fill(
+                            LinearGradient(
+                                colors: isPro
+                                    ? [Color(hex: "#1A1A2E"), Color(hex: "#E94560")]
+                                    : [Color(uiColor: .secondarySystemBackground), Color(uiColor: .tertiarySystemBackground)],
+                                startPoint: .topLeading, endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .frame(width: 48, height: 48)
-                Image(systemName: isPro ? "crown.fill" : "crown")
-                    .font(.system(size: 22))
-                    .foregroundStyle(isPro ? Color(hex: "#FFE66D") : .secondary)
-            }
+                        .frame(width: 48, height: 48)
+                    Image(systemName: isPro ? "crown.fill" : "crown")
+                        .font(.system(size: 22))
+                        .foregroundStyle(isPro ? Color(hex: "#FFE66D") : .secondary)
+                }
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(isPro ? "Passo Pro" : "免费版")
-                    .font(.system(size: 16, weight: .semibold))
-                Text(isPro ? "无限导入 · iCloud 同步" : "每月 5 张 · 基础功能")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-            }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(isPro ? "Passo Pro" : "免费版")
+                        .font(.system(size: 16, weight: .semibold))
+                    Text(isPro ? "无限导入 · iCloud 同步" : (isDepleted ? "本月额度已用完" : "基础功能"))
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                }
 
-            Spacer()
+                Spacer()
+
+                if !isPro {
+                    Button(action: onUpgrade) {
+                        Text("升级")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(Color.black)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.borderless)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+            }
 
             if !isPro {
-                Button(action: onUpgrade) {
-                    Text("升级")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(Color.black)
-                        .clipShape(Capsule())
-                }
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
+                usageMeter
             }
         }
-        .padding(AppSpacing.md)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.vertical, AppSpacing.sm)
+        .padding(.vertical, AppSpacing.xs)
+    }
+
+    private var usageMeter: some View {
+        VStack(spacing: AppSpacing.xs) {
+            HStack {
+                Text("本月额度")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(isDepleted ? "已达上限" : "还可导入 \(remaining) 张")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(isDepleted ? Color(hex: "#E94560") : .primary)
+            }
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color(uiColor: .tertiarySystemFill))
+                    Capsule()
+                        .fill(meterColor)
+                        .frame(width: max(geo.size.width * progress, progress > 0 ? 8 : 0))
+                }
+            }
+            .frame(height: 8)
+        }
     }
 }
 
