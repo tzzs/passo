@@ -23,6 +23,7 @@
 		698DB139BFF2BBFDBE4DCA51 /* ScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA0887C01B87EB0EF76CA62 /* ScanView.swift */; };
 		6ED0D67F72EEFDFAADCE4B9B /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C0EEE25F45C15570C3516D9 /* CameraService.swift */; };
 		700999EB5649B621B1161297 /* TicketParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC63ABB292ACF839C7C55C1 /* TicketParser.swift */; };
+		819E0F3E928A7C6ECC790C07 /* CardPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F0872B27BE659482EAE3E8 /* CardPalette.swift */; };
 		84C7CE115C0D3557EF6F5DDC /* PassDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A04F3BB9D8DF2E510103862 /* PassDetailView.swift */; };
 		8D759A8B0C6609A5C403174A /* CardWalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95E2D5DDBDF0CF7C7BB75A84 /* CardWalletView.swift */; };
 		92E38410C52186A2F117578C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7372016D63A2348DAD153AE /* ContentView.swift */; };
@@ -75,6 +76,7 @@
 		5BA6BE4619F4C8BEB0074DE6 /* TicketParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketParserTests.swift; sourceTree = "<group>"; };
 		5EB4FFFB3E5323A44702A848 /* Ticket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ticket.swift; sourceTree = "<group>"; };
 		6B793F634581EDB604F0042D /* PassoShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PassoShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		71F0872B27BE659482EAE3E8 /* CardPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPalette.swift; sourceTree = "<group>"; };
 		7414454046D0D20E7B0A3BC0 /* SigningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SigningService.swift; sourceTree = "<group>"; };
 		779091FEBA240173A77EE3AC /* PassoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassoApp.swift; sourceTree = "<group>"; };
 		860470D6261E032B5AA6C4F3 /* ArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveView.swift; sourceTree = "<group>"; };
@@ -242,6 +244,7 @@
 			isa = PBXGroup;
 			children = (
 				E0A65A73C8BED644269BF1DA /* AppTheme.swift */,
+				71F0872B27BE659482EAE3E8 /* CardPalette.swift */,
 			);
 			path = Theme;
 			sourceTree = "<group>";
@@ -411,6 +414,7 @@
 				57424267B76A02553DCA4D5D /* AppTheme.swift in Sources */,
 				452FE746D302E74BA0E40581 /* ArchiveView.swift in Sources */,
 				6ED0D67F72EEFDFAADCE4B9B /* CameraService.swift in Sources */,
+				819E0F3E928A7C6ECC790C07 /* CardPalette.swift in Sources */,
 				8D759A8B0C6609A5C403174A /* CardWalletView.swift in Sources */,
 				92E38410C52186A2F117578C /* ContentView.swift in Sources */,
 				BB8E8003CD161D5635D2FCC3 /* GlassCardView.swift in Sources */,

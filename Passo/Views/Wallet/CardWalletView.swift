@@ -3,8 +3,10 @@ import SwiftData
 
 // MARK: - Card Wallet View (卡包)
 
-/// Grid of long-lived membership / loyalty cards (no timeline, no event time).
-/// Cards are surfaced for on-demand retrieval — tap to enlarge the barcode at a POS.
+/// Apple Wallet–style stack of long-lived membership / loyalty cards.
+/// Cards stack vertically, each peeking its header; tap one to expand it in
+/// place and reveal the barcode for POS scanning. Tap an already-expanded card
+/// again to push into its detail page.
 /// Expired cards leave here for the unified archive; soon-to-expire cards are flagged.
 struct CardWalletView: View {
     @Environment(\.colorScheme) private var colorScheme
@@ -15,8 +17,15 @@ struct CardWalletView: View {
     let onPhotoTapped: () -> Void
 
     @State private var selectedTicket: Ticket?
+    /// The card currently expanded to show its barcode (nil = all collapsed).
+    @State private var expandedID: UUID?
 
     private var isDark: Bool { colorScheme == .dark }
+
+    // Stack geometry
+    private let collapsedHeight: CGFloat = 72
+    private let expandedHeight:  CGFloat = 224
+    private let peekOverlap:     CGFloat = 18   // how much each collapsed card slides up over the previous
 
     /// Count across all items (tickets + cards) currently in the archive.
     private var archivedCount: Int {
@@ -39,11 +48,6 @@ struct CardWalletView: View {
             }
     }
 
-    private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12),
-    ]
-
     var body: some View {
         NavigationStack {
             ZStack {
@@ -56,14 +60,7 @@ struct CardWalletView: View {
                         if cards.isEmpty {
                             emptyState
                         } else {
-                            LazyVGrid(columns: columns, spacing: 12) {
-                                ForEach(cards) { card in
-                                    Button { selectedTicket = card } label: { cardCell(card) }
-                                        .buttonStyle(.plain)
-                                }
-                            }
-                            .padding(.horizontal, AppSpacing.md)
-                            .padding(.top, 16)
+                            cardStack
                         }
 
                         archiveEntry
@@ -73,7 +70,132 @@ struct CardWalletView: View {
             .navigationDestination(item: $selectedTicket) { ticket in
                 PassDetailView(ticket: ticket)
             }
+            .onAppear {
+                // Default state: expand the top card (soon-to-expire / most relevant).
+                if expandedID == nil { expandedID = cards.first?.id }
+            }
         }
+    }
+
+    // MARK: Stack
+
+    private var cardStack: some View {
+        let list = cards
+        return VStack(spacing: 0) {
+            ForEach(Array(list.enumerated()), id: \.element.id) { index, card in
+                let isExpanded   = expandedID == card.id
+                let prevExpanded = index > 0 && expandedID == list[index - 1].id
+
+                Button {
+                    if expandedID == card.id {
+                        selectedTicket = card                       // 2nd tap → detail
+                    } else {
+                        withAnimation(AppAnimation.cardAppear) {     // 1st tap → expand
+                            expandedID = card.id
+                        }
+                    }
+                } label: {
+                    cardView(card, isExpanded: isExpanded)
+                }
+                .buttonStyle(.plain)
+                // First card flush; a card under an expanded one gets a gap so it
+                // isn't covered; otherwise slide up to overlap the previous card.
+                .padding(.top, index == 0 ? 0 : (prevExpanded ? AppSpacing.sm : -peekOverlap))
+                // Expanded card floats above everything; lower cards cover upper ones.
+                .zIndex(isExpanded ? 1000 : Double(index))
+            }
+        }
+        .padding(.horizontal, AppSpacing.md)
+        .padding(.top, 16)
+    }
+
+    // MARK: Card (collapsed peek / expanded with barcode)
+
+    private func cardView(_ ticket: Ticket, isExpanded: Bool) -> some View {
+        let palette = CardPalette.palette(for: colorKey(ticket))
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top, spacing: 10) {
+                Text(ticket.ticketType.emoji)
+                    .font(.system(size: isExpanded ? 24 : 20))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(ticket.title.isEmpty ? "未命名卡片" : ticket.title)
+                        .font(.system(size: isExpanded ? 18 : 15, weight: isExpanded ? .bold : .semibold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                    if isExpanded {
+                        Text(validityText(ticket))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.7))
+                    }
+                }
+
+                Spacer(minLength: 8)
+
+                if ticket.isExpiringSoon {
+                    expiringBadge
+                } else if isExpanded {
+                    Image(systemName: "chevron.up")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+            }
+
+            if isExpanded {
+                Spacer(minLength: 12)
+                barcodePanel(ticket)
+            }
+        }
+        .padding(isExpanded ? 16 : 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: isExpanded ? expandedHeight : collapsedHeight, alignment: .top)
+        .background(palette.backgroundGradient)
+        .overlay(
+            // Accent glow blob, top-right
+            Circle()
+                .fill(palette.accent)
+                .frame(width: 90, height: 90)
+                .blur(radius: 40)
+                .opacity(0.35)
+                .offset(x: 40, y: -30),
+            alignment: .topTrailing
+        )
+        .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusCard, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppSpacing.radiusCard, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(isDark ? 0.45 : 0.18), radius: 8, y: 4)
+    }
+
+    private func barcodePanel(_ ticket: Ticket) -> some View {
+        VStack(spacing: 6) {
+            BarcodeImageView(
+                value: ticket.barcodeValue,
+                format: ticket.barcodeFormat,
+                size: 78
+            )
+            if !ticket.barcodeValue.isEmpty {
+                Text(formatBarcode(ticket.barcodeValue))
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(.gray)
+                    .kerning(1)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(12)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var expiringBadge: some View {
+        Text("即将到期")
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(Color(hex: "#FF9F0A"))
+            .clipShape(Capsule())
     }
 
     // 已归档入口 — 与票据 tab 共用统一归档页，卡包用户归档卡片后也能在此找到。
@@ -138,59 +260,14 @@ struct CardWalletView: View {
         .padding(.top, 8)
     }
 
-    // MARK: Card Cell
+    // MARK: Helpers
 
-    private func cardCell(_ ticket: Ticket) -> some View {
-        let theme = ticket.ticketType.theme
-        return VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text(ticket.ticketType.emoji)
-                    .font(.system(size: 22))
-                Spacer()
-                if ticket.isExpiringSoon {
-                    Text("即将到期")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 3)
-                        .background(Color(hex: "#FF9F0A"))
-                        .clipShape(Capsule())
-                }
-            }
-
-            Spacer(minLength: 12)
-
-            Text(ticket.title.isEmpty ? "未命名卡片" : ticket.title)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(.white)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-
-            Text(validityText(ticket))
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.white.opacity(0.7))
-                .padding(.top, 4)
-        }
-        .padding(14)
-        .frame(height: 132, alignment: .topLeading)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.backgroundGradient)
-        .overlay(
-            // Subtle accent glow blob, top-right
-            Circle()
-                .fill(theme.accent)
-                .frame(width: 90, height: 90)
-                .blur(radius: 40)
-                .opacity(0.35)
-                .offset(x: 40, y: -30),
-            alignment: .topTrailing
-        )
-        .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusCard, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppSpacing.radiusCard, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
-        )
-        .shadow(color: theme.accent.opacity(isDark ? 0.25 : 0.18), radius: 10, y: 5)
+    /// Stable color key — same card always maps to the same palette.
+    /// Falls back to barcode/uuid so unnamed cards still get distinct colors.
+    private func colorKey(_ ticket: Ticket) -> String {
+        let title = ticket.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !title.isEmpty { return title }
+        return ticket.barcodeValue.isEmpty ? ticket.id.uuidString : ticket.barcodeValue
     }
 
     private func validityText(_ ticket: Ticket) -> String {
@@ -198,6 +275,17 @@ struct CardWalletView: View {
         let f = DateFormatter()
         f.dateFormat = "yyyy.MM.dd"
         return "有效期至 " + f.string(from: exp)
+    }
+
+    private func formatBarcode(_ value: String) -> String {
+        let digits = value.prefix(16)
+        return stride(from: 0, to: digits.count, by: 4)
+            .map { i -> String in
+                let start = digits.index(digits.startIndex, offsetBy: i)
+                let end   = digits.index(start, offsetBy: min(4, digits.count - i))
+                return String(digits[start..<end])
+            }
+            .joined(separator: " ")
     }
 
     // MARK: Empty State
@@ -233,7 +321,13 @@ struct CardWalletView: View {
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: Ticket.self, configurations: config)
-    container.mainContext.insert(Ticket.preview(.member))
+    // Several differently-named member cards to show the stacked, multi-color look.
+    let names = ["星巴克 金星会员", "山姆会员店", "健身房年卡", "图书馆借阅证", "Apple Store"]
+    for name in names {
+        let card = Ticket.preview(.member)
+        card.title = name
+        container.mainContext.insert(card)
+    }
     return CardWalletView(onScanTapped: {}, onPhotoTapped: {})
         .modelContainer(container)
 }
