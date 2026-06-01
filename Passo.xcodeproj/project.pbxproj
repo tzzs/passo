@@ -17,6 +17,7 @@
 		347F9E1028F31F2A08F5052C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EEDC446E43178C3565AFF53 /* SettingsView.swift */; };
 		3AB947B2F7597ADB274B85C9 /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34380143A1056CF5DF006171 /* ReminderService.swift */; };
 		3AEBCE9DA388017D5D7AED13 /* ScreenshotImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D516DDC4C03CC891607C4B49 /* ScreenshotImportView.swift */; };
+		3CC4E0CE0C792311D7831A5F /* CardPaletteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FF2055C47287C1595F814CB /* CardPaletteTests.swift */; };
 		40E858CA92E0767DDF7D29F3 /* TicketModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE169E8AD9AAFB1F47FADF29 /* TicketModelTests.swift */; };
 		452FE746D302E74BA0E40581 /* ArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 860470D6261E032B5AA6C4F3 /* ArchiveView.swift */; };
 		57424267B76A02553DCA4D5D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A65A73C8BED644269BF1DA /* AppTheme.swift */; };
@@ -62,6 +63,7 @@
 		0C0EEE25F45C15570C3516D9 /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
 		0C1DF6A4D119802D65B15991 /* ProUpgradeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProUpgradeSheet.swift; sourceTree = "<group>"; };
 		0EA0887C01B87EB0EF76CA62 /* ScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanView.swift; sourceTree = "<group>"; };
+		0FF2055C47287C1595F814CB /* CardPaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPaletteTests.swift; sourceTree = "<group>"; };
 		130949084EA1B9812008F736 /* Passo.storekit */ = {isa = PBXFileReference; path = Passo.storekit; sourceTree = "<group>"; };
 		161D2CD54A35C6FA4BDD7D4B /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		1A04F3BB9D8DF2E510103862 /* PassDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassDetailView.swift; sourceTree = "<group>"; };
@@ -206,6 +208,7 @@
 		D3E35CA4EA9F007ACDDDFB94 /* PassoTests */ = {
 			isa = PBXGroup;
 			children = (
+				0FF2055C47287C1595F814CB /* CardPaletteTests.swift */,
 				954D8C922DB7D11CFEC22FF6 /* ImportQuotaTests.swift */,
 				A6650C39ED4A591466089266 /* PassBuilderTests.swift */,
 				EE169E8AD9AAFB1F47FADF29 /* TicketModelTests.swift */,
@@ -400,6 +403,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3CC4E0CE0C792311D7831A5F /* CardPaletteTests.swift in Sources */,
 				33344080FC2090B0E75E3012 /* ImportQuotaTests.swift in Sources */,
 				2367D51AFA90F491EBD95588 /* PassBuilderTests.swift in Sources */,
 				40E858CA92E0767DDF7D29F3 /* TicketModelTests.swift in Sources */,

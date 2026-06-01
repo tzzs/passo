@@ -54,14 +54,10 @@ struct CardPalette: Equatable {
     ///  - **Deterministic across launches.** Do NOT use `String.hashValue` —
     ///    Swift seeds it randomly per process, so colors would change on every
     ///    relaunch. Derive the value yourself from the string's bytes/scalars.
-    ///  - Return a value in `0..<upperBound` (assume `upperBound > 0`).
+    ///  - Return a value in `0..<upperBound`.
     ///  - Spread reasonably evenly so similar names don't all collide.
-    //
-    // TODO(you): implement the deterministic hash. A few valid approaches:
-    //   • Sum/fold `key.unicodeScalars` (e.g. accumulate `hash = hash &* 31 &+ scalar.value`)
-    //   • FNV-1a over `key.utf8`
-    // then take `% upperBound` (guard against negative with `&` math on unsigned).
     static func stableIndex(for key: String, upperBound: Int) -> Int {
+        precondition(upperBound > 0, "upperBound must be positive")
         // djb2-style accumulation over Unicode scalars. `&*` / `&+` are
         // overflow operators — hash accumulation always overflows, and unlike
         // `*`/`+` these wrap instead of trapping. Deterministic across launches.
