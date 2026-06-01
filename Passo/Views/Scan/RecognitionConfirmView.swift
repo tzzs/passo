@@ -45,18 +45,33 @@ struct RecognitionConfirmView: View {
     private var theme: TicketTheme { ticket.ticketType.theme }
 
     var body: some View {
-        ZStack {
-            background.ignoresSafeArea()
+        GeometryReader { proxy in
+            ZStack(alignment: .top) {
+                background.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                navigationBar
-                ticketPreview
-                editableFieldsCard
-                addToWalletButton
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        Color.clear
+                            .frame(height: AppSpacing.xl + AppSpacing.lg)
+                        navigationBar(topInset: proxy.safeAreaInsets.top)
+                        ticketPreview
+                            .padding(.top, AppSpacing.md)
+                        editableFieldsCard
+                            .padding(.top, AppSpacing.md)
+                    }
+                    .padding(.bottom, bottomControlReserve(bottomInset: proxy.safeAreaInsets.bottom))
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+
+                if showAddedToast { successToast }
             }
-
-            if showAddedToast { successToast }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .ignoresSafeArea(.container, edges: .all)
+            .overlay(alignment: .bottom) {
+                addToWalletButton(bottomInset: proxy.safeAreaInsets.bottom)
+            }
         }
+        .ignoresSafeArea(.container, edges: .all)
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showWalletSheet) {
             if let data = pkpassData {
@@ -115,7 +130,7 @@ struct RecognitionConfirmView: View {
                         .offset(y: UIScreen.main.bounds.height * 0.3)
                 }
             } else {
-                Color(uiColor: .systemGroupedBackground)
+                Color(hex: "#F4F1EA")
             }
         }
         .animation(AppAnimation.themeChange, value: ticket.ticketType.rawValue)
@@ -123,68 +138,70 @@ struct RecognitionConfirmView: View {
 
     // MARK: Navigation Bar
 
-    private var navigationBar: some View {
-        HStack {
-            GlassPillButton(isDark: true, action: { dismiss() }) {
+    private func navigationBar(topInset: CGFloat) -> some View {
+        let boundedTopInset = min(topInset, AppSpacing.xl * 2)
+
+        return HStack {
+            GlassPillButton(isDark: isDark, action: { dismiss() }) {
                 AnyView(
                     Image(systemName: "chevron.left")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(isDark ? .white : .black)
                 )
             }
             Spacer()
             Text(mode == .edit ? "编辑票据" : "确认信息")
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(isDark ? .white : .black)
+                .accessibilityIdentifier(mode == .edit ? "editTicketTitle" : "confirmInfoTitle")
             Spacer()
             Color.clear.frame(width: 44)
         }
         .padding(.horizontal, AppSpacing.md)
-        .padding(.top, 8)
-        .padding(.bottom, 8)
+        .padding(.top, boundedTopInset + AppSpacing.sm)
+        .padding(.bottom, AppSpacing.sm)
     }
 
     // MARK: Ticket Preview (compact)
 
     private var ticketPreview: some View {
-        TicketCardView(ticket: ticket, size: .compact, isDark: true)
+        TicketCardView(ticket: ticket, size: .compact, isDark: isDark)
+            .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 20)
-            .padding(.bottom, 12)
+            .accessibilityIdentifier("editTicketPreview")
             .animation(AppAnimation.themeChange, value: ticket.ticketType.rawValue)
     }
 
     // MARK: Editable Fields Card
 
     private var editableFieldsCard: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                // Type selector
-                typeSelector
+        VStack(alignment: .leading, spacing: 0) {
+            // Type selector
+            typeSelector
 
-                Divider().padding(.horizontal, AppSpacing.md)
+            Divider().padding(.horizontal, AppSpacing.md)
 
-                // Field rows
-                fieldRow(systemIcon: "textformat",        label: "活动名称",  value: $ticket.title)
-                Divider().padding(.horizontal, AppSpacing.md)
-                fieldRow(systemIcon: "mappin.and.ellipse", label: "场馆",      value: $ticket.venue)
-                Divider().padding(.horizontal, AppSpacing.md)
-                dateRow
-                Divider().padding(.horizontal, AppSpacing.md)
-                fieldRow(systemIcon: "clock",             label: "时间",      value: $ticket.eventTime)
-                Divider().padding(.horizontal, AppSpacing.md)
-                fieldRow(systemIcon: "chair.lounge",      label: "座位",      value: $ticket.seatInfo)
+            // Field rows
+            fieldRow(systemIcon: "textformat",        label: "活动名称",  value: $ticket.title)
+            Divider().padding(.horizontal, AppSpacing.md)
+            fieldRow(systemIcon: "mappin.and.ellipse", label: "场馆",      value: $ticket.venue)
+            Divider().padding(.horizontal, AppSpacing.md)
+            dateRow
+            Divider().padding(.horizontal, AppSpacing.md)
+            fieldRow(systemIcon: "clock",             label: "时间",      value: $ticket.eventTime)
+            Divider().padding(.horizontal, AppSpacing.md)
+            fieldRow(systemIcon: "chair.lounge",      label: "座位",      value: $ticket.seatInfo)
 
-                Divider().padding(.horizontal, AppSpacing.md)
-                tagsRow
-                Divider().padding(.horizontal, AppSpacing.md)
+            Divider().padding(.horizontal, AppSpacing.md)
+            tagsRow
+            Divider().padding(.horizontal, AppSpacing.md)
 
-                // Add custom field
-                addFieldRow
-            }
-            .background(Color(uiColor: isDark ? .secondarySystemBackground : .systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusCard))
-            .shadow(color: .black.opacity(0.06), radius: 12, y: 4)
+            // Add custom field
+            addFieldRow
         }
+        .background(Color(uiColor: isDark ? .secondarySystemBackground : .systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusCard))
+        .shadow(color: .black.opacity(0.06), radius: 12, y: 4)
         .padding(.horizontal, AppSpacing.md)
     }
 
@@ -460,15 +477,15 @@ struct RecognitionConfirmView: View {
     // MARK: Add to Wallet Button
 
     @ViewBuilder
-    private var addToWalletButton: some View {
+    private func addToWalletButton(bottomInset: CGFloat) -> some View {
         if mode == .edit {
-            editSaveButton
+            editSaveButton(bottomInset: bottomInset)
         } else {
-            confirmButtons
+            confirmButtons(bottomInset: bottomInset)
         }
     }
 
-    private var confirmButtons: some View {
+    private func confirmButtons(bottomInset: CGFloat) -> some View {
         VStack(spacing: 10) {
             Button {
                 Task { await addToWallet() }
@@ -503,12 +520,12 @@ struct RecognitionConfirmView: View {
             }
             .disabled(isSigning)
         }
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.vertical, 12)
-        .padding(.bottom, 40)
+        .padding(.horizontal, AppSpacing.lg)
+        .padding(.top, AppSpacing.sm)
+        .padding(.bottom, bottomControlBottomPadding(bottomInset))
     }
 
-    private var editSaveButton: some View {
+    private func editSaveButton(bottomInset: CGFloat) -> some View {
         Button {
             saveEdits()
         } label: {
@@ -521,9 +538,22 @@ struct RecognitionConfirmView: View {
                 .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusButton))
                 .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
         }
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.vertical, 12)
-        .padding(.bottom, 40)
+        .padding(.horizontal, AppSpacing.lg)
+        .padding(.top, AppSpacing.sm)
+        .padding(.bottom, bottomControlBottomPadding(bottomInset))
+    }
+
+    private func bottomControlReserve(bottomInset: CGFloat) -> CGFloat {
+        switch mode {
+        case .edit:
+            return 50 + AppSpacing.sm + bottomControlBottomPadding(bottomInset) + AppSpacing.md
+        case .confirm:
+            return 88 + AppSpacing.sm + bottomControlBottomPadding(bottomInset) + AppSpacing.md
+        }
+    }
+
+    private func bottomControlBottomPadding(_ safeAreaBottom: CGFloat) -> CGFloat {
+        max(safeAreaBottom + AppSpacing.md, AppSpacing.xl)
     }
 
     // MARK: Success Toast

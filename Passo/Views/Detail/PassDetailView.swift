@@ -73,10 +73,8 @@ struct PassDetailView: View {
             // F2: sync isAddedToWallet with actual PKPassLibrary state
             syncWalletStatus()
         }
-        .sheet(isPresented: $showEditTicket) {
-            NavigationStack {
-                RecognitionConfirmView(ticket: ticket, mode: .edit)
-            }
+        .fullScreenCover(isPresented: $showEditTicket) {
+            RecognitionConfirmView(ticket: ticket, mode: .edit)
         }
         .sheet(item: $expiryEditDraft) { draft in
             ExpiryEditorSheet(
