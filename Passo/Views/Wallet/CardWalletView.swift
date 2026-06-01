@@ -166,6 +166,9 @@ struct CardWalletView: View {
                 .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
         )
         .shadow(color: .black.opacity(isDark ? 0.45 : 0.18), radius: 8, y: 4)
+        // Limit the tap target to the card face so overlapping peeks and the
+        // rounded-corner dead zones don't catch taps meant for a neighbor.
+        .contentShape(RoundedRectangle(cornerRadius: AppSpacing.radiusCard, style: .continuous))
     }
 
     private func barcodePanel(_ ticket: Ticket) -> some View {
