@@ -69,9 +69,26 @@ struct PassoApp: App {
     #if DEBUG
     private func seedPreviewDataIfNeeded() {
         let ctx = PassoApp.sharedContainer.mainContext
-        guard (try? ctx.fetchCount(FetchDescriptor<Ticket>())) == 0 else { return }
-        for type in TicketType.allCases {
-            ctx.insert(Ticket.preview(type))
+        // Base preview fixtures only on a fresh store.
+        if (try? ctx.fetchCount(FetchDescriptor<Ticket>())) == 0 {
+            for type in TicketType.allCases {
+                ctx.insert(Ticket.preview(type))
+            }
+        }
+        // UI-test hook: guarantee a deterministic expired ticket so the renewal
+        // flow can be exercised regardless of prior simulator state.
+        if ProcessInfo.processInfo.arguments.contains("-uitest-seed-expired") {
+            let marker = "已过期电影票"
+            let existing = (try? ctx.fetchCount(
+                FetchDescriptor<Ticket>(predicate: #Predicate { $0.title == marker })
+            )) ?? 0
+            if existing == 0 {
+                let expired = Ticket.preview(.movie)
+                expired.title = marker
+                expired.eventDate = Date(timeIntervalSinceNow: -2 * 86_400)
+                expired.expiresAt = Date(timeIntervalSinceNow: -86_400)
+                ctx.insert(expired)
+            }
         }
         try? ctx.save()
     }
