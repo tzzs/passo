@@ -87,6 +87,7 @@ struct PassDetailView: View {
     @State private var showEditNotes = false
     @State private var showDeleteConfirm = false
     @State private var showEditTicket = false
+    @State private var showRenewal = false
     @State private var editingNotes = ""
 
     // Wallet pass (re)generation — lets a save-only ticket get signed later.
@@ -138,6 +139,13 @@ struct PassDetailView: View {
         .sheet(isPresented: $showEditTicket) {
             NavigationStack {
                 RecognitionConfirmView(ticket: ticket, mode: .edit)
+            }
+        }
+        .sheet(isPresented: $showRenewal) {
+            RenewalSheet(ticket: ticket) { newDate in
+                ticket.renew(until: newDate)
+                try? modelContext.save()
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
             }
         }
         .sheet(isPresented: $showWalletSheet) {
@@ -282,6 +290,12 @@ struct PassDetailView: View {
                     if ticket.canRestore {
                         Button { restoreTicket() } label: {
                             Label("恢复", systemImage: "arrow.uturn.backward")
+                        }
+                    }
+                    // Expired items re-activate through the renewal flow instead.
+                    if ticket.canRenew {
+                        Button { showRenewal = true } label: {
+                            Label("编辑有效期", systemImage: "calendar.badge.clock")
                         }
                     }
                 } else {

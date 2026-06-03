@@ -9,19 +9,43 @@ struct PassoApp: App {
     private let store = StoreService.shared
 
     // Singleton container — SwiftData's SQLite store must not be reopened on every body evaluation.
-    // cloudKitDatabase: .none prevents SwiftData from auto-enabling CloudKit via entitlements,
-    // which would require every attribute to be Optional.
-    private static let sharedContainer: ModelContainer = {
-        let config = ModelConfiguration(
-            groupContainer: .none,
-            cloudKitDatabase: .none
-        )
+    static let sharedContainer: ModelContainer = makeContainer()
+
+    /// CloudKit container identifier declared in `Passo.entitlements`.
+    static let cloudKitContainerID = "iCloud.com.passo.app"
+
+    /// Builds the SwiftData container, enabling CloudKit mirroring only when the
+    /// user is Pro AND has the iCloud sync toggle on. The decision is made once at
+    /// launch — SwiftData cannot hot-swap a container's CloudKit backing at runtime,
+    /// which is why Settings shows a "takes effect after restart" note.
+    static func makeContainer() -> ModelContainer {
+        // Read straight from UserDefaults — @AppStorage isn't reachable from this
+        // static context. Mirror the @AppStorage defaults: sync on, Pro off.
+        let syncEnabled = UserDefaults.standard.object(forKey: "iCloudSyncEnabled") as? Bool ?? true
+        let isPro       = UserDefaults.standard.bool(forKey: "isPro")
+        let useCloudKit = syncEnabled && isPro
+
+        let cloudDatabase: ModelConfiguration.CloudKitDatabase = useCloudKit
+            ? .private(cloudKitContainerID)
+            : .none
+        let config = ModelConfiguration(groupContainer: .none, cloudKitDatabase: cloudDatabase)
+
         do {
             return try ModelContainer(for: Ticket.self, configurations: config)
         } catch {
+            // CloudKit can fail to initialize (no signed-in iCloud account, Simulator
+            // without iCloud, schema mismatch). Rather than crash and lock the user
+            // out of their tickets, fall back to a local-only store.
+            if useCloudKit,
+               let local = try? ModelContainer(
+                   for: Ticket.self,
+                   configurations: ModelConfiguration(groupContainer: .none, cloudKitDatabase: .none)
+               ) {
+                return local
+            }
             fatalError("SwiftData: cannot create ModelContainer – \(error)")
         }
-    }()
+    }
 
     var body: some Scene {
         WindowGroup {

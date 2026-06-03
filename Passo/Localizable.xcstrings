@@ -1,0 +1,113 @@
+{
+  "sourceLanguage" : "zh-Hans",
+  "strings" : {
+    "iCloud 同步" : {
+      "comment" : "Settings · data section toggle",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "iCloud Sync" } }
+      }
+    },
+    "iCloud 同步更改将在重启 App 后生效" : {
+      "comment" : "Settings · data section footer",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "iCloud Sync changes take effect after you restart the app." } }
+      }
+    },
+    "关于 Passo" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About Passo" } }
+      }
+    },
+    "卡包" : {
+      "comment" : "Main tab · membership cards",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cards" } }
+      }
+    },
+    "票据" : {
+      "comment" : "Main tab · event tickets",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tickets" } }
+      }
+    },
+    "设置" : {
+      "comment" : "Main tab · settings",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } }
+      }
+    },
+    "数据" : {
+      "comment" : "Settings · data section header",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Data" } }
+      }
+    },
+    "已归档" : {
+      "comment" : "Archive screen title and status tag",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Archived" } }
+      }
+    },
+    "归档是空的" : {
+      "comment" : "Archive empty state title",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nothing archived yet" } }
+      }
+    },
+    "用过、过期的票和卡会自动收进这里" : {
+      "comment" : "Archive empty state subtitle",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Used and expired tickets and cards are collected here automatically." } }
+      }
+    },
+    "已过期" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Expired" } }
+      }
+    },
+    "已使用" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Used" } }
+      }
+    },
+    "未识别票据" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unrecognized ticket" } }
+      }
+    },
+    "删除" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } }
+      }
+    },
+    "恢复" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Restore" } }
+      }
+    },
+    "编辑有效期" : {
+      "comment" : "Renew flow · context menu / button to change an expired ticket's validity",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit validity" } }
+      }
+    },
+    "续期" : {
+      "comment" : "Renew flow · primary action",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Renew" } }
+      }
+    },
+    "选择新的有效期" : {
+      "comment" : "Renew flow · sheet title",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose a new validity date" } }
+      }
+    },
+    "取消" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}
