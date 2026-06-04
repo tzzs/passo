@@ -1,8 +1,9 @@
 import SwiftUI
+import UIKit
 
-/// Shows a single ticket's scannable barcode, generated on-device. The barcode
-/// sits on a white plate (so scanners get clean contrast) over the ticket type's
-/// themed background.
+/// Shows a single ticket's scannable barcode. The image is pre-rendered on the
+/// iPhone (watchOS has no CoreImage) and shipped over WatchConnectivity; the
+/// Watch just displays it on a white plate so scanners get clean contrast.
 struct WatchBarcodeDetailView: View {
     let ticket: TicketDTO
 
@@ -34,17 +35,21 @@ struct WatchBarcodeDetailView: View {
         .navigationTitle(ticket.ticketType.displayName)
     }
 
+    /// Linear (1D) codes render as a short wide strip; matrix codes render square.
+    private var isLinear: Bool {
+        let f = ticket.barcodeFormat
+        return f != "QR" && f != "DataMatrix" && f != "Aztec"
+    }
+
     @ViewBuilder
     private var barcode: some View {
-        if let image = WatchBarcodeGenerator.makeImage(value: ticket.barcodeValue,
-                                                       format: ticket.barcodeFormat) {
-            let linear = WatchBarcodeGenerator.isLinear(ticket.barcodeFormat)
-            image
+        if let data = ticket.barcodeImageData, let uiImage = UIImage(data: data) {
+            Image(uiImage: uiImage)
                 .interpolation(.none)
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: .infinity)
-                .frame(height: linear ? 70 : 150)
+                .frame(height: isLinear ? 70 : 150)
                 .padding(AppSpacing.sm)
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: AppSpacing.radiusCard))

@@ -22,6 +22,9 @@ struct TicketDTO: Codable, Identifiable, Hashable {
     var barcodeValue: String
     var barcodeFormat: String
     var typeRaw: String
+    /// Barcode pre-rendered to PNG on the iPhone. watchOS has no CoreImage to
+    /// generate codes on-device, so the phone renders and ships the image.
+    var barcodeImageData: Data? = nil
 
     var ticketType: TicketType { TicketType(rawValue: typeRaw) ?? .generic }
 }

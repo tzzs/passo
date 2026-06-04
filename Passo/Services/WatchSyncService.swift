@@ -1,5 +1,7 @@
 import Foundation
 import WatchConnectivity
+import UIKit
+import CoreImage.CIFilterBuiltins
 
 /// Pushes the user's active tickets from the iPhone to the paired Apple Watch
 /// over WatchConnectivity.
@@ -80,6 +82,7 @@ struct WatchTicketSnapshot: Sendable {
     let barcodeValue: String
     let barcodeFormat: String
     let typeRaw: String
+    let barcodeImageData: Data?
 
     init(ticket: Ticket) {
         self.id = ticket.id.uuidString
@@ -90,6 +93,10 @@ struct WatchTicketSnapshot: Sendable {
         self.barcodeValue = ticket.barcodeValue
         self.barcodeFormat = ticket.barcodeFormat
         self.typeRaw = ticket.ticketTypeRaw
+        // Pre-render the barcode here on the phone; the Watch can't.
+        self.barcodeImageData = WatchBarcodeRenderer.pngData(
+            value: ticket.barcodeValue, format: ticket.barcodeFormat
+        )
     }
 
     /// The Codable wire representation. Field-for-field identical to
@@ -103,11 +110,48 @@ struct WatchTicketSnapshot: Sendable {
         var barcodeValue: String
         var barcodeFormat: String
         var typeRaw: String
+        var barcodeImageData: Data?
     }
 
     fileprivate var dto: DTO {
         DTO(id: id, title: title, venue: venue, eventTime: eventTime,
             eventDate: eventDate, barcodeValue: barcodeValue,
-            barcodeFormat: barcodeFormat, typeRaw: typeRaw)
+            barcodeFormat: barcodeFormat, typeRaw: typeRaw,
+            barcodeImageData: barcodeImageData)
+    }
+}
+
+// MARK: - Barcode Renderer (iPhone side)
+
+/// Renders a ticket barcode to PNG on the iPhone so the Watch — which has no
+/// CoreImage — can display it directly. Mirrors the QR / Code128 handling in the
+/// app's `BarcodeImageView`.
+private enum WatchBarcodeRenderer {
+    private static let ciContext = CIContext()
+
+    static func pngData(value: String, format: String) -> Data? {
+        guard !value.isEmpty else { return nil }
+        let message = Data(value.utf8)
+
+        let output: CIImage?
+        let scale: CGFloat
+        if format == "QR" || format == "DataMatrix" || format == "Aztec" {
+            let filter = CIFilter.qrCodeGenerator()
+            filter.message = message
+            filter.correctionLevel = "M"
+            output = filter.outputImage
+            scale = 10
+        } else {
+            let filter = CIFilter.code128BarcodeGenerator()
+            filter.message = message
+            filter.quietSpace = 4
+            output = filter.outputImage
+            scale = 3
+        }
+
+        guard let ciImage = output else { return nil }
+        let scaled = ciImage.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        guard let cgImage = ciContext.createCGImage(scaled, from: scaled.extent) else { return nil }
+        return UIImage(cgImage: cgImage).pngData()
     }
 }

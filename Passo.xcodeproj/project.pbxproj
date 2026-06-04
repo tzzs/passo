@@ -51,7 +51,6 @@
 		BCAB63311E2C8AF9756404BF /* StoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCE1EC0A750A2164DE38A167 /* StoreService.swift */; };
 		BE00A6EA6323B7F6331571E6 /* PassoWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BC31A0AF89652D52290CBDC1 /* PassoWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		BF7C4877B438ECB6E9065449 /* WatchBarcodeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135438C6D76CDD6EC2262F29 /* WatchBarcodeDetailView.swift */; };
-		C92AEEF32D9050D066B63ECB /* WatchBarcodeGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7D825A15A25137B6AFAD5E6 /* WatchBarcodeGenerator.swift */; };
 		C95D66DC169C0C63A51DDC97 /* ShareImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF46936704AE3E9E67560C2 /* ShareImportService.swift */; };
 		CE4ACA3120EC2DD5C603CC17 /* TicketLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F7BD36562EBBBE0EE4F1F3 /* TicketLiveActivity.swift */; };
 		CEA28CCA7E938C7BE574873F /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A65A73C8BED644269BF1DA /* AppTheme.swift */; };
@@ -176,7 +175,6 @@
 		CAF46936704AE3E9E67560C2 /* ShareImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareImportService.swift; sourceTree = "<group>"; };
 		CCD5C23BD956B933CF0623C2 /* PassoAppShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassoAppShortcuts.swift; sourceTree = "<group>"; };
 		D516DDC4C03CC891607C4B49 /* ScreenshotImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotImportView.swift; sourceTree = "<group>"; };
-		D7D825A15A25137B6AFAD5E6 /* WatchBarcodeGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBarcodeGenerator.swift; sourceTree = "<group>"; };
 		E0A65A73C8BED644269BF1DA /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		E3018D96FF8FDD1E6438C347 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		E677CFBFB81137068BBAD2CA /* TicketDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketDTO.swift; sourceTree = "<group>"; };
@@ -320,7 +318,6 @@
 				EA9742F2725DB2473E678A8D /* PassoWatchApp.swift */,
 				E677CFBFB81137068BBAD2CA /* TicketDTO.swift */,
 				135438C6D76CDD6EC2262F29 /* WatchBarcodeDetailView.swift */,
-				D7D825A15A25137B6AFAD5E6 /* WatchBarcodeGenerator.swift */,
 				14523227F13CE967923871D9 /* WatchConnectivityReceiver.swift */,
 				A81CAFA0E81D6ECEBF624CFE /* WatchTicketListView.swift */,
 			);
@@ -607,7 +604,6 @@
 				8DEE3823B53824BE99C22F78 /* PassoWatchApp.swift in Sources */,
 				2FA5FDA02B1CDEA800F7AB40 /* TicketDTO.swift in Sources */,
 				BF7C4877B438ECB6E9065449 /* WatchBarcodeDetailView.swift in Sources */,
-				C92AEEF32D9050D066B63ECB /* WatchBarcodeGenerator.swift in Sources */,
 				1700CFAC60ADC109E7A6DFDB /* WatchConnectivityReceiver.swift in Sources */,
 				2319D9AA14CB85884306C8F7 /* WatchTicketListView.swift in Sources */,
 			);
