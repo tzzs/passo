@@ -7,5 +7,6 @@ import SwiftUI
 struct PassoWidgetBundle: WidgetBundle {
     var body: some Widget {
         UpNextWidget()
+        TicketLiveActivity()
     }
 }
