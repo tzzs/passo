@@ -14,6 +14,10 @@ struct PassoApp: App {
     /// CloudKit container identifier declared in `Passo.entitlements`.
     static let cloudKitContainerID = "iCloud.com.passo.app"
 
+    /// App Group identifier — the SwiftData store lives here so extensions
+    /// (Widget, Share) read the same database as the app.
+    static let appGroupID = "group.com.passo.app"
+
     /// Builds the SwiftData container, enabling CloudKit mirroring only when the
     /// user is Pro AND has the iCloud sync toggle on. The decision is made once at
     /// launch — SwiftData cannot hot-swap a container's CloudKit backing at runtime,
@@ -28,7 +32,7 @@ struct PassoApp: App {
         let cloudDatabase: ModelConfiguration.CloudKitDatabase = useCloudKit
             ? .private(cloudKitContainerID)
             : .none
-        let config = ModelConfiguration(groupContainer: .none, cloudKitDatabase: cloudDatabase)
+        let config = ModelConfiguration(groupContainer: .identifier(appGroupID), cloudKitDatabase: cloudDatabase)
 
         do {
             return try ModelContainer(for: Ticket.self, configurations: config)
@@ -39,7 +43,7 @@ struct PassoApp: App {
             if useCloudKit,
                let local = try? ModelContainer(
                    for: Ticket.self,
-                   configurations: ModelConfiguration(groupContainer: .none, cloudKitDatabase: .none)
+                   configurations: ModelConfiguration(groupContainer: .identifier(appGroupID), cloudKitDatabase: .none)
                ) {
                 return local
             }
