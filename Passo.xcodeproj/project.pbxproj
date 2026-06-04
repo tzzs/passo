@@ -10,12 +10,16 @@
 		003E646DC8A61AC3812A623A /* WalletPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0D485E8E2B4B02FC945F9C /* WalletPresenter.swift */; };
 		031731B8F7CB0DB60E36965E /* PhotoImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8785A1542D28E66674E87567 /* PhotoImportView.swift */; };
 		1337A66117CAA5E968FE766F /* TicketActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0592D160470B9276FBF22E7 /* TicketActivityAttributes.swift */; };
+		158B1B2327E9289CFFD8A9B1 /* WatchSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3710B6E051DD3765DB727353 /* WatchSyncService.swift */; };
 		15DAA7D09B3C0A810D95D76F /* Passo.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 130949084EA1B9812008F736 /* Passo.storekit */; };
+		1700CFAC60ADC109E7A6DFDB /* WatchConnectivityReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14523227F13CE967923871D9 /* WatchConnectivityReceiver.swift */; };
 		1ABD982041FF0E0D14B84B3F /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC67683C5D8ACEE177AA30B /* WalletView.swift */; };
 		1CB0D3834B69332BBE6EC3D7 /* CardPaletteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A02BA31F911265091B683D7 /* CardPaletteTests.swift */; };
 		21A49E39152092A353783656 /* LiveActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A99FDADA0E6F70BD0BCC7DDB /* LiveActivityService.swift */; };
+		2319D9AA14CB85884306C8F7 /* WatchTicketListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A81CAFA0E81D6ECEBF624CFE /* WatchTicketListView.swift */; };
 		2367D51AFA90F491EBD95588 /* PassBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6650C39ED4A591466089266 /* PassBuilderTests.swift */; };
 		2E39365D20EBD50AB9BF8BFD /* TicketCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F056606A6ADCE2DECE67CFD1 /* TicketCardView.swift */; };
+		2FA5FDA02B1CDEA800F7AB40 /* TicketDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = E677CFBFB81137068BBAD2CA /* TicketDTO.swift */; };
 		33344080FC2090B0E75E3012 /* ImportQuotaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 954D8C922DB7D11CFEC22FF6 /* ImportQuotaTests.swift */; };
 		347F9E1028F31F2A08F5052C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EEDC446E43178C3565AFF53 /* SettingsView.swift */; };
 		3AB947B2F7597ADB274B85C9 /* ReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34380143A1056CF5DF006171 /* ReminderService.swift */; };
@@ -34,6 +38,7 @@
 		81F62E5F929E980C065E6A6E /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 98D1F43C8F8EDB62BD860B15 /* Localizable.xcstrings */; };
 		84C7CE115C0D3557EF6F5DDC /* PassDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A04F3BB9D8DF2E510103862 /* PassDetailView.swift */; };
 		8D759A8B0C6609A5C403174A /* CardWalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95E2D5DDBDF0CF7C7BB75A84 /* CardWalletView.swift */; };
+		8DEE3823B53824BE99C22F78 /* PassoWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA9742F2725DB2473E678A8D /* PassoWatchApp.swift */; };
 		92E38410C52186A2F117578C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7372016D63A2348DAD153AE /* ContentView.swift */; };
 		99B2A05CF21020DCCA6CE3DE /* PassoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 779091FEBA240173A77EE3AC /* PassoApp.swift */; };
 		A10C0CBCED3D61588DE5F225 /* RecognitionConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52B6103FEDB9C1AB75B55EB1 /* RecognitionConfirmView.swift */; };
@@ -45,13 +50,16 @@
 		BB8E8003CD161D5635D2FCC3 /* GlassCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56B3637ABE30F5345353721C /* GlassCardView.swift */; };
 		BCAB63311E2C8AF9756404BF /* StoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCE1EC0A750A2164DE38A167 /* StoreService.swift */; };
 		BE00A6EA6323B7F6331571E6 /* PassoWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BC31A0AF89652D52290CBDC1 /* PassoWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BF7C4877B438ECB6E9065449 /* WatchBarcodeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135438C6D76CDD6EC2262F29 /* WatchBarcodeDetailView.swift */; };
 		C95D66DC169C0C63A51DDC97 /* ShareImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF46936704AE3E9E67560C2 /* ShareImportService.swift */; };
 		CE4ACA3120EC2DD5C603CC17 /* TicketLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F7BD36562EBBBE0EE4F1F3 /* TicketLiveActivity.swift */; };
+		CEA28CCA7E938C7BE574873F /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A65A73C8BED644269BF1DA /* AppTheme.swift */; };
 		D147F629DE59E5A01080DD60 /* NextTicketIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E5021395F1F89F708B89A3 /* NextTicketIntent.swift */; };
 		D5A002BA5101A4D7409F8268 /* ProUpgradeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1DF6A4D119802D65B15991 /* ProUpgradeSheet.swift */; };
 		DBC103AA4BC43C2C12566A0C /* TicketActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0592D160470B9276FBF22E7 /* TicketActivityAttributes.swift */; };
 		E0E127DEAED7F0F6ED9C98F4 /* PassBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21CCD280CACB4267082FB60B /* PassBuilder.swift */; };
 		E21994F89A5B401CF4B92353 /* TicketParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BA6BE4619F4C8BEB0074DE6 /* TicketParserTests.swift */; };
+		EA92E11B263BB4E9A6B7625B /* PassoWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 40F4D2007CBBE417739D363E /* PassoWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		EBC81943CD6E37640B2A2678 /* PassoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1E7D0B3F933B3A26880CC9 /* PassoUITests.swift */; };
 		ED9562CF295174354F472618 /* Ticket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EB4FFFB3E5323A44702A848 /* Ticket.swift */; };
 /* End PBXBuildFile section */
@@ -63,6 +71,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = F5BD4D1EC7FCCFCC2C7706B6;
 			remoteInfo = Passo;
+		};
+		67021A6450A0296BC94DE49D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 94067BF3B1AA1391FB21C835 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27A8965057752AD8F18264D3;
+			remoteInfo = PassoWatch;
 		};
 		CCCA55A7346CB00D4CA76D92 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -81,6 +96,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		9F770283D72679DD18C305B2 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				EA92E11B263BB4E9A6B7625B /* PassoWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A65A7CD787DA219718356015 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -99,15 +125,19 @@
 		0C1DF6A4D119802D65B15991 /* ProUpgradeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProUpgradeSheet.swift; sourceTree = "<group>"; };
 		0EA0887C01B87EB0EF76CA62 /* ScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanView.swift; sourceTree = "<group>"; };
 		130949084EA1B9812008F736 /* Passo.storekit */ = {isa = PBXFileReference; path = Passo.storekit; sourceTree = "<group>"; };
+		135438C6D76CDD6EC2262F29 /* WatchBarcodeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBarcodeDetailView.swift; sourceTree = "<group>"; };
+		14523227F13CE967923871D9 /* WatchConnectivityReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityReceiver.swift; sourceTree = "<group>"; };
 		161D2CD54A35C6FA4BDD7D4B /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		1A04F3BB9D8DF2E510103862 /* PassDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassDetailView.swift; sourceTree = "<group>"; };
 		1A1E7D0B3F933B3A26880CC9 /* PassoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassoUITests.swift; sourceTree = "<group>"; };
 		1D0D485E8E2B4B02FC945F9C /* WalletPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletPresenter.swift; sourceTree = "<group>"; };
 		21CCD280CACB4267082FB60B /* PassBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassBuilder.swift; sourceTree = "<group>"; };
 		34380143A1056CF5DF006171 /* ReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderService.swift; sourceTree = "<group>"; };
+		3710B6E051DD3765DB727353 /* WatchSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSyncService.swift; sourceTree = "<group>"; };
 		3A02BA31F911265091B683D7 /* CardPaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPaletteTests.swift; sourceTree = "<group>"; };
 		3AC67683C5D8ACEE177AA30B /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		3BB440B0843B268F49CC1429 /* PassoWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PassoWidget.entitlements; sourceTree = "<group>"; };
+		40F4D2007CBBE417739D363E /* PassoWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PassoWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F3EE53288228D726ED912E9 /* PassoShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PassoShareExtension.entitlements; sourceTree = "<group>"; };
 		52B6103FEDB9C1AB75B55EB1 /* RecognitionConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognitionConfirmView.swift; sourceTree = "<group>"; };
 		56B3637ABE30F5345353721C /* GlassCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCardView.swift; sourceTree = "<group>"; };
@@ -116,6 +146,7 @@
 		6B793F634581EDB604F0042D /* PassoShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PassoShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		71F0872B27BE659482EAE3E8 /* CardPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPalette.swift; sourceTree = "<group>"; };
 		7414454046D0D20E7B0A3BC0 /* SigningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SigningService.swift; sourceTree = "<group>"; };
+		74D252070FBD7366AF232929 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		779091FEBA240173A77EE3AC /* PassoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassoApp.swift; sourceTree = "<group>"; };
 		787DD181950E9B80FFA41D6C /* PassoWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassoWidgetBundle.swift; sourceTree = "<group>"; };
 		84F7BD36562EBBBE0EE4F1F3 /* TicketLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketLiveActivity.swift; sourceTree = "<group>"; };
@@ -134,6 +165,7 @@
 		A5F4B2C44AB8A2B9891D9637 /* PassoTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PassoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A6650C39ED4A591466089266 /* PassBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassBuilderTests.swift; sourceTree = "<group>"; };
 		A7372016D63A2348DAD153AE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A81CAFA0E81D6ECEBF624CFE /* WatchTicketListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTicketListView.swift; sourceTree = "<group>"; };
 		A99FDADA0E6F70BD0BCC7DDB /* LiveActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityService.swift; sourceTree = "<group>"; };
 		A9E5021395F1F89F708B89A3 /* NextTicketIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextTicketIntent.swift; sourceTree = "<group>"; };
 		AE0E16382929ECB8BF76D636 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
@@ -145,6 +177,8 @@
 		D516DDC4C03CC891607C4B49 /* ScreenshotImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotImportView.swift; sourceTree = "<group>"; };
 		E0A65A73C8BED644269BF1DA /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		E3018D96FF8FDD1E6438C347 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		E677CFBFB81137068BBAD2CA /* TicketDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketDTO.swift; sourceTree = "<group>"; };
+		EA9742F2725DB2473E678A8D /* PassoWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassoWatchApp.swift; sourceTree = "<group>"; };
 		EAC63ABB292ACF839C7C55C1 /* TicketParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketParser.swift; sourceTree = "<group>"; };
 		EE169E8AD9AAFB1F47FADF29 /* TicketModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketModelTests.swift; sourceTree = "<group>"; };
 		F056606A6ADCE2DECE67CFD1 /* TicketCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketCardView.swift; sourceTree = "<group>"; };
@@ -261,6 +295,7 @@
 				6B793F634581EDB604F0042D /* PassoShareExtension.appex */,
 				A5F4B2C44AB8A2B9891D9637 /* PassoTests.xctest */,
 				97BE5AE8813C3ACFEE794BCB /* PassoUITests.xctest */,
+				40F4D2007CBBE417739D363E /* PassoWatch.app */,
 				BC31A0AF89652D52290CBDC1 /* PassoWidget.appex */,
 			);
 			name = Products;
@@ -274,6 +309,19 @@
 				0EA0887C01B87EB0EF76CA62 /* ScanView.swift */,
 			);
 			path = Scan;
+			sourceTree = "<group>";
+		};
+		A3A22C72F72E27856AC2AA5F /* PassoWatch */ = {
+			isa = PBXGroup;
+			children = (
+				74D252070FBD7366AF232929 /* Info.plist */,
+				EA9742F2725DB2473E678A8D /* PassoWatchApp.swift */,
+				E677CFBFB81137068BBAD2CA /* TicketDTO.swift */,
+				135438C6D76CDD6EC2262F29 /* WatchBarcodeDetailView.swift */,
+				14523227F13CE967923871D9 /* WatchConnectivityReceiver.swift */,
+				A81CAFA0E81D6ECEBF624CFE /* WatchTicketListView.swift */,
+			);
+			path = PassoWatch;
 			sourceTree = "<group>";
 		};
 		C4B4955E40D33D4E1477343E /* Wallet */ = {
@@ -305,6 +353,7 @@
 				0F94FF738C34C02755004D4F /* PassoShareExtension */,
 				D3E35CA4EA9F007ACDDDFB94 /* PassoTests */,
 				3D9024CE57946DB54E7BDA9B /* PassoUITests */,
+				A3A22C72F72E27856AC2AA5F /* PassoWatch */,
 				5A0DEC5B3865FDC220FBC53C /* PassoWidget */,
 				9F2EB66CC34EA10D876FC799 /* Products */,
 			);
@@ -322,6 +371,7 @@
 				FCE1EC0A750A2164DE38A167 /* StoreService.swift */,
 				EAC63ABB292ACF839C7C55C1 /* TicketParser.swift */,
 				1D0D485E8E2B4B02FC945F9C /* WalletPresenter.swift */,
+				3710B6E051DD3765DB727353 /* WatchSyncService.swift */,
 				3833C4793054BDDBDAE58FD9 /* Intents */,
 			);
 			path = Services;
@@ -351,6 +401,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		27A8965057752AD8F18264D3 /* PassoWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3184B4CC028B6DC1DF812837 /* Build configuration list for PBXNativeTarget "PassoWatch" */;
+			buildPhases = (
+				57B26F5A7B010F3967CECAE1 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PassoWatch;
+			packageProductDependencies = (
+			);
+			productName = PassoWatch;
+			productReference = 40F4D2007CBBE417739D363E /* PassoWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 		986516C00D11AA9EC9F7E09B /* PassoWidget */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 545E071AC9036494DFA17F69 /* Build configuration list for PBXNativeTarget "PassoWidget" */;
@@ -428,11 +495,13 @@
 				A0FA1A95E2D0520F208180C5 /* Sources */,
 				167F49B7981476B9D7E8EF4D /* Resources */,
 				A65A7CD787DA219718356015 /* Embed Foundation Extensions */,
+				9F770283D72679DD18C305B2 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				EDF1725FB3E535E3E0396598 /* PBXTargetDependency */,
+				BFB01A6ED68588D37282757F /* PBXTargetDependency */,
 			);
 			name = Passo;
 			packageProductDependencies = (
@@ -450,6 +519,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					27A8965057752AD8F18264D3 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
 					986516C00D11AA9EC9F7E09B = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
@@ -492,6 +565,7 @@
 				E2B7095B8E0E5D64B7254936 /* PassoShareExtension */,
 				C5E8BC934039E0239441323C /* PassoTests */,
 				AB9074CAFA5C74A51D496C34 /* PassoUITests */,
+				27A8965057752AD8F18264D3 /* PassoWatch */,
 				986516C00D11AA9EC9F7E09B /* PassoWidget */,
 			);
 		};
@@ -519,6 +593,19 @@
 				2367D51AFA90F491EBD95588 /* PassBuilderTests.swift in Sources */,
 				40E858CA92E0767DDF7D29F3 /* TicketModelTests.swift in Sources */,
 				E21994F89A5B401CF4B92353 /* TicketParserTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		57B26F5A7B010F3967CECAE1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CEA28CCA7E938C7BE574873F /* AppTheme.swift in Sources */,
+				8DEE3823B53824BE99C22F78 /* PassoWatchApp.swift in Sources */,
+				2FA5FDA02B1CDEA800F7AB40 /* TicketDTO.swift in Sources */,
+				BF7C4877B438ECB6E9065449 /* WatchBarcodeDetailView.swift in Sources */,
+				1700CFAC60ADC109E7A6DFDB /* WatchConnectivityReceiver.swift in Sources */,
+				2319D9AA14CB85884306C8F7 /* WatchTicketListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -570,6 +657,7 @@
 				700999EB5649B621B1161297 /* TicketParser.swift in Sources */,
 				003E646DC8A61AC3812A623A /* WalletPresenter.swift in Sources */,
 				1ABD982041FF0E0D14B84B3F /* WalletView.swift in Sources */,
+				158B1B2327E9289CFFD8A9B1 /* WatchSyncService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -592,6 +680,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		BFB01A6ED68588D37282757F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 27A8965057752AD8F18264D3 /* PassoWatch */;
+			targetProxy = 67021A6450A0296BC94DE49D /* PBXContainerItemProxy */;
+		};
 		D59369665A444742A0248952 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F5BD4D1EC7FCCFCC2C7706B6 /* Passo */;
@@ -610,6 +703,23 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		002D35216823FDF4E8EE6D81 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = PassoWatch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.passo.app.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
 		0A3DC522C4596E6A81F5CDA8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -768,7 +878,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.passo.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -870,13 +979,29 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.passo.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		B3A6111FC79FAF1EB0B5573B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = PassoWatch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.passo.app.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
@@ -942,6 +1067,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3184B4CC028B6DC1DF812837 /* Build configuration list for PBXNativeTarget "PassoWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				002D35216823FDF4E8EE6D81 /* Debug */,
+				B3A6111FC79FAF1EB0B5573B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		3F777B85C6A09D636B653D64 /* Build configuration list for PBXNativeTarget "Passo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
