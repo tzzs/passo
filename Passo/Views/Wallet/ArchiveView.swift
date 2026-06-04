@@ -11,6 +11,8 @@ struct ArchiveView: View {
 
     @Query(sort: \Ticket.importedAt, order: .reverse) private var tickets: [Ticket]
 
+    @State private var renewingTicket: Ticket?
+
     private var isDark: Bool { colorScheme == .dark }
 
     private var archived: [Ticket] {
@@ -45,6 +47,13 @@ struct ArchiveView: View {
                                 }
                                 .tint(.green)
                             }
+                            // Expired items get the explicit renewal flow instead.
+                            if ticket.canRenew {
+                                Button { renewingTicket = ticket } label: {
+                                    Label("编辑有效期", systemImage: "calendar.badge.clock")
+                                }
+                                .tint(.blue)
+                            }
                         }
                     }
                 }
@@ -53,6 +62,11 @@ struct ArchiveView: View {
         }
         .navigationTitle("已归档")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $renewingTicket) { ticket in
+            RenewalSheet(ticket: ticket) { newDate in
+                renew(ticket, to: newDate)
+            }
+        }
     }
 
     // MARK: Row
@@ -111,6 +125,12 @@ struct ArchiveView: View {
         ticket.isArchived = false
         ticket.isUsed     = false
         ticket.archivedAt = nil
+        try? modelContext.save()
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+
+    private func renew(_ ticket: Ticket, to newDate: Date) {
+        ticket.renew(until: newDate)
         try? modelContext.save()
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
