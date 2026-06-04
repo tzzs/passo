@@ -30,8 +30,10 @@ final class WatchConnectivityReceiver: NSObject, ObservableObject {
     /// The wire payload stores the encoded DTO array under this key.
     static let payloadKey = "tickets"
 
-    private func apply(_ context: [String: Any]) {
-        guard let data = context[Self.payloadKey] as? Data else { return }
+    /// Takes the already-extracted Sendable `Data` (decoding + caching on the
+    /// main actor). The non-Sendable `[String: Any]` is unwrapped by the callers
+    /// before crossing the actor boundary.
+    private func apply(_ data: Data) {
         guard let decoded = try? JSONDecoder().decode([TicketDTO].self, from: data) else { return }
         tickets = decoded
         UserDefaults.standard.set(data, forKey: cacheKey)
@@ -51,17 +53,21 @@ extension WatchConnectivityReceiver: WCSessionDelegate {
                              activationDidCompleteWith activationState: WCSessionActivationState,
                              error: Error?) {
         // On activation, surface whatever application context the phone last set.
-        let context = session.receivedApplicationContext
-        Task { @MainActor in self.apply(context) }
+        // Extract the Sendable Data here (nonisolated) before hopping to the main
+        // actor — a raw [String: Any] is not Sendable and can't cross.
+        guard let data = session.receivedApplicationContext[Self.payloadKey] as? Data else { return }
+        Task { @MainActor in self.apply(data) }
     }
 
     nonisolated func session(_ session: WCSession,
                              didReceiveApplicationContext applicationContext: [String: Any]) {
-        Task { @MainActor in self.apply(applicationContext) }
+        guard let data = applicationContext[Self.payloadKey] as? Data else { return }
+        Task { @MainActor in self.apply(data) }
     }
 
     nonisolated func session(_ session: WCSession,
                              didReceiveUserInfo userInfo: [String: Any]) {
-        Task { @MainActor in self.apply(userInfo) }
+        guard let data = userInfo[Self.payloadKey] as? Data else { return }
+        Task { @MainActor in self.apply(data) }
     }
 }
