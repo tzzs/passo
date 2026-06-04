@@ -19,7 +19,7 @@ import CoreImage.CIFilterBuiltins
 ///
 /// The DTO shape here is duplicated from `PassoWatch/TicketDTO.swift`; the two
 /// form the wire contract between the devices and must stay in sync.
-final class WatchSyncService: NSObject {
+final class WatchSyncService: NSObject, @unchecked Sendable {
 
     static let shared = WatchSyncService()
 
@@ -127,7 +127,8 @@ struct WatchTicketSnapshot: Sendable {
 /// CoreImage — can display it directly. Mirrors the QR / Code128 handling in the
 /// app's `BarcodeImageView`.
 private enum WatchBarcodeRenderer {
-    private static let ciContext = CIContext()
+    // CIContext is documented as thread-safe; the type just isn't marked Sendable.
+    nonisolated(unsafe) private static let ciContext = CIContext()
 
     static func pngData(value: String, format: String) -> Data? {
         guard !value.isEmpty else { return nil }
