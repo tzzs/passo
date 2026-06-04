@@ -28,7 +28,8 @@ final class WatchConnectivityReceiver: NSObject, ObservableObject {
     // MARK: Payload handling
 
     /// The wire payload stores the encoded DTO array under this key.
-    static let payloadKey = "tickets"
+    /// `nonisolated` so the off-main-actor WCSession delegate callbacks can read it.
+    nonisolated static let payloadKey = "tickets"
 
     /// Takes the already-extracted Sendable `Data` (decoding + caching on the
     /// main actor). The non-Sendable `[String: Any]` is unwrapped by the callers
