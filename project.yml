@@ -25,6 +25,8 @@ targets:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
+    dependencies:
+      - target: PassoWidget   # Embeds the WidgetKit extension into the app bundle
     sources:
       - path: Passo
         excludes:
@@ -101,6 +103,38 @@ targets:
         SWIFT_STRICT_CONCURRENCY: complete
         PRODUCT_BUNDLE_IDENTIFIER: com.passo.app.share
         INFOPLIST_FILE: PassoShareExtension/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+
+  PassoWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: PassoWidget
+      # Shared with the app target so the widget can read the same SwiftData store.
+      - path: Passo/Models/Ticket.swift
+      - path: Passo/Theme/AppTheme.swift
+    info:
+      path: PassoWidget/Info.plist
+      properties:
+        CFBundleName: PassoWidget
+        CFBundleDisplayName: Passo
+        CFBundleShortVersionString: "1.0.0" # x-release-please-version
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: PassoWidget/PassoWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.passo.app
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        PRODUCT_BUNDLE_IDENTIFIER: com.passo.app.widget
+        INFOPLIST_FILE: PassoWidget/Info.plist
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: ""
 

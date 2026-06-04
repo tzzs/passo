@@ -258,6 +258,27 @@ extension Ticket {
         return Calendar.current.isDateInToday(date)
     }
 
+    // MARK: Home widget selection
+
+    /// The single ticket the home-screen widget surfaces as "up next".
+    ///
+    /// This is a product decision with several reasonable answers, which is why
+    /// it lives in one focused function rather than baked into the widget's
+    /// TimelineProvider:
+    ///   • Only event tickets, or also a membership card that's expiring soon?
+    ///   • Strictly future events, or include one happening *right now* (started
+    ///     earlier today but not yet archived)?
+    ///   • Nearest by date, or always prefer today's regardless of clock time?
+    ///
+    /// TODO(you): implement the selection policy. The placeholder returns the
+    /// nearest still-active event ticket whose eventDate is in the future.
+    static func upNext(from tickets: [Ticket]) -> Ticket? {
+        tickets
+            .filter { !$0.isCard && !$0.isInArchive }
+            .filter { ($0.eventDate ?? .distantPast) > Date() }
+            .min { ($0.eventDate ?? .distantFuture) < ($1.eventDate ?? .distantFuture) }
+    }
+
     // Default expiry rules per ticket type (spec §4.4)
     static func defaultExpiry(for type: TicketType, eventDate: Date?) -> Date? {
         guard let base = eventDate else {
