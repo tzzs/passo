@@ -22,6 +22,7 @@
 		3AEBCE9DA388017D5D7AED13 /* ScreenshotImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D516DDC4C03CC891607C4B49 /* ScreenshotImportView.swift */; };
 		40E858CA92E0767DDF7D29F3 /* TicketModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE169E8AD9AAFB1F47FADF29 /* TicketModelTests.swift */; };
 		452FE746D302E74BA0E40581 /* ArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 860470D6261E032B5AA6C4F3 /* ArchiveView.swift */; };
+		53FA3BF9A593A7657AA84208 /* PassoAppShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD5C23BD956B933CF0623C2 /* PassoAppShortcuts.swift */; };
 		57424267B76A02553DCA4D5D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A65A73C8BED644269BF1DA /* AppTheme.swift */; };
 		5961A086AA59CAB2ED7383C9 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A65A73C8BED644269BF1DA /* AppTheme.swift */; };
 		5F40F0C99F3916EEB245782C /* UpNextWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F48475B7835B75973FEF920 /* UpNextWidget.swift */; };
@@ -46,6 +47,7 @@
 		BE00A6EA6323B7F6331571E6 /* PassoWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BC31A0AF89652D52290CBDC1 /* PassoWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C95D66DC169C0C63A51DDC97 /* ShareImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF46936704AE3E9E67560C2 /* ShareImportService.swift */; };
 		CE4ACA3120EC2DD5C603CC17 /* TicketLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F7BD36562EBBBE0EE4F1F3 /* TicketLiveActivity.swift */; };
+		D147F629DE59E5A01080DD60 /* NextTicketIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E5021395F1F89F708B89A3 /* NextTicketIntent.swift */; };
 		D5A002BA5101A4D7409F8268 /* ProUpgradeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1DF6A4D119802D65B15991 /* ProUpgradeSheet.swift */; };
 		DBC103AA4BC43C2C12566A0C /* TicketActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0592D160470B9276FBF22E7 /* TicketActivityAttributes.swift */; };
 		E0E127DEAED7F0F6ED9C98F4 /* PassBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21CCD280CACB4267082FB60B /* PassBuilder.swift */; };
@@ -133,11 +135,13 @@
 		A6650C39ED4A591466089266 /* PassBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassBuilderTests.swift; sourceTree = "<group>"; };
 		A7372016D63A2348DAD153AE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A99FDADA0E6F70BD0BCC7DDB /* LiveActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityService.swift; sourceTree = "<group>"; };
+		A9E5021395F1F89F708B89A3 /* NextTicketIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextTicketIntent.swift; sourceTree = "<group>"; };
 		AE0E16382929ECB8BF76D636 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		BC31A0AF89652D52290CBDC1 /* PassoWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PassoWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C40D0BBFE1FBA5D4F792822E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C536FDC78C8D1D8B55083031 /* Passo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Passo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CAF46936704AE3E9E67560C2 /* ShareImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareImportService.swift; sourceTree = "<group>"; };
+		CCD5C23BD956B933CF0623C2 /* PassoAppShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassoAppShortcuts.swift; sourceTree = "<group>"; };
 		D516DDC4C03CC891607C4B49 /* ScreenshotImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotImportView.swift; sourceTree = "<group>"; };
 		E0A65A73C8BED644269BF1DA /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		E3018D96FF8FDD1E6438C347 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -192,6 +196,15 @@
 				F577ED28142E3E3BF7FAA917 /* Views */,
 			);
 			path = Passo;
+			sourceTree = "<group>";
+		};
+		3833C4793054BDDBDAE58FD9 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				A9E5021395F1F89F708B89A3 /* NextTicketIntent.swift */,
+				CCD5C23BD956B933CF0623C2 /* PassoAppShortcuts.swift */,
+			);
+			path = Intents;
 			sourceTree = "<group>";
 		};
 		3D9024CE57946DB54E7BDA9B /* PassoUITests */ = {
@@ -309,6 +322,7 @@
 				FCE1EC0A750A2164DE38A167 /* StoreService.swift */,
 				EAC63ABB292ACF839C7C55C1 /* TicketParser.swift */,
 				1D0D485E8E2B4B02FC945F9C /* WalletPresenter.swift */,
+				3833C4793054BDDBDAE58FD9 /* Intents */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -533,10 +547,12 @@
 				92E38410C52186A2F117578C /* ContentView.swift in Sources */,
 				BB8E8003CD161D5635D2FCC3 /* GlassCardView.swift in Sources */,
 				21A49E39152092A353783656 /* LiveActivityService.swift in Sources */,
+				D147F629DE59E5A01080DD60 /* NextTicketIntent.swift in Sources */,
 				A4859846C376E0AD552EC30C /* OnboardingView.swift in Sources */,
 				E0E127DEAED7F0F6ED9C98F4 /* PassBuilder.swift in Sources */,
 				84C7CE115C0D3557EF6F5DDC /* PassDetailView.swift in Sources */,
 				99B2A05CF21020DCCA6CE3DE /* PassoApp.swift in Sources */,
+				53FA3BF9A593A7657AA84208 /* PassoAppShortcuts.swift in Sources */,
 				031731B8F7CB0DB60E36965E /* PhotoImportView.swift in Sources */,
 				D5A002BA5101A4D7409F8268 /* ProUpgradeSheet.swift in Sources */,
 				A10C0CBCED3D61588DE5F225 /* RecognitionConfirmView.swift in Sources */,
