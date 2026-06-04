@@ -27,6 +27,8 @@ targets:
     deploymentTarget: "17.0"
     dependencies:
       - target: PassoWidget   # Embeds the WidgetKit extension into the app bundle
+      - target: PassoWatch     # Embeds the watchOS companion app
+        embed: true
     sources:
       - path: Passo
         excludes:
@@ -138,6 +140,34 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: ""
 
+  PassoWatch:
+    type: application
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - path: PassoWatch
+      # Shared with the app so the Watch reuses TicketType + its theme palette.
+      # The SwiftData @Model Ticket is deliberately NOT shared — the Watch is
+      # SwiftData-free and receives a lightweight Codable TicketDTO instead.
+      - path: Passo/Theme/AppTheme.swift
+    info:
+      path: PassoWatch/Info.plist
+      properties:
+        CFBundleName: PassoWatch
+        CFBundleDisplayName: Passo
+        CFBundleShortVersionString: "1.0.0" # x-release-please-version
+        CFBundleVersion: "1"
+        WKApplication: true
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        PRODUCT_BUNDLE_IDENTIFIER: com.passo.app.watchkitapp
+        INFOPLIST_FILE: PassoWatch/Info.plist
+        TARGETED_DEVICE_FAMILY: "4"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+
   # NOTE: the live Passo.xcodeproj is currently hand/Xcode-maintained and has
   # diverged from this file (it already contains PassoUITests, which was added
   # directly to the pbxproj). Both test targets are declared here so a future
@@ -183,3 +213,7 @@ schemes:
       targets:
         - PassoTests
         - PassoUITests
+  PassoWatch:
+    build:
+      targets:
+        PassoWatch: all
