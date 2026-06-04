@@ -89,6 +89,7 @@ struct PassDetailView: View {
     @State private var showEditTicket = false
     @State private var showRenewal = false
     @State private var editingNotes = ""
+    @State private var liveActivityRunning = false
 
     // Wallet pass (re)generation — lets a save-only ticket get signed later.
     @AppStorage("signingNodePreference") private var nodeRaw = NodePreference.auto.rawValue
@@ -135,6 +136,7 @@ struct PassDetailView: View {
             await loadMapSnapshot()
             // F2: sync isAddedToWallet with actual PKPassLibrary state
             syncWalletStatus()
+            liveActivityRunning = LiveActivityService.hasActiveActivity
         }
         .sheet(isPresented: $showEditTicket) {
             NavigationStack {
@@ -220,6 +222,28 @@ struct PassDetailView: View {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
+    // MARK: Live Activity
+
+    /// A countdown only makes sense for a non-card ticket whose event is still in
+    /// the future and that isn't already archived.
+    private var canStartLiveActivity: Bool {
+        guard !ticket.isCard, !ticket.isInArchive, let date = ticket.eventDate else { return false }
+        return date > Date()
+    }
+
+    private func startLiveActivity() {
+        liveActivityRunning = LiveActivityService.start(for: ticket)
+        if liveActivityRunning {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }
+    }
+
+    private func stopLiveActivity() {
+        LiveActivityService.endAll()
+        liveActivityRunning = false
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
     private func syncWalletStatus() {
         guard let serial = ticket.passSerialNumber else { return }
         let typeID = "pass.com.passo.ticket"
@@ -283,6 +307,19 @@ struct PassDetailView: View {
                 }
                 Button { editingNotes = ticket.notes; showEditNotes = true } label: {
                     Label("编辑备注", systemImage: "square.and.pencil")
+                }
+                // Live Activity: lock-screen / Dynamic Island countdown for an
+                // upcoming event ticket. Only meaningful for future-dated tickets.
+                if canStartLiveActivity {
+                    if liveActivityRunning {
+                        Button { stopLiveActivity() } label: {
+                            Label("结束锁屏提醒", systemImage: "bell.slash")
+                        }
+                    } else {
+                        Button { startLiveActivity() } label: {
+                            Label("开始锁屏提醒", systemImage: "bell.and.waveform")
+                        }
+                    }
                 }
                 if ticket.isInArchive {
                     // Only offer restore when it can actually re-activate the item
