@@ -185,4 +185,45 @@ final class TicketModelTests: XCTestCase {
         XCTAssertTrue(cal.isDate(movie, inSameDayAs: expectedDay),
                       "movie renewal should land seven days out")
     }
+
+    // MARK: Home widget up-next selection
+
+    private func makeTicket(_ type: TicketType, event: Date?, expires: Date?) -> Ticket {
+        let ticket = Ticket(ticketType: type, eventDate: event)
+        ticket.expiresAt = expires
+        return ticket
+    }
+
+    func testUpNextPicksSoonestUpcoming() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let soon  = makeTicket(.movie,   event: now.addingTimeInterval(3600), expires: now.addingTimeInterval(7200))
+        let later = makeTicket(.concert, event: now.addingTimeInterval(7200), expires: now.addingTimeInterval(10800))
+        XCTAssertEqual(Ticket.upNext(from: [later, soon], now: now)?.id, soon.id)
+    }
+
+    func testUpNextPrefersInProgressOverUpcoming() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        // Started 10 min ago, still valid for another hour → most relevant now.
+        let inProgress = makeTicket(.movie,   event: now.addingTimeInterval(-600), expires: now.addingTimeInterval(3600))
+        // Upcoming in 30 min.
+        let upcoming   = makeTicket(.concert, event: now.addingTimeInterval(1800), expires: now.addingTimeInterval(5400))
+        XCTAssertEqual(Ticket.upNext(from: [upcoming, inProgress], now: now)?.id, inProgress.id)
+    }
+
+    func testUpNextAmongInProgressPicksSoonestToExpire() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let expiresSoon = makeTicket(.movie,  event: now.addingTimeInterval(-600),  expires: now.addingTimeInterval(600))
+        let expiresLate = makeTicket(.scenic, event: now.addingTimeInterval(-1200), expires: now.addingTimeInterval(7200))
+        XCTAssertEqual(Ticket.upNext(from: [expiresLate, expiresSoon], now: now)?.id, expiresSoon.id)
+    }
+
+    func testUpNextExcludesCardsArchivedAndExpired() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let card    = makeTicket(.member,  event: nil, expires: nil)
+        let used    = makeTicket(.movie,   event: now.addingTimeInterval(3600),  expires: now.addingTimeInterval(7200))
+        used.isUsed = true
+        // expiresAt in the past → isExpired → isInArchive.
+        let expired = makeTicket(.concert, event: now.addingTimeInterval(-7200), expires: now.addingTimeInterval(-3600))
+        XCTAssertNil(Ticket.upNext(from: [card, used, expired], now: now))
+    }
 }

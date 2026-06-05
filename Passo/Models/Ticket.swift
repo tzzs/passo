@@ -262,20 +262,41 @@ extension Ticket {
 
     /// The single ticket the home-screen widget surfaces as "up next".
     ///
-    /// This is a product decision with several reasonable answers, which is why
-    /// it lives in one focused function rather than baked into the widget's
-    /// TimelineProvider:
-    ///   • Only event tickets, or also a membership card that's expiring soon?
-    ///   • Strictly future events, or include one happening *right now* (started
-    ///     earlier today but not yet archived)?
-    ///   • Nearest by date, or always prefer today's regardless of clock time?
+    /// Policy (ordered by relevance to *now*, not just by event date):
+    ///   1. **In-progress** tickets — the event has started but the pass is still
+    ///      valid (e.g. you're at the cinema, movie running, ticket not expired).
+    ///      These are the most useful to surface: you may need the barcode this
+    ///      instant. Among them, the one expiring soonest wins (use it before it
+    ///      lapses).
+    ///   2. Otherwise the **soonest upcoming** ticket by event date.
     ///
-    /// TODO(you): implement the selection policy. The placeholder returns the
-    /// nearest still-active event ticket whose eventDate is in the future.
-    static func upNext(from tickets: [Ticket]) -> Ticket? {
-        tickets
-            .filter { !$0.isCard && !$0.isInArchive }
-            .filter { ($0.eventDate ?? .distantPast) > Date() }
+    /// Membership cards are excluded — the widget answers "what do I need to get
+    /// into next?", which is an event, not an always-available loyalty card.
+    /// `isInArchive` already filters out used / manually-archived / truly-expired
+    /// items, so every candidate here is still valid.
+    ///
+    /// `now` is injectable for deterministic tests.
+    static func upNext(from tickets: [Ticket], now: Date = Date()) -> Ticket? {
+        // Candidate = active event ticket still valid as of `now`. Expiry is
+        // re-derived against `now` rather than via `isInArchive` (whose `isExpired`
+        // reads the real system clock), so the whole selection is a pure function
+        // of `now` — essential for deterministic tests.
+        let candidates = tickets.filter { ticket in
+            !ticket.isCard && !ticket.isArchived && !ticket.isUsed
+                && (ticket.expiresAt ?? .distantFuture) > now
+        }
+
+        // 1. In-progress: event started (eventDate <= now) and not yet expired
+        //    (guaranteed by !isInArchive). Prefer the soonest to expire.
+        let inProgress = candidates
+            .filter { ($0.eventDate ?? .distantFuture) <= now }
+            .min { ($0.expiresAt ?? .distantFuture) < ($1.expiresAt ?? .distantFuture) }
+        if let inProgress { return inProgress }
+
+        // 2. Soonest upcoming by event date. Dateless tickets sort last so a
+        //    ticket with a real date always wins.
+        return candidates
+            .filter { ($0.eventDate ?? .distantFuture) > now }
             .min { ($0.eventDate ?? .distantFuture) < ($1.eventDate ?? .distantFuture) }
     }
 
