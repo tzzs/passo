@@ -1,113 +1,1666 @@
 {
-  "sourceLanguage" : "zh-Hans",
-  "strings" : {
-    "iCloud 同步" : {
-      "comment" : "Settings · data section toggle",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "iCloud Sync" } }
+  "sourceLanguage": "zh-Hans",
+  "strings": {
+    "": {},
+    "· 已使用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· Used"
+          }
+        }
       }
     },
-    "iCloud 同步更改将在重启 App 后生效" : {
-      "comment" : "Settings · data section footer",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "iCloud Sync changes take effect after you restart the app." } }
+    "「自动」根据网络位置选择国内或 Cloudflare 节点": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"Auto\" picks the domestic or Cloudflare node based on your network location"
+          }
+        }
       }
     },
-    "关于 Passo" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "About Passo" } }
+    "%@ %@ · %@ %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ %2$@ · %3$@ %4$@"
+          }
+        }
       }
     },
-    "卡包" : {
-      "comment" : "Main tab · membership cards",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cards" } }
+    "%@ → %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ → %2$@"
+          }
+        }
       }
     },
-    "票据" : {
-      "comment" : "Main tab · event tickets",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tickets" } }
+    "%lld": {},
+    "%lld 张": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
+          }
+        }
       }
     },
-    "设置" : {
-      "comment" : "Main tab · settings",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } }
+    "%lld 张票今天可用 · 共 %lld 张": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld 张票今天可用 · 共 %2$lld 张"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld available today · %2$lld total"
+          }
+        }
       }
     },
-    "数据" : {
-      "comment" : "Settings · data section header",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Data" } }
+    "%lld/2": {},
+    "← 点击翻回正面": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "← Tap to flip back"
+          }
+        }
       }
     },
-    "已归档" : {
-      "comment" : "Archive screen title and status tag",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Archived" } }
+    "＋ 添加卡片": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "＋ Add card"
+          }
+        }
       }
     },
-    "归档是空的" : {
-      "comment" : "Archive empty state title",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nothing archived yet" } }
+    "⏰": {},
+    "✦": {},
+    "🎟": {},
+    "💳": {},
+    "iCloud 同步": {
+      "comment": "Settings · data section toggle",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Sync"
+          }
+        }
       }
     },
-    "用过、过期的票和卡会自动收进这里" : {
-      "comment" : "Archive empty state subtitle",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Used and expired tickets and cards are collected here automatically." } }
+    "iCloud 同步更改将在重启 App 后生效": {
+      "comment": "Settings · data section footer",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Sync changes take effect after you restart the app."
+          }
+        }
       }
     },
-    "已过期" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Expired" } }
+    "Pass 签名": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pass Signing"
+          }
+        }
       }
     },
-    "已使用" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Used" } }
+    "Pass 详情": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pass Details"
+          }
+        }
       }
     },
-    "未识别票据" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unrecognized ticket" } }
+    "Passo": {},
+    "Passo Pro": {},
+    "Passo 将扫描你相册中最近 20 张截图，自动识别其中包含的票据二维码或条形码。授权后点击「立即扫描」开始。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passo will scan the 20 most recent screenshots in your library and automatically detect ticket QR codes or barcodes. Grant access, then tap \"Scan Now\" to start."
+          }
+        }
       }
     },
-    "删除" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } }
+    "v%@": {},
+    "下一张": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
+          }
+        }
       }
     },
-    "恢复" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Restore" } }
+    "下一张票": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next ticket"
+          }
+        }
       }
     },
-    "编辑有效期" : {
-      "comment" : "Renew flow · context menu / button to change an expired ticket's validity",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit validity" } }
+    "下一步": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
+          }
+        }
       }
     },
-    "续期" : {
-      "comment" : "Renew flow · primary action",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Renew" } }
+    "仅保存到票夹": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save to wallet only"
+          }
+        }
       }
     },
-    "选择新的有效期" : {
-      "comment" : "Renew flow · sheet title",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose a new validity date" } }
+    "仅扫描截图类型的图片，不会访问其他照片内容": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only screenshot-type images are scanned; other photos are never accessed"
+          }
+        }
       }
     },
-    "取消" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } }
+    "仍然保存": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save anyway"
+          }
+        }
+      }
+    },
+    "从相册导入": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import from Photos"
+          }
+        }
+      }
+    },
+    "会员卡、积分卡、月卡都可以放在这里\n随时调出条码核销": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep membership, loyalty, and monthly cards here\nPull up the barcode to redeem anytime"
+          }
+        }
+      }
+    },
+    "你还没有即将使用的票": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You don't have any upcoming tickets"
+          }
+        }
+      }
+    },
+    "例：取票码、座位区域": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. pickup code, seating area"
+          }
+        }
+      }
+    },
+    "保存": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "保存失败": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save failed"
+          }
+        }
+      }
+    },
+    "保存未来时间后，非手动归档且未使用的票卡会回到有效列表。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After setting a future date, tickets that were not manually archived or used will return to the active list."
+          }
+        }
+      }
+    },
+    "倒计时": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Countdown"
+          }
+        }
+      }
+    },
+    "免费版": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free"
+          }
+        }
+      }
+    },
+    "免费版每月最多导入 5 张票据，升级 Pro 解锁无限导入": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The free plan imports up to 5 tickets per month. Upgrade to Pro for unlimited imports."
+          }
+        }
+      }
+    },
+    "入园时段  %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admission window  %@"
+          }
+        }
+      }
+    },
+    "共享扩展": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share Extension"
+          }
+        }
+      }
+    },
+    "关于": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About"
+          }
+        }
+      }
+    },
+    "关于 Passo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Passo"
+          }
+        }
+      }
+    },
+    "关闭": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        }
+      }
+    },
+    "分享票据": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share Ticket"
+          }
+        }
+      }
+    },
+    "删除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
+    "删除票据": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Ticket"
+          }
+        }
+      }
+    },
+    "前往「设置 → Passo → 相机」开启": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to Settings → Passo → Camera to enable"
+          }
+        }
+      }
+    },
+    "加载中…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading…"
+          }
+        }
+      }
+    },
+    "升级": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upgrade"
+          }
+        }
+      }
+    },
+    "升级 Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upgrade to Pro"
+          }
+        }
+      }
+    },
+    "卡包": {
+      "comment": "Main tab · membership cards",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cards"
+          }
+        }
+      }
+    },
+    "即将到期": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expiring soon"
+          }
+        }
+      }
+    },
+    "去设置": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        }
+      }
+    },
+    "发现 %lld 张票据": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found %lld tickets"
+          }
+        }
+      }
+    },
+    "取消": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "可能重复导入": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Possible duplicate"
+          }
+        }
+      }
+    },
+    "告诉你下一张即将使用的票据，并可在 Passo 中打开它。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tells you your next upcoming ticket and can open it in Passo."
+          }
+        }
+      }
+    },
+    "在任意 App 中找到要导入的票据截图，点击「分享」，然后选择「Passo」即可自动识别。首次使用前需在分享菜单中点「更多」启用 Passo。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In any app, find the ticket screenshot you want to import, tap \"Share\", then choose \"Passo\" to auto-detect it. Before first use, tap \"More\" in the share sheet to enable Passo."
+          }
+        }
+      }
+    },
+    "基础功能": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basics"
+          }
+        }
+      }
+    },
+    "填写内容": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter details"
+          }
+        }
+      }
+    },
+    "备注 & 详情": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes & Details"
+          }
+        }
+      }
+    },
+    "备注内容": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note"
+          }
+        }
+      }
+    },
+    "好的": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "如何使用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How to use"
+          }
+        }
+      }
+    },
+    "如何使用共享扩展": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How to use the Share Extension"
+          }
+        }
+      }
+    },
+    "字段内容": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Field value"
+          }
+        }
+      }
+    },
+    "字段标签": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Field label"
+          }
+        }
+      }
+    },
+    "对准条码或二维码": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aim at the barcode or QR code"
+          }
+        }
+      }
+    },
+    "导入": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import"
+          }
+        }
+      }
+    },
+    "将删除 %lld 张已过期或已使用的票据，此操作不可撤销": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This will delete %lld expired or used tickets. This cannot be undone."
+          }
+        }
+      }
+    },
+    "已使用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used"
+          }
+        }
+      }
+    },
+    "已存票据": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved tickets"
+          }
+        }
+      }
+    },
+    "已归档": {
+      "comment": "Archive screen title and status tag",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archived"
+          }
+        }
+      }
+    },
+    "已检测到票据": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket detected"
+          }
+        }
+      }
+    },
+    "已添加": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added"
+          }
+        }
+      }
+    },
+    "已达上限": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limit reached"
+          }
+        }
+      }
+    },
+    "已过期": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expired"
+          }
+        }
+      }
+    },
+    "年度订阅": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annual subscription"
+          }
+        }
+      }
+    },
+    "开发者": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Developer"
+          }
+        }
+      }
+    },
+    "开始使用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get Started"
+          }
+        }
+      }
+    },
+    "开始锁屏提醒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Lock Screen reminder"
+          }
+        }
+      }
+    },
+    "归档": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive"
+          }
+        }
+      }
+    },
+    "归档是空的": {
+      "comment": "Archive empty state title",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing archived yet"
+          }
+        }
+      }
+    },
+    "恢复": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore"
+          }
+        }
+      }
+    },
+    "恢复购买": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore Purchases"
+          }
+        }
+      }
+    },
+    "截图快速导入": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick import from screenshots"
+          }
+        }
+      }
+    },
+    "手动新建": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create manually"
+          }
+        }
+      }
+    },
+    "打开相册": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Photos"
+          }
+        }
+      }
+    },
+    "打开设置": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        }
+      }
+    },
+    "扫描中…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning…"
+          }
+        }
+      }
+    },
+    "扫描条码": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan barcode"
+          }
+        }
+      }
+    },
+    "拍一张票、截图或二维码": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photograph a ticket, screenshot, or QR code"
+          }
+        }
+      }
+    },
+    "授权访问相册": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Photos access"
+          }
+        }
+      }
+    },
+    "提醒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder"
+          }
+        }
+      }
+    },
+    "搜索标题、场馆、座位、标签": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search title, venue, seat, tags"
+          }
+        }
+      }
+    },
+    "支持电影票 · 高铁票 · 演出票 · 会员卡 · 门票...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Movies · trains · shows · membership cards · attractions…"
+          }
+        }
+      }
+    },
+    "支持电影票、火车票、演出票等各类截图": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Works with movie, train, show, and other ticket screenshots"
+          }
+        }
+      }
+    },
+    "数据": {
+      "comment": "Settings · data section header",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data"
+          }
+        }
+      }
+    },
+    "无限导入 · iCloud 同步": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlimited imports · iCloud sync"
+          }
+        }
+      }
+    },
+    "日期": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date"
+          }
+        }
+      }
+    },
+    "智能票据管家": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your smart ticket keeper"
+          }
+        }
+      }
+    },
+    "暂无位置信息": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No location info"
+          }
+        }
+      }
+    },
+    "暂时无法加载订阅产品，请检查网络": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscription products are unavailable right now. Please check your network."
+          }
+        }
+      }
+    },
+    "月度订阅": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monthly subscription"
+          }
+        }
+      }
+    },
+    "未在近期截图中发现票据": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No tickets found in recent screenshots"
+          }
+        }
+      }
+    },
+    "未设置": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not set"
+          }
+        }
+      }
+    },
+    "未识别票据": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unrecognized ticket"
+          }
+        }
+      }
+    },
+    "本月额度": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This month's quota"
+          }
+        }
+      }
+    },
+    "本月额度已用完": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This month's quota is used up"
+          }
+        }
+      }
+    },
+    "查看下一张票": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show next ticket"
+          }
+        }
+      }
+    },
+    "标签": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tags"
+          }
+        }
+      }
+    },
+    "标记使用": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as used"
+          }
+        }
+      }
+    },
+    "正在识别票据信息…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognizing ticket info…"
+          }
+        }
+      }
+    },
+    "此操作不可撤销，票据将从 Passo 中永久删除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This cannot be undone. The ticket will be permanently deleted from Passo."
+          }
+        }
+      }
+    },
+    "添加": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        }
+      }
+    },
+    "添加到 Wallet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Wallet"
+          }
+        }
+      }
+    },
+    "添加字段": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add field"
+          }
+        }
+      }
+    },
+    "添加标签": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add tag"
+          }
+        }
+      }
+    },
+    "添加自定义字段": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add custom field"
+          }
+        }
+      }
+    },
+    "清理已过期票据": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear expired tickets"
+          }
+        }
+      }
+    },
+    "清理过期票据（%lld 张）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear expired tickets (%lld)"
+          }
+        }
+      }
+    },
+    "点击卡片查看背面 →": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap the card to see the back →"
+          }
+        }
+      }
+    },
+    "点击在地图中打开": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to open in Maps"
+          }
+        }
+      }
+    },
+    "点击添加标签": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to add a tag"
+          }
+        }
+      }
+    },
+    "点击翻回": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to flip back"
+          }
+        }
+      }
+    },
+    "版本": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        }
+      }
+    },
+    "用户协议": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of Use"
+          }
+        }
+      }
+    },
+    "用过、过期的票和卡会自动收进这里": {
+      "comment": "Archive empty state subtitle",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used and expired tickets and cards are collected here automatically."
+          }
+        }
+      }
+    },
+    "相册": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photos"
+          }
+        }
+      }
+    },
+    "相册选取": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick from Photos"
+          }
+        }
+      }
+    },
+    "相机扫描": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera scan"
+          }
+        }
+      }
+    },
+    "确定": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "确认信息": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm details"
+          }
+        }
+      }
+    },
+    "确认删除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm deletion"
+          }
+        }
+      }
+    },
+    "确认清理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm cleanup"
+          }
+        }
+      }
+    },
+    "票夹里已有一张条码、日期、场馆都相同的票据。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your wallet already has a ticket with the same barcode, date, and venue."
+          }
+        }
+      }
+    },
+    "票据": {
+      "comment": "Main tab · event tickets",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tickets"
+          }
+        }
+      }
+    },
+    "票据类型": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket type"
+          }
+        }
+      }
+    },
+    "秒速导入，随时亮码": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import in seconds, show your code anytime"
+          }
+        }
+      }
+    },
+    "积分 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Points %@"
+          }
+        }
+      }
+    },
+    "立即扫描近期截图": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan recent screenshots now"
+          }
+        }
+      }
+    },
+    "签名失败": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing failed"
+          }
+        }
+      }
+    },
+    "签名节点": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing node"
+          }
+        }
+      }
+    },
+    "系统级": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "结束锁屏提醒": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End Lock Screen reminder"
+          }
+        }
+      }
+    },
+    "续期": {
+      "comment": "Renew flow · primary action",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renew"
+          }
+        }
+      }
+    },
+    "编辑备注": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit note"
+          }
+        }
+      }
+    },
+    "编辑有效期": {
+      "comment": "Renew flow · context menu / button to change an expired ticket's validity",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit validity"
+          }
+        }
+      }
+    },
+    "编辑票据": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit ticket"
+          }
+        }
+      }
+    },
+    "编辑过期时间": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit expiry date"
+          }
+        }
+      }
+    },
+    "解锁无限导入与 iCloud 跨设备同步": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock unlimited imports and iCloud sync across devices"
+          }
+        }
+      }
+    },
+    "订阅": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscription"
+          }
+        }
+      }
+    },
+    "订阅将自动续期，可随时在 App Store 订阅管理中取消": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The subscription renews automatically and can be cancelled anytime in App Store subscription settings."
+          }
+        }
+      }
+    },
+    "设置": {
+      "comment": "Main tab · settings",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "设置过期时间": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set expiry date"
+          }
+        }
+      }
+    },
+    "识别失败": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognition failed"
+          }
+        }
+      }
+    },
+    "识别成功": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognized"
+          }
+        }
+      }
+    },
+    "请在系统设置中允许 Passo 访问你的相册": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please allow Passo to access your Photos in system Settings"
+          }
+        }
+      }
+    },
+    "跳过": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip"
+          }
+        }
+      }
+    },
+    "过期时间": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expiry date"
+          }
+        }
+      }
+    },
+    "还可导入 %lld 张": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld import(s) left"
+          }
+        }
+      }
+    },
+    "还没有会员卡": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No membership cards yet"
+          }
+        }
+      }
+    },
+    "还没有票": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No tickets yet"
+          }
+        }
+      }
+    },
+    "选择新的有效期": {
+      "comment": "Renew flow · sheet title",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a new validity date"
+          }
+        }
+      }
+    },
+    "选择票据截图": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a ticket screenshot"
+          }
+        }
+      }
+    },
+    "重新扫描": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan again"
+          }
+        }
+      }
+    },
+    "重新选择图片": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another image"
+          }
+        }
+      }
+    },
+    "重试": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
+          }
+        }
+      }
+    },
+    "隐私政策": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
+          }
+        }
+      }
+    },
+    "需要相册访问权限": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photos access required"
+          }
+        }
+      }
+    },
+    "需要相机权限": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera access required"
+          }
+        }
+      }
+    },
+    "%1$lld 张票今天可用 · 共 %2$lld 张": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld ticket(s) available today · %2$lld total"
+          }
+        }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }
