@@ -22,3 +22,6 @@ Package.resolved
 
 # Local isolated worktrees
 .worktrees/
+
+# Superpowers brainstorming companion output
+.superpowers/
