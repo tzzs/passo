@@ -3,6 +3,69 @@ import UIKit
 import PassKit
 @preconcurrency import MapKit
 
+// MARK: - Detail Map Target
+
+struct PassDetailMapTarget {
+    enum OpenMode: Equatable {
+        case coordinate(latitude: Double, longitude: Double, name: String)
+        case query(String)
+        case route(origin: String, destination: String)
+        case none
+    }
+
+    static func previewQuery(for ticket: Ticket) -> String? {
+        if ticket.latitude != nil, ticket.longitude != nil {
+            return nil
+        }
+
+        if ticket.ticketType == .train {
+            return firstNonEmpty(ticket.routeDestination, ticket.routeOrigin)
+        }
+
+        return firstNonEmpty(ticket.venueAddress, ticket.venue)
+    }
+
+    static func openMode(for ticket: Ticket) -> OpenMode {
+        let name = firstNonEmpty(ticket.venue, ticket.title) ?? "位置"
+        if let lat = ticket.latitude, let lon = ticket.longitude {
+            return .coordinate(latitude: lat, longitude: lon, name: name)
+        }
+
+        if ticket.ticketType == .train {
+            if let origin = nonEmpty(ticket.routeOrigin),
+               let destination = nonEmpty(ticket.routeDestination) {
+                return .route(origin: origin, destination: destination)
+            }
+            if let query = firstNonEmpty(ticket.routeDestination, ticket.routeOrigin) {
+                return .query(query)
+            }
+            return .none
+        }
+
+        if let query = firstNonEmpty(ticket.venueAddress, ticket.venue) {
+            return .query(query)
+        }
+
+        return .none
+    }
+
+    static func hasPreviewTarget(for ticket: Ticket) -> Bool {
+        if ticket.latitude != nil, ticket.longitude != nil {
+            return true
+        }
+        return previewQuery(for: ticket) != nil
+    }
+
+    private static func firstNonEmpty(_ values: String...) -> String? {
+        values.compactMap(nonEmpty).first
+    }
+
+    private static func nonEmpty(_ value: String) -> String? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
 // MARK: - Pass Detail View
 
 /// Immersive pass detail: full-width gradient header + 3D flip card + info rows.
@@ -24,8 +87,10 @@ struct PassDetailView: View {
     @State private var showEditNotes = false
     @State private var showDeleteConfirm = false
     @State private var showEditTicket = false
+    @State private var showRenewal = false
     @State private var editingNotes = ""
     @State private var expiryEditDraft: ExpiryEditDraft?
+    @State private var liveActivityRunning = false
 
     // Wallet pass (re)generation — lets a save-only ticket get signed later.
     @AppStorage("signingNodePreference") private var nodeRaw = NodePreference.auto.rawValue
@@ -72,6 +137,7 @@ struct PassDetailView: View {
             await loadMapSnapshot()
             // F2: sync isAddedToWallet with actual PKPassLibrary state
             syncWalletStatus()
+            liveActivityRunning = LiveActivityService.hasActiveActivity
         }
         .fullScreenCover(isPresented: $showEditTicket) {
             RecognitionConfirmView(ticket: ticket, mode: .edit)
@@ -83,6 +149,13 @@ struct PassDetailView: View {
                 onCancel: { expiryEditDraft = nil },
                 onSave: saveEditedExpiry
             )
+        }
+        .sheet(isPresented: $showRenewal) {
+            RenewalSheet(ticket: ticket) { newDate in
+                ticket.renew(until: newDate)
+                try? modelContext.save()
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            }
         }
         .sheet(isPresented: $showWalletSheet) {
             if let data = pkpassData {
@@ -154,6 +227,28 @@ struct PassDetailView: View {
         ticket.archivedAt = nil
         try? modelContext.save()
         UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+
+    // MARK: Live Activity
+
+    /// A countdown only makes sense for a non-card ticket whose event is still in
+    /// the future and that isn't already archived.
+    private var canStartLiveActivity: Bool {
+        guard !ticket.isCard, !ticket.isInArchive, let date = ticket.eventDate else { return false }
+        return date > Date()
+    }
+
+    private func startLiveActivity() {
+        liveActivityRunning = LiveActivityService.start(for: ticket)
+        if liveActivityRunning {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }
+    }
+
+    private func stopLiveActivity() {
+        LiveActivityService.endAll()
+        liveActivityRunning = false
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
     private func syncWalletStatus() {
@@ -252,12 +347,31 @@ struct PassDetailView: View {
                 Button { editingNotes = ticket.notes; showEditNotes = true } label: {
                     Label("编辑备注", systemImage: "square.and.pencil")
                 }
+                // Live Activity: lock-screen / Dynamic Island countdown for an
+                // upcoming event ticket. Only meaningful for future-dated tickets.
+                if canStartLiveActivity {
+                    if liveActivityRunning {
+                        Button { stopLiveActivity() } label: {
+                            Label("结束锁屏提醒", systemImage: "bell.slash")
+                        }
+                    } else {
+                        Button { startLiveActivity() } label: {
+                            Label("开始锁屏提醒", systemImage: "bell.and.waveform")
+                        }
+                    }
+                }
                 if ticket.isInArchive {
                     // Only offer restore when it can actually re-activate the item
                     // (auto-expired tickets stay archived — no misleading no-op).
                     if ticket.canRestore {
                         Button { restoreTicket() } label: {
                             Label("恢复", systemImage: "arrow.uturn.backward")
+                        }
+                    }
+                    // Expired items re-activate through the renewal flow instead.
+                    if ticket.canRenew {
+                        Button { showRenewal = true } label: {
+                            Label("编辑有效期", systemImage: "calendar.badge.clock")
                         }
                     }
                 } else {
@@ -409,7 +523,7 @@ struct PassDetailView: View {
 
     private var mapPreview: some View {
         Button {
-            openInMaps()
+            Task { await openInMaps() }
         } label: {
             // Color.clear (flexible width, 0 ideal) defines the box size; the map
             // image and chrome are OVERLAYS, which never drive the host's layout —
@@ -430,7 +544,7 @@ struct PassDetailView: View {
                                     : [Color(hex: "#e8e6e0"), Color(hex: "#d4d1c9")],
                                 startPoint: .topLeading, endPoint: .bottomTrailing
                             )
-                            if ticket.venueAddress.isEmpty && ticket.latitude == nil {
+                            if !PassDetailMapTarget.hasPreviewTarget(for: ticket) {
                                 Label("暂无位置信息", systemImage: "map")
                                     .font(.system(size: 13))
                                     .foregroundStyle(.secondary)
@@ -441,11 +555,7 @@ struct PassDetailView: View {
                     }
                 }
                 .overlay {
-                    // Pin
-                    Image(systemName: "mappin.circle.fill")
-                        .font(.system(size: 28))
-                        .foregroundStyle(theme.accent)
-                        .shadow(color: theme.accent.opacity(0.5), radius: 6)
+                    mapPinMarker
                         .opacity(mapSnapshot != nil ? 1 : 0)
                 }
                 .overlay(alignment: .bottomTrailing) {
@@ -465,7 +575,44 @@ struct PassDetailView: View {
         }
         .buttonStyle(.plain)
         .padding(AppSpacing.md)
-        .disabled(mapCoordinate == nil && ticket.venueAddress.isEmpty)
+        .disabled(PassDetailMapTarget.openMode(for: ticket) == .none)
+    }
+
+    private var mapPinMarker: some View {
+        ZStack {
+            Circle()
+                .fill(.regularMaterial)
+                .frame(width: 38, height: 38)
+                .overlay {
+                    Circle()
+                        .strokeBorder(Color.white.opacity(0.85), lineWidth: 1)
+                }
+                .shadow(color: Color.black.opacity(0.18), radius: 8, y: 4)
+
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [theme.accent, theme.accentSecondary],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 28, height: 28)
+                .overlay {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.white)
+                        .offset(x: -0.5, y: 0.5)
+                }
+
+            Circle()
+                .fill(theme.accent.opacity(0.22))
+                .frame(width: 12, height: 5)
+                .blur(radius: 1)
+                .offset(y: 22)
+        }
+        .frame(width: 44, height: 50)
+        .accessibilityHidden(true)
     }
 
     private var expiryRow: some View {
@@ -498,15 +645,13 @@ struct PassDetailView: View {
     }
 
     private func loadMapSnapshot() async {
-        // Resolve coordinate: use stored lat/lon, or geocode the address
+        guard PassDetailMapTarget.hasPreviewTarget(for: ticket) else { return }
+
         let coordinate: CLLocationCoordinate2D
         if let lat = ticket.latitude, let lon = ticket.longitude {
             coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-        } else if !ticket.venueAddress.isEmpty {
-            guard let geocoded = await geocodeAddress(ticket.venueAddress) else { return }
-            coordinate = geocoded
-        } else if !ticket.venue.isEmpty {
-            guard let geocoded = await geocodeAddress(ticket.venue) else { return }
+        } else if let query = PassDetailMapTarget.previewQuery(for: ticket),
+                  let geocoded = await geocodeAddress(query) {
             coordinate = geocoded
         } else {
             return
@@ -527,19 +672,7 @@ struct PassDetailView: View {
 
         let snapshotter = MKMapSnapshotter(options: options)
         guard let snapshot = try? await snapshotter.start() else { return }
-
-        // Draw pin on snapshot
-        let image = UIGraphicsImageRenderer(size: options.size).image { _ in
-            snapshot.image.draw(at: .zero)
-            let point = snapshot.point(for: coordinate)
-            let pin = UIImage(systemName: "mappin.circle.fill",
-                              withConfiguration: UIImage.SymbolConfiguration(pointSize: 28, weight: .regular))!
-                .withTintColor(UIColor(theme.accent), renderingMode: .alwaysOriginal)
-            pin.draw(at: CGPoint(x: point.x - pin.size.width / 2,
-                                 y: point.y - pin.size.height))
-        }
-
-        mapSnapshot = image
+        mapSnapshot = snapshot.image
     }
 
     private func geocodeAddress(_ address: String) async -> CLLocationCoordinate2D? {
@@ -554,11 +687,62 @@ struct PassDetailView: View {
         }
     }
 
-    private func openInMaps() {
-        guard let coord = mapCoordinate else { return }
+    @MainActor
+    private func openInMaps() async {
+        switch PassDetailMapTarget.openMode(for: ticket) {
+        case let .coordinate(latitude, longitude, name):
+            openCoordinate(latitude: latitude, longitude: longitude, name: name)
+        case let .query(query):
+            let coord: CLLocationCoordinate2D?
+            if let mapCoordinate {
+                coord = mapCoordinate
+            } else {
+                coord = await geocodeAddress(query)
+            }
+            if let coord {
+                openCoordinate(latitude: coord.latitude, longitude: coord.longitude, name: query)
+            }
+        case let .route(origin, destination):
+            if let originCoord = await geocodeAddress(origin),
+               let destinationCoord = await geocodeAddress(destination) {
+                openRoute(
+                    origin: routeItem(name: origin, coordinate: originCoord),
+                    destination: routeItem(name: destination, coordinate: destinationCoord)
+                )
+            } else {
+                let destinationCoord: CLLocationCoordinate2D?
+                if let mapCoordinate {
+                    destinationCoord = mapCoordinate
+                } else {
+                    destinationCoord = await geocodeAddress(destination)
+                }
+                if let destinationCoord {
+                    openCoordinate(latitude: destinationCoord.latitude, longitude: destinationCoord.longitude, name: destination)
+                }
+            }
+        case .none:
+            return
+        }
+    }
+
+    private func openCoordinate(latitude: Double, longitude: Double, name: String) {
+        let coord = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
         let item = MKMapItem(placemark: MKPlacemark(coordinate: coord))
-        item.name = ticket.venue.isEmpty ? ticket.title : ticket.venue
+        item.name = name
         item.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
+    }
+
+    private func openRoute(origin: MKMapItem, destination: MKMapItem) {
+        MKMapItem.openMaps(
+            with: [origin, destination],
+            launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving]
+        )
+    }
+
+    private func routeItem(name: String, coordinate: CLLocationCoordinate2D) -> MKMapItem {
+        let item = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        item.name = name
+        return item
     }
 
     // MARK: M4 — Reminder Row

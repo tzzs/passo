@@ -6,65 +6,71 @@ import SwiftData
 @Model
 final class Ticket {
 
+    // NOTE: Every non-optional stored property MUST declare a default value.
+    // SwiftData's CloudKit mirroring (enabled via the iCloud sync toggle, see
+    // PassoApp.makeContainer) requires defaults on all attributes and forbids
+    // `@Attribute(.unique)` / non-optional relationships. The `init` below still
+    // overrides these defaults; they exist purely to satisfy the CloudKit schema.
+
     // Core identity
-    var id: UUID
-    var title: String
-    var venue: String
-    var ticketTypeRaw: String   // Persists TicketType.rawValue
+    var id: UUID = UUID()
+    var title: String = ""
+    var venue: String = ""
+    var ticketTypeRaw: String = TicketType.generic.rawValue  // Persists TicketType.rawValue
 
     // Event timing
     var eventDate: Date?
-    var eventTime: String       // "19:30" — display string from OCR
+    var eventTime: String = ""  // "19:30" — display string from OCR
     var expiresAt: Date?
 
     // Seat / entry info
-    var seatInfo: String        // e.g. "IMAX 4厅 · F排 7座"
-    var extraField1Label: String
-    var extraField1Value: String
-    var extraField2Label: String
-    var extraField2Value: String
+    var seatInfo: String = ""   // e.g. "IMAX 4厅 · F排 7座"
+    var extraField1Label: String = ""
+    var extraField1Value: String = ""
+    var extraField2Label: String = ""
+    var extraField2Value: String = ""
 
     // Train-specific route (structurally different layout on card)
-    var routeOrigin: String      // "北京南"
-    var routeDestination: String // "上海虹桥"
-    var routeDuration: String    // "4h 28m"
-    var arrivalTime: String      // "13:10"
+    var routeOrigin: String = ""      // "北京南"
+    var routeDestination: String = "" // "上海虹桥"
+    var routeDuration: String = ""    // "4h 28m"
+    var arrivalTime: String = ""      // "13:10"
 
     // Member-specific
-    var memberLevel: String      // "★ Gold"
-    var memberPoints: String     // "2,560"
+    var memberLevel: String = ""      // "★ Gold"
+    var memberPoints: String = ""     // "2,560"
 
     // Scenic: timed admission window
-    var admissionWindow: String  // "09:00 - 12:00"
+    var admissionWindow: String = ""  // "09:00 - 12:00"
 
     // Tags / badges (JSON array of strings, e.g. VIP通道, 含停车, 生日免费)
-    var tagsJSON: String         // encoded as "["VIP通道","含停车"]"
+    var tagsJSON: String = "[]"       // encoded as "["VIP通道","含停车"]"
 
     // Barcode
-    var barcodeValue: String
-    var barcodeFormat: String   // "QR", "Code128", "EAN13", etc.
+    var barcodeValue: String = ""
+    var barcodeFormat: String = "QR"  // "QR", "Code128", "EAN13", etc.
 
     // Location for Wallet pass
     var latitude: Double?
     var longitude: Double?
-    var venueAddress: String
+    var venueAddress: String = ""
 
     // Wallet integration
     var passSerialNumber: String?   // UUID assigned on Pass creation
-    var isAddedToWallet: Bool
+    var isAddedToWallet: Bool = false
 
     // Metadata
-    var notes: String
-    var sourceApp: String           // "猫眼电影", "12306", "截图导入", etc.
-    var importedAt: Date
-    var isUsed: Bool
+    var notes: String = ""
+    var sourceApp: String = ""      // "猫眼电影", "12306", "截图导入", etc.
+    var importedAt: Date = Date()
+    var isUsed: Bool = false
     var isArchived: Bool = false    // Explicit manual archive (declaration default = SwiftData migration default)
     var archivedAt: Date?           // When it entered the archive (manual) — for sorting
     var thumbnailData: Data?        // Cropped source image for card thumbnail
 
     // Reminder
     var reminderDate: Date?
-    var reminderEnabled: Bool
+    var reminderEnabled: Bool = false
 
     init(
         title: String = "",
@@ -173,14 +179,73 @@ extension Ticket {
     /// Restore clears `isArchived`/`isUsed`, but it cannot un-expire a ticket —
     /// an auto-expired item stays in the archive regardless. So we only offer
     /// "restore" when the item would genuinely leave the archive afterwards.
-    /// Expired items need an explicit "edit validity" flow instead (see P2-1).
+    /// Expired items can't be un-expired by restore; they use the explicit
+    /// renewal flow instead (see `renew(until:)` / `RenewalSheet`).
     var canRestore: Bool { isInArchive && !isExpired }
+
+    /// Whether the explicit "edit validity" (renewal) flow applies — i.e. the item
+    /// is archived specifically because it expired.
+    var canRenew: Bool { isExpired }
 
     /// A still-valid card within 7 days of its validity end — surfaced visually
     /// in the card wallet (no system notification).
     var isExpiringSoon: Bool {
         guard let exp = expiresAt, !isExpired else { return false }
         return exp.timeIntervalSinceNow <= 7 * 86_400
+    }
+
+    // MARK: Renewal (P2-1: explicit "edit validity" flow for expired items)
+
+    /// Extends an expired (or about-to-expire) item's validity to `newExpiry` and
+    /// pulls it back out of the archive. Renewal deliberately also clears `isUsed`
+    /// and the manual archive flag, because the user is explicitly declaring the
+    /// item active again. Caller is responsible for persisting (`modelContext.save()`)
+    /// and rescheduling any reminder.
+    func renew(until newExpiry: Date) {
+        expiresAt  = newExpiry
+        isArchived = false
+        isUsed     = false
+        archivedAt = nil
+    }
+
+    /// The validity date pre-selected when the user opens the renewal sheet.
+    ///
+    /// This is a product/business decision with several defensible answers, which
+    /// is why it's a single focused function rather than scattered inline logic:
+    ///
+    ///   • Membership cards (`.member`) are usually renewed for a long horizon
+    ///     (e.g. another year), since they have no event date.
+    ///   • Event tickets (movie / concert / train / scenic) are short-lived; a
+    ///     renewed one is typically valid only for a few days at most.
+    ///   • The date should always land in the *future* relative to `now`, otherwise
+    ///     the renewed item would immediately fall back into the archive.
+    ///
+    /// The sheet lets the user fine-tune the result, so this only needs to produce
+    /// a sensible starting point per ticket type.
+    ///
+    /// Policy: members renew by the month (no event date, long horizon); event
+    /// tickets renew by a handful of days. The computed day is then snapped to
+    /// end-of-day so a renewed item stays valid for the whole of that day.
+    static func suggestedRenewalDate(for type: TicketType, from now: Date = Date()) -> Date {
+        let cal = Calendar.current
+
+        // Per-type horizon from `now`.
+        let advanced: Date? = {
+            switch type {
+            case .member:           return cal.date(byAdding: .month, value: 1, to: now)
+            case .train:            return cal.date(byAdding: .day,   value: 2, to: now)
+            case .movie, .concert:  return cal.date(byAdding: .day,   value: 7, to: now)
+            case .scenic, .generic: return cal.date(byAdding: .day,   value: 30, to: now)
+            }
+        }()
+        let target = advanced ?? now
+
+        // Snap to a friendly instant: keep the target day, rewrite the time to
+        // 23:59. Because this is an *expiry* cutoff, end-of-day means the renewed
+        // item is valid for that entire day rather than expiring at whatever odd
+        // minute `now` happened to carry. `bySettingHour` preserves the date and
+        // lets Calendar absorb DST / month-length edge cases.
+        return cal.date(bySettingHour: 23, minute: 59, second: 0, of: target) ?? target
     }
 
     var isUpcoming: Bool {
@@ -191,6 +256,27 @@ extension Ticket {
     var isToday: Bool {
         guard let date = eventDate else { return false }
         return Calendar.current.isDateInToday(date)
+    }
+
+    // MARK: Home widget selection
+
+    /// The single ticket the home-screen widget surfaces as "up next".
+    ///
+    /// This is a product decision with several reasonable answers, which is why
+    /// it lives in one focused function rather than baked into the widget's
+    /// TimelineProvider:
+    ///   • Only event tickets, or also a membership card that's expiring soon?
+    ///   • Strictly future events, or include one happening *right now* (started
+    ///     earlier today but not yet archived)?
+    ///   • Nearest by date, or always prefer today's regardless of clock time?
+    ///
+    /// TODO(you): implement the selection policy. The placeholder returns the
+    /// nearest still-active event ticket whose eventDate is in the future.
+    static func upNext(from tickets: [Ticket]) -> Ticket? {
+        tickets
+            .filter { !$0.isCard && !$0.isInArchive }
+            .filter { ($0.eventDate ?? .distantPast) > Date() }
+            .min { ($0.eventDate ?? .distantFuture) < ($1.eventDate ?? .distantFuture) }
     }
 
     // Default expiry rules per ticket type (spec §4.4)

@@ -1,6 +1,7 @@
 name: Passo
 options:
   bundleIdPrefix: com.passo
+  developmentLanguage: zh-Hans   # Source language = the zh-Hans string literals in Text("…")
   deploymentTarget:
     iOS: "17.0"
   xcodeVersion: "16.0"
@@ -17,12 +18,17 @@ settings:
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
     ENABLE_PREVIEWS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES         # Extract localizable strings from source into the String Catalog
 
 targets:
   Passo:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
+    dependencies:
+      - target: PassoWidget   # Embeds the WidgetKit extension into the app bundle
+      - target: PassoWatch     # Embeds the watchOS companion app
+        embed: true
     sources:
       - path: Passo
         excludes:
@@ -40,6 +46,7 @@ targets:
           UISceneConfigurations: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        NSSupportsLiveActivities: true
         NSCameraUsageDescription: "扫描票据条码和二维码"
         NSPhotoLibraryUsageDescription: "从相册导入票据截图"
         NSLocationWhenInUseUsageDescription: "在你到达场馆时发送票据提醒"
@@ -102,6 +109,68 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: ""
 
+  PassoWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: PassoWidget
+      # Shared with the app target so the widget can read the same SwiftData store.
+      - path: Passo/Models/Ticket.swift
+      - path: Passo/Theme/AppTheme.swift
+      # Shared ActivityKit contract for the Live Activity (rendered here, started by the app).
+      - path: Passo/Models/TicketActivityAttributes.swift
+    info:
+      path: PassoWidget/Info.plist
+      properties:
+        CFBundleName: PassoWidget
+        CFBundleDisplayName: Passo
+        CFBundleShortVersionString: "1.0.0" # x-release-please-version
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: PassoWidget/PassoWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.passo.app
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        PRODUCT_BUNDLE_IDENTIFIER: com.passo.app.widget
+        INFOPLIST_FILE: PassoWidget/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+
+  PassoWatch:
+    type: application
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - path: PassoWatch
+      # Shared with the app so the Watch reuses TicketType + its theme palette.
+      # The SwiftData @Model Ticket is deliberately NOT shared — the Watch is
+      # SwiftData-free and receives a lightweight Codable TicketDTO instead.
+      - path: Passo/Theme/AppTheme.swift
+    info:
+      path: PassoWatch/Info.plist
+      properties:
+        CFBundleName: PassoWatch
+        CFBundleDisplayName: Passo
+        CFBundleShortVersionString: "1.0.0" # x-release-please-version
+        CFBundleVersion: "1"
+        WKApplication: true
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        PRODUCT_BUNDLE_IDENTIFIER: com.passo.app.watchkitapp
+        INFOPLIST_FILE: PassoWatch/Info.plist
+        TARGETED_DEVICE_FAMILY: "4"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+
   # NOTE: the live Passo.xcodeproj is currently hand/Xcode-maintained and has
   # diverged from this file (it already contains PassoUITests, which was added
   # directly to the pbxproj). Both test targets are declared here so a future
@@ -147,3 +216,7 @@ schemes:
       targets:
         - PassoTests
         - PassoUITests
+  PassoWatch:
+    build:
+      targets:
+        PassoWatch: all

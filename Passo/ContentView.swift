@@ -37,6 +37,9 @@ struct ContentView: View {
     // card-wallet imports default an unrecognized result to .member.
     @State private var importPreferredType: TicketType?
 
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    @State private var showOnboarding = false
+
     // Badge: today's active ticket count shown on the 即将 tab
     @Query private var allTickets: [Ticket]
     private var todayBadgeCount: Int {
@@ -82,10 +85,32 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .passoShareImport)) { _ in
             handleShareImport()
         }
+        .fullScreenCover(isPresented: $showOnboarding) {
+            OnboardingView { hasSeenOnboarding = true; showOnboarding = false }
+        }
         .onAppear {
+            // First-launch onboarding — skipped in UI tests for a deterministic start.
+            if !hasSeenOnboarding,
+               !ProcessInfo.processInfo.arguments.contains("-uitest") {
+                showOnboarding = true
+            }
             // Handle import if app was cold-launched via passo:// URL scheme
             handleShareImport()
+            pushTicketsToWatch()
         }
+        .onChange(of: allTickets) { _, _ in
+            pushTicketsToWatch()
+        }
+    }
+
+    /// Pushes the active event tickets (upcoming first) to the paired Apple Watch
+    /// over WatchConnectivity. Cards and archived items are excluded.
+    private func pushTicketsToWatch() {
+        let active = allTickets
+            .filter { !$0.isCard && !$0.isInArchive }
+            .sorted { ($0.eventDate ?? .distantFuture) < ($1.eventDate ?? .distantFuture) }
+            .map(WatchTicketSnapshot.init)
+        WatchSyncService.shared.sync(tickets: active)
     }
 
     private func handleShareImport() {
