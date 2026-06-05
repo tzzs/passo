@@ -29,21 +29,33 @@ struct PassoApp: App {
         let isPro       = UserDefaults.standard.bool(forKey: "isPro")
         let useCloudKit = syncEnabled && isPro
 
+        // The App Group container can be absent — e.g. a Simulator unit-test host
+        // built with CODE_SIGNING_ALLOWED=NO has no embedded entitlements. SwiftData
+        // *fatalErrors* (it does not throw) when it can't find the group container,
+        // so a try/catch fallback can't save us — we must detect availability up
+        // front and fall back to a local store. (On device / signed builds the
+        // group is present and the Widget shares this same store.)
+        let groupAvailable = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupID) != nil
+        let groupContainer: ModelConfiguration.GroupContainer = groupAvailable
+            ? .identifier(appGroupID)
+            : .none
+
         let cloudDatabase: ModelConfiguration.CloudKitDatabase = useCloudKit
             ? .private(cloudKitContainerID)
             : .none
-        let config = ModelConfiguration(groupContainer: .identifier(appGroupID), cloudKitDatabase: cloudDatabase)
+        let config = ModelConfiguration(groupContainer: groupContainer, cloudKitDatabase: cloudDatabase)
 
         do {
             return try ModelContainer(for: Ticket.self, configurations: config)
         } catch {
-            // CloudKit can fail to initialize (no signed-in iCloud account, Simulator
-            // without iCloud, schema mismatch). Rather than crash and lock the user
-            // out of their tickets, fall back to a local-only store.
+            // CloudKit can still fail to initialize (no signed-in iCloud account,
+            // Simulator without iCloud, schema mismatch). Rather than crash and lock
+            // the user out of their tickets, fall back to a local-only store.
             if useCloudKit,
                let local = try? ModelContainer(
                    for: Ticket.self,
-                   configurations: ModelConfiguration(groupContainer: .identifier(appGroupID), cloudKitDatabase: .none)
+                   configurations: ModelConfiguration(groupContainer: groupContainer, cloudKitDatabase: .none)
                ) {
                 return local
             }
