@@ -102,4 +102,64 @@ final class PassoUITests: XCTestCase {
         sleep(4)
         snap("detail_after_map")  // map loaded — width must be unchanged
     }
+
+    /// Detail expiry row should open a focused validity editor.
+    func testDetailExpiryRowOpensEditor() throws {
+        app.tabBars.buttons["卡包"].tap()
+
+        let memberCard = app.staticTexts["星巴克金卡"].firstMatch
+        XCTAssertTrue(memberCard.waitForExistence(timeout: 2))
+        memberCard.tap()
+
+        let expiryRow = app.buttons["detailExpiryRow"]
+        XCTAssertTrue(expiryRow.waitForExistence(timeout: 2))
+        expiryRow.tap()
+
+        XCTAssertTrue(app.navigationBars["编辑过期时间"].waitForExistence(timeout: 2))
+
+        let expiryToggle = app.switches["设置过期时间"]
+        XCTAssertTrue(expiryToggle.waitForExistence(timeout: 2))
+        XCTAssertEqual(expiryToggle.value as? String, "0")
+        XCTAssertFalse(app.datePickers["过期时间"].exists)
+
+        expiryToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let enabledPredicate = NSPredicate(format: "value == %@", "1")
+        expectation(for: enabledPredicate, evaluatedWith: expiryToggle)
+        waitForExpectations(timeout: 2)
+        XCTAssertTrue(app.descendants(matching: .any)["expiryDatePicker"].waitForExistence(timeout: 2))
+    }
+
+    /// Edit-ticket sheet content should start near the top instead of being vertically centered.
+    func testEditTicketSheetContentStartsNearTop() throws {
+        let card = app.descendants(matching: .any).matching(identifier: "topTicketCard").firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 2))
+        card.tap()
+
+        let moreButton = app.buttons["More"]
+        XCTAssertTrue(moreButton.waitForExistence(timeout: 2))
+        moreButton.tap()
+
+        let editTicket = app.buttons["编辑票据"]
+        XCTAssertTrue(editTicket.waitForExistence(timeout: 2))
+        editTicket.tap()
+
+        let title = app.staticTexts["editTicketTitle"]
+        XCTAssertTrue(title.waitForExistence(timeout: 2))
+        sleep(1)
+        snap("edit_ticket_top_spacing")
+        XCTAssertGreaterThan(title.frame.minY, 70)
+        XCTAssertLessThan(title.frame.minY, 130)
+
+        let preview = app.descendants(matching: .any).matching(identifier: "editTicketPreview").firstMatch
+        XCTAssertTrue(preview.waitForExistence(timeout: 2))
+        XCTAssertLessThan(preview.frame.minY - title.frame.maxY, 64)
+
+        let typeLabel = app.staticTexts["票据类型"]
+        XCTAssertTrue(typeLabel.waitForExistence(timeout: 2))
+
+        let saveButton = app.buttons["保存"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 2))
+        snap("edit_ticket_bottom_spacing")
+        XCTAssertGreaterThan(app.frame.maxY - saveButton.frame.maxY, 16)
+    }
 }
