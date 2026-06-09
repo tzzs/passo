@@ -38,7 +38,7 @@ targets:
       properties:
         CFBundleName: Passo
         CFBundleDisplayName: Passo
-        CFBundleShortVersionString: "1.0.0" # x-release-please-version
+        CFBundleShortVersionString: "2.0.0" # x-release-please-version
         CFBundleVersion: "1"
         UILaunchStoryboardName: LaunchScreen
         UIApplicationSceneManifest:
@@ -86,7 +86,7 @@ targets:
       properties:
         CFBundleName: PassoShareExtension
         CFBundleDisplayName: Passo
-        CFBundleShortVersionString: "1.0.0" # x-release-please-version
+        CFBundleShortVersionString: "2.0.0" # x-release-please-version
         CFBundleVersion: "1"
         NSExtension:
           NSExtensionAttributes:
@@ -125,7 +125,7 @@ targets:
       properties:
         CFBundleName: PassoWidget
         CFBundleDisplayName: Passo
-        CFBundleShortVersionString: "1.0.0" # x-release-please-version
+        CFBundleShortVersionString: "2.0.0" # x-release-please-version
         CFBundleVersion: "1"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
@@ -158,7 +158,7 @@ targets:
       properties:
         CFBundleName: PassoWatch
         CFBundleDisplayName: Passo
-        CFBundleShortVersionString: "1.0.0" # x-release-please-version
+        CFBundleShortVersionString: "2.0.0" # x-release-please-version
         CFBundleVersion: "1"
         WKApplication: true
     settings:
